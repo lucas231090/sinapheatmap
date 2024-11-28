@@ -58,7 +58,7 @@ npm run docker
 
 ##### Portas Expostas
 
-- **API**: `localhost:3000`
+- **API**: `localhost:3333`
 - **MongoDB**: `localhost:27017`
 
 #### 3.2. Sem Docker
