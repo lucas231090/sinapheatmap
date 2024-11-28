@@ -31,7 +31,7 @@ npm install
 Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis de ambiente:
 
 ```makefile
-PORT=3000
+PORT=3333
 MONGO_URI=mongodb://localhost:27017/sinapheatmap
 JWT_SECRET=sua_chave_secreta_aqui
 ```
