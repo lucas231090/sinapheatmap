@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Testando img</title>
+  </head>
+  <body>
+    <h1>Mostrar Imagem</h1>
+
+    <div id="user-info">
+      <p id="description"></p>
+      <img
+        id="user-image"
+        alt="Imagem do experimento"
+        style="max-width: 100%; height: auto"
+      />
+    </div>
+
+    <script>
+      const userId = "6745d02ca23d8256caa7f000";
+
+      const apiUrl = `http://localhost:3333/eyetracking/${userId}`;
+
+      async function getUserData() {
+        try {
+          const response = await fetch(apiUrl);
+
+          if (!response.ok) {
+            throw new Error("Erro ao obter os dados do usuário");
+          }
+
+          const data = await response.json();
+
+          console.log("Dados do usuário:", data);
+
+          const user = data;
+          const mediaPath = user.mediaPath;
+
+          const filename = mediaPath.split("/").pop();
+
+          const imageResponse = await fetch(
+            `http://localhost:3333/uploads/media/${filename}`
+          );
+
+          if (!imageResponse.ok) {
+            throw new Error("Erro ao carregar a imagem");
+          }
+
+          document.getElementById("description").innerText = user.description;
+          document.getElementById(
+            "user-image"
+          ).src = `http://localhost:3333/uploads/media/${filename}`;
+        } catch (error) {
+          console.error("Erro ao carregar os dados do usuário:", error);
+        }
+      }
+
+      window.onload = getUserData;
+    </script>
+  </body>
+</html>

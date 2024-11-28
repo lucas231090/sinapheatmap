@@ -1,0 +1,21 @@
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  api-sinapheatmap:
+    build: .
+    container_name: api-sinapheatmap
+    ports:
+      - "3333:3333"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/sinapsense
+    depends_on:
+      - mongodb
+
+volumes:
+  mongo-data:

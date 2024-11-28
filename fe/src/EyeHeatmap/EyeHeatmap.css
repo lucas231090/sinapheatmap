@@ -1,0 +1,93 @@
+.body {
+    display: flex;
+    flex-direction: row;
+    justify-content: start;
+    padding: 20px 40px;
+    overflow-y: scroll;
+    overflow-x: scroll;
+}
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    margin-right: 20px;
+    margin-top: 20px;
+    background-color: white;
+    border-radius: 20px;
+    align-items: center;
+    padding: 20px 5px;
+    gap: 10px;
+}
+
+input[type=range] {
+    writing-mode: bt-lr;
+    /* IE */
+    appearance: slider-vertical;
+    -webkit-appearance: slider-vertical;
+    /* WebKit */
+    width: 50px;
+    height: 200px;
+    padding: 0 24px;
+    outline: none;
+    background: transparent;
+}
+
+
+.heatmapContainer {
+    position: absolute;
+
+}
+
+.heatmapContainer * {
+    position: absolute;
+    z-index: 2;
+}
+
+.image-area {
+    position: absolute;
+    z-index: 1;
+}
+
+.white-area {
+    display: flex;
+    flex-direction: column;
+    background-color: rgb(255, 255, 255);
+    padding: 15px;
+    width: max-content;
+    border-radius: 20px;
+    box-shadow: 3px 10px 20px rgba(38, 41, 44, 0.8);
+    margin-top: 20px;
+}
+
+.image {
+    height: 100%;
+    width: 100%;
+}
+
+.scale-btn {
+    background-color: deepskyblue;
+    color: white;
+    padding: 10px;
+    font-weight: 800;
+
+    border: 0px;
+    border-radius: 10px;
+    box-shadow: 7px 20px 20px rgba(210, 227, 244, 0.3);
+}
+
+.scale-btn:hover {
+    background-color: rgb(0, 145, 194);
+    /* Green */
+    color: white;
+}
+
+.scale-btn:active {
+    background-color: rgb(0, 89, 118);
+    box-shadow: 3px 20px 20px rgb(210, 227, 244, 0.3);
+    transform: translateY(2px);
+}
+
+.text {
+    font-size: 20px;
+    color: rgb(38, 41, 44);
+}

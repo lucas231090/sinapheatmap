@@ -1,0 +1,323 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API SinapSense",
+    "version": "1.0.0",
+    "description": "API de integração de dados",
+    "contact": {
+      "name": "Lucas José de Souza",
+      "email": "souza.lucasj@ufpr.br"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://",
+      "description": "API prod"
+    },
+    {
+      "url": "http://localhost:3333",
+      "description": "API dev"
+    }
+  ],
+
+  "components": {
+    "schemas": {
+      "File": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string",
+            "description": "Nome do arquivo"
+          },
+          "description": {
+            "type": "string",
+            "description": "Descrição do arquivo"
+          },
+          "path": {
+            "type": "string",
+            "description": "Caminho do arquivo"
+          },
+          "active": {
+            "type": "boolean",
+            "default": true,
+            "description": "Status de ativação do arquivo"
+          },
+          "jsonData": {
+            "type": "object",
+            "description": "Dados em formato JSON do arquivo"
+          }
+        },
+        "required": ["filename", "path", "jsonData"]
+      }
+    }
+  },
+
+  "paths": {
+    "/data-mock": {
+      "get": {
+        "summary": "Retorna dados mockados para teste de criação do HeatMap",
+        "responses": {
+          "200": {
+            "description": "Dados retornados com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/File"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["test"]
+      }
+    },
+    "/upload": {
+      "post": {
+        "summary": "Faz upload de um arquivo CSV sem tratamento",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "filename": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Arquivo CSV processado e dados salvos com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/File"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["upload"]
+      }
+    },
+    "/heatmap": {
+      "post": {
+        "summary": "Faz upload de um arquivo CSV e um arquivo de mídia para gerar o heatmap JSON",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "csvFile": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Arquivo CSV que será processado para gerar o heatmap"
+                  },
+                  "mediaFile": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Arquivo de mídia relacionado ao experimento (JPEG, PNG, MP4, etc.)"
+                  },
+                  "filename": {
+                    "type": "string",
+                    "description": "Nome do experimento"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Descrição do experimento"
+                  }
+                },
+                "required": ["file", "filename"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Arquivos processados e dados salvos com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Arquivo CSV e mídia processados e salvos com sucesso!"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/File"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Erro de validação na requisição",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Nome do arquivo é obrigatório"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno no servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Erro ao processar o arquivo CSV"
+                    },
+                    "details": {
+                      "type": "string",
+                      "example": "Entre em contato com o administrador"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["upload"]
+      }
+    },
+
+    "/eyetracking": {
+      "get": {
+        "summary": "Retorna todos os registros de eyetracking ativos",
+        "responses": {
+          "200": {
+            "description": "Lista de arquivos de eyetracking ativos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/File"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["list"]
+      }
+    },
+    "/eyetracking/{_id}": {
+      "get": {
+        "summary": "Retorna um registro de eyetracking pelo ID",
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dados do arquivo retornados com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/File"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Arquivo não encontrado"
+          },
+          "400": {
+            "description": "ID inválido"
+          }
+        },
+        "tags": ["list"]
+      },
+      "put": {
+        "summary": "Atualiza a visibilidade de um registro de eyetracking",
+        "parameters": [
+          {
+            "name": "_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status do arquivo atualizado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/File"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Arquivo não encontrado"
+          },
+          "400": {
+            "description": "ID inválido"
+          }
+        },
+        "tags": ["update"]
+      }
+    }
+  }
+}

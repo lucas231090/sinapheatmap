@@ -1,0 +1,9 @@
+node_modules
+combined.log
+error.log
+
+src/uploads/*
+!src/uploads/
+!src/uploads/.gitkeep
+
+.env

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Heatmap Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/heatmap.js@2.0.5/build/heatmap.min.js"></script>
+    <style>
+      #heatmapContainer {
+        width: 100vw;
+        height: 100vh;
+        position: relative;
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Visualização HeatMap Sinapsense</h1>
+    <div id="heatmapContainer"></div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        console.log("DOM fully loaded and parsed");
+
+        fetch("/data-mock")
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Data received:", data);
+
+            const heatmapInstance = h337.create({
+              container: document.getElementById("heatmapContainer"),
+              maxOpacity: 0.6,
+              radius: 50,
+              blur: 0.9,
+              backgroundColor: "rgba(0, 0, 58, 0.96)",
+            });
+
+            heatmapInstance.setData({
+              data: data,
+            });
+
+            console.log("Data set on heatmap");
+          })
+          .catch((error) => {
+            console.error("Error fetching heatmap data:", error);
+          });
+      });
+    </script>
+  </body>
+</html>
