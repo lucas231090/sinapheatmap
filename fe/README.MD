@@ -12,7 +12,7 @@ Rodar `npm install` seguido de `npm start`
 
 ##### Portas Expostas
 
-- **Web**: `localhost:3333`
+- **Web**: `localhost:3000`
 
 ## Compilando o projeto com docker
 
