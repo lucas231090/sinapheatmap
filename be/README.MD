@@ -40,6 +40,18 @@ Substitua `sua_chave_secreta_aqui` por uma chave segura para autenticação via 
 
 ### 3. Iniciando o Projeto
 
+#### Pré-requisitos
+ 
+Considerando que o Docker já esteja instalado. Certifique-se de estar dentro da pasta do projeto.
+
+Caso não tenha a imagem do container de compilação, execute o seguinte comando para gerar:
+
+```sh
+npm run docker
+```
+
+Obs.: Só é necessário gerar a imagem uma vez.
+
 Para iniciar a aplicação, você tem duas opções:
 
 #### 3.1. Usando Docker
