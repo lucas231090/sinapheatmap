@@ -4,10 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start-docker": "docker-compose up",
-    "dev": "concurrently \"npm run start-docker\" \"npx nodemon src/server/server.js\"",
-    "start": "node src/server/server.js",
-    "docker": "docker-compose up --build",
+    "dev": "concurrently \"docker-compose up mongodb\" \"npx nodemon src/server/server.js\"",
+    "start": "docker-compose up",
+    "build": "docker-compose up --build",
     "test": "echo \"No test specified\" && exit 0"
   },
   "keywords": [],
