@@ -1,0 +1,61 @@
+.eye-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.eye-card h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.eye-card p {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #555;
+}
+
+.action-line {
+    display: flex;
+    max-height: 40px;
+}
+
+.download-btn {
+    background-color: #1976d2;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.download-btn:hover {
+    background-color: #1565c0;
+}
+
+.trash {
+    margin-left: 10px;
+    background-color: red;
+    border: 0px;
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    padding-top: 7px;
+    box-shadow: 7px 20px 20px rgb(210, 227, 244);
+}
+
+.trash:hover {
+    background-color: rgb(169, 0, 0);
+    /* Green */
+    color: white;
+}
+
+.trash:active {
+    background-color: rgb(58, 0, 0);
+    box-shadow: 3px 20px 20px rgb(210, 227, 244);
+    transform: translateY(2px);
+}
