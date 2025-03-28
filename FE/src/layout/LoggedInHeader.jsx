@@ -2,11 +2,9 @@ import React from "react";
 
 function LoggedInHeader() {
   return (
-    <header className="bg-blue-500 text-white p-4">
+    <header className="bg-blue-500 text-white p-2">
       <h1>Bem-vindo, Usuário!</h1>
-      <nav>
-        <a href="/dashboard">Dashboard</a> | <a href="/logout">Logout</a>
-      </nav>
+      <nav></nav>
     </header>
   );
 }

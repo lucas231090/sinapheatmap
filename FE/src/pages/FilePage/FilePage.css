@@ -81,6 +81,8 @@
 .line-input {
     width: 100%;
     margin-right: 10px;
+    border: #bbcada 1px solid;
+    border-radius: 10px;
 }
 
 .trash {
