@@ -5,15 +5,20 @@
   --color-tahiti: #3ab7bf;
   --color-bermuda: #78dcca;
   --color-bluegray: #bbcada;
+  --color-black50opacity: rgba(0, 0, 0, 0.5);
+  --color-black75opacity: rgba(0, 0, 0, 0.75)
 }
+
+.bg-opacity-500 {
+  opacity: 0.5;
+}
+
 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
   font-synthesis: none;

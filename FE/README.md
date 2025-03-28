@@ -37,3 +37,9 @@ Rodar `npm install` seguido de `npx vite`
 ##### Portas Expostas
 
 - **Web**: `localhost:3000`
+
+### Comentários
+
+Desde essa data -> "28/03/2025" o heatmap.js não corrigiu um erro no qual alguns navegadores proibiam a edição direta do objeto ImageData no qual a biblioteca usa (Erro especifico: Uncaught TypeError: Cannot assign to read only property 'data' of object '#<ImageData>').
+Por isso está sendo utilizado um fork, o "@mars3d/heatmap.js", no qual solucionou o problema.
+As duas bibliotecas vão ficar instalados até a original resolver o problema, no qual o fork será desinstalado do projeto.

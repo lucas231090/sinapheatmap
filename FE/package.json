@@ -12,8 +12,10 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@mars3d/heatmap.js": "^2.0.7",
     "@mui/icons-material": "^7.0.0",
     "@tailwindcss/vite": "^4.0.17",
+    "heatmap.js": "^2.0.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-modal": "^3.16.3",

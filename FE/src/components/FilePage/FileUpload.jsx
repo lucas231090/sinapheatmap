@@ -133,18 +133,20 @@ function FileUpload({ fetchData }) {
             value={selectedName}
             onChange={(e) => setSelectedName(e.target.value)}
           />
-          <button
-            className="bg-red-500 hover:bg-red-800 text-white px-4 py-2 rounded-lg"
-            onClick={handleFileRemove}
-          >
-            <DeleteIcon />
-          </button>
-          <button
-            className="bg-blue-500 hover:bg-blue-800 text-white px-4 py-2 rounded-lg"
-            onClick={handleFileSubmit}
-          >
-            Enviar
-          </button>
+          <div className="flex flex-row gap-2 justify-center">
+            <button
+              className="bg-red-500 hover:bg-red-800 text-white px-4 py-2 rounded-lg"
+              onClick={handleFileRemove}
+            >
+              <DeleteIcon />
+            </button>
+            <button
+              className="bg-blue-500 hover:bg-blue-800 text-white px-4 py-2 rounded-lg"
+              onClick={handleFileSubmit}
+            >
+              Enviar
+            </button>
+          </div>
         </div>
       </div>
     </div>

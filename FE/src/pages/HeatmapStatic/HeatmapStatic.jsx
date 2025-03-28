@@ -1,26 +1,40 @@
-import React, { useEffect, useState, useRef } from "react";
+import { React, useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
-import h337 from "heatmap.js";
-import "./HeatmapStatic.css";
+import h337 from "@mars3d/heatmap.js";
 
-function HeatmapStatic() {
+const HeatmapStatic = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const { id } = useParams();
-  const [flag, setFlag] = useState(false);
-  const [img, setImg] = useState("");
+
+  //   Arquivos e Imagem
   const [fileName, setFileName] = useState();
   const [dataFile, setDataFile] = useState();
+  const [img, setImg] = useState(null);
+
+  //   Canvas e Heatmap
   const [coords, setCoords] = useState([]);
   const [radiusScale, setRadiusScale] = useState(1);
-  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 }); // Estado para o tamanho do canvas
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const imgRef = useRef(null);
+
+  // Chama fetchData apenas uma vez na montagem do componente
+  // 'id' como dependência
+  useEffect(() => {
+    fetchData();
+  }, [id]);
 
   // Busca os arquivos dos testes uma vez
   const fetchData = async () => {
     try {
-      const res = await fetch(`http://localhost:3333/eyetracking/${id}`);
+      const res = await fetch(`${API_BASE_URL}/eyetracking/${id}`);
       const data = await res.json();
-      console.log(data);
+      console.log("data : ", data);
       setFileName(data.filename);
+
+      if (!data) {
+        console.log("Erro: 0 Data");
+        return;
+      }
 
       if (data.jsonData.length !== 0) {
         setDataFile(data.jsonData[0]);
@@ -32,7 +46,7 @@ function HeatmapStatic() {
         const mediaPath = data.mediaPath;
         const imgName = mediaPath.split("/").pop();
         const imageRes = await fetch(
-          `http://localhost:3333/uploads/media/${imgName}`
+          `${API_BASE_URL}/uploads/media/${imgName}`
         );
         const imageResBlob = await imageRes.blob();
         const imageResUrl = URL.createObjectURL(imageResBlob);
@@ -63,6 +77,10 @@ function HeatmapStatic() {
     }));
   }
 
+  useEffect(() => {
+    createHeatMap(0.4);
+  }, [dataFile]); // 'id' como dependência
+
   const createHeatMap = (scale) => {
     if (dataFile) {
       // Remove o canvas anterior
@@ -88,9 +106,24 @@ function HeatmapStatic() {
     }
   };
 
-  const downloadHeatMap = () => {
-    console.log("Image", img);
+  // Criação do heatmap quando coords ou canvasSize mudar
+  useEffect(() => {
+    if (coords.length > 0 && canvasSize.width > 0 && canvasSize.height > 0) {
+      const heatmapInstance = h337.create({
+        container: document.querySelector(".heatmapContainer"),
+        maxOpacity: 1,
+        radius: Math.max(10, 50 * radiusScale),
+        blur: 0.9,
+        backgroundColor: "rgba(255, 255, 255, 0)",
+      });
 
+      heatmapInstance.setData({
+        data: coords, // Define os dados do heatmap
+      });
+    }
+  }, [coords, canvasSize, radiusScale]); // Dependências adequadas
+
+  const downloadHeatMap = () => {
     // A ideia é criar um canvas novo (nao colocando na tela) e baixar como imagem esse novo canvas
     // Pega o canvas do heatmap e cria um novo canvas
     const overlayCanvas = document.querySelectorAll(".heatmap-canvas")[0];
@@ -123,51 +156,22 @@ function HeatmapStatic() {
     link.click();
   };
 
-  // Chama fetchData apenas uma vez na montagem do componente
-  useEffect(() => {
-    if (!flag) {
-      fetchData();
-      setFlag(true);
-    }
-  }, [id]); // 'id' como dependência
-
-  useEffect(() => {
-    createHeatMap(1);
-  }, [dataFile]); // 'id' como dependência
-
-  // Criação do heatmap quando coords ou canvasSize mudar
-  useEffect(() => {
-    if (coords.length > 0 && canvasSize.width > 0 && canvasSize.height > 0) {
-      const heatmapInstance = h337.create({
-        container: document.querySelector(".heatmapContainer"),
-        maxOpacity: 1,
-        radius: Math.max(10, 50 * radiusScale),
-        blur: 0.9,
-        backgroundColor: "rgba(255, 255, 255, 0)",
-      });
-      console.log(coords);
-
-      heatmapInstance.setData({
-        data: coords, // Define os dados do heatmap
-      });
-
-      console.log("Heatmap created with radiusScale:", radiusScale);
-    }
-  }, [coords, canvasSize, radiusScale]); // Dependências adequadas
-
   return (
-    <div className="body">
-      <div>
-        <div className="controls">
+    <div className="flex flex-col justify-center items-center p-4 overflow-x-auto">
+      <p className="mb-2 text-3xl">
+        <strong>Heatmap :</strong> {fileName || "Nenhum ID fornecido"}
+      </p>
+      <div className="flex justify-center mb-4">
+        <div className="bg-white">
           <strong className="text">Escala</strong>
           <span className="text">{radiusScale}</span>
 
           <input
             id="scale-slider"
             type="range"
-            min="0.5"
-            max="3"
-            step="0.5"
+            min="0.2"
+            max="2"
+            step="0.2"
             value={radiusScale}
             onChange={(e) => createHeatMap(parseFloat(e.target.value))}
           />
@@ -176,37 +180,38 @@ function HeatmapStatic() {
           </button>
         </div>
       </div>
-
-      <div className="white-area">
-        {canvasSize.width > 0 && canvasSize.height > 0 && (
-          <div>
-            <div
-              className="heatmapContainer"
-              style={{
-                width: `${canvasSize.width}px`,
-                height: `${canvasSize.height}px`,
-              }}
-            >
-              {img ? (
-                <img
-                  ref={imgRef}
-                  src={img}
-                  crossOrigin="anonymous"
-                  className="image-area"
-                  style={{
-                    width: `${canvasSize.width}px`,
-                    height: `${canvasSize.height}px`,
-                  }}
-                />
-              ) : (
-                <div></div>
-              )}
+      <div className="flex flex-row">
+        <div className="bg-white p-4 rounded-lg">
+          {canvasSize.width > 0 && canvasSize.height > 0 && (
+            <div>
+              <div
+                className="heatmapContainer"
+                style={{
+                  width: `${canvasSize.width}px`,
+                  height: `${canvasSize.height}px`,
+                }}
+              >
+                {img ? (
+                  <img
+                    ref={imgRef}
+                    src={img}
+                    crossOrigin="anonymous"
+                    className="image-area"
+                    style={{
+                      width: `${canvasSize.width}px`,
+                      height: `${canvasSize.height}px`,
+                    }}
+                  />
+                ) : (
+                  <div></div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
-}
+};
 
 export default HeatmapStatic;

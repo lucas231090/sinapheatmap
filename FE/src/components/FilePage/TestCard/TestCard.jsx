@@ -22,12 +22,12 @@ function TestCard({ file, callFunction }) {
       </div>
       <div className="flex flex-col md:flex-row gap-2 justify-center md:justify-start w-full">
         <button
-          className="bg-blue-500 hover:bg-blue-700 px-4 py-2 rounded-lg"
+          className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
           onClick={() => navigate(`eyeheatmap/${file._id}`)}
         >
           Ver Heatmap
         </button>
-        <button className="bg-yellow-500 hover:bg-yellow-700 px-4 py-2 rounded-lg ">
+        <button className="bg-yellow-500 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg ">
           Editar
         </button>
         <button

@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from "react";
-import Modal from "react-modal";
 import FileUpload from "../../components/FilePage/FileUpload";
 import FileList from "../../components/FilePage/FileList";
+import CustomDialog from "../../components/General/CustomDialog";
 
 function FilePage() {
   const [modalIsOpen, setIsOpen] = useState({ open: false, id: "" });
   const [getFiles, setGetFiles] = useState([]);
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   const fetchData = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/eyetracking`);
       const data = await res.json();
       console.log("data", data);
-
       setGetFiles(data);
     } catch (err) {
-      console.log("A", err.message);
+      console.log("Erro ao buscar arquivos:", err.message);
     }
   };
 
@@ -27,33 +27,44 @@ function FilePage() {
     setIsOpen({ open: true, id });
   };
 
-  const fecharModal = (value) => {
-    if (value) {
-      // Lógica para deletar o arquivo
+  const fecharModal = async (confirm) => {
+    if (confirm) {
+      try {
+        const res = await fetch(
+          `${API_BASE_URL}/eyetracking/${modalIsOpen.id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ active: false }),
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error("Erro ao atualizar visibilidade do arquivo");
+        }
+
+        console.log("Arquivo atualizado com sucesso");
+        fetchData(); // Atualiza a lista após a exclusão
+      } catch (err) {
+        console.error("Erro ao excluir arquivo:", err.message);
+      }
     }
     setIsOpen({ open: false, id: "" });
   };
 
   return (
     <div className="flex flex-col gap-4 p-8">
-      <Modal
+      {/* Custom Dialog */}
+      <CustomDialog
         isOpen={modalIsOpen.open}
-        onRequestClose={fecharModal}
-        contentLabel="Modal de exemplo"
-        className="modal"
-      >
-        <div className="modal-inside">
-          <h2>Você quer mesmo deletar esse arquivo?</h2>
-          <div className="button-row">
-            <button className="no" onClick={() => fecharModal(false)}>
-              Não
-            </button>
-            <button className="submit" onClick={() => fecharModal(true)}>
-              Sim
-            </button>
-          </div>
-        </div>
-      </Modal>
+        onClose={() => fecharModal(false)}
+        onConfirm={() => fecharModal(true)}
+        title="Confirmação de Exclusão"
+        message="Você tem certeza de que deseja excluir este arquivo?"
+      />
+
       {/* Layout for FileUpload and FileList */}
       <div className="flex flex-row gap-4 w-full justify-center">
         <div className="w-1/2 2xl:w-200">
