@@ -1,6 +1,15 @@
 import { React, useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import h337 from "@mars3d/heatmap.js";
+import {
+  TransformWrapper,
+  TransformComponent,
+  useControls,
+} from "react-zoom-pan-pinch";
+import ZoomInIcon from "@mui/icons-material/ZoomIn";
+import ZoomOutIcon from "@mui/icons-material/ZoomOut";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import DownloadIcon from "@mui/icons-material/Download";
 
 const HeatmapStatic = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -78,7 +87,7 @@ const HeatmapStatic = () => {
   }
 
   useEffect(() => {
-    createHeatMap(0.4);
+    createHeatMap(0.7);
   }, [dataFile]); // 'id' como dependência
 
   const createHeatMap = (scale) => {
@@ -156,58 +165,84 @@ const HeatmapStatic = () => {
     link.click();
   };
 
+  const Controls = () => {
+    const { zoomIn, zoomOut, resetTransform } = useControls();
+    return (
+      <>
+        <div className="flex flex-row justify-between items-center">
+          <p className="mb-2 text-3xl text-black">
+            <strong>Heatmap :</strong> {fileName || "Nenhum ID fornecido"}
+          </p>
+          <div className="flex flex-row">
+            <button
+              className="m-2 bg-blue-500 hover:bg-blue-700 text-white p-2 rounded-lg flex items-center gap-2"
+              onClick={() => zoomIn()}
+            >
+              <ZoomInIcon />
+              Zoom In
+            </button>
+            <button
+              className="m-2 bg-green-500 hover:bg-green-700 text-white p-2 rounded-lg flex items-center gap-2"
+              onClick={() => zoomOut()}
+            >
+              <ZoomOutIcon />
+              Zoom Out
+            </button>
+            <button
+              className="m-2 bg-yellow-500 hover:bg-yellow-700 text-white p-2 rounded-lg flex items-center gap-2"
+              onClick={() => resetTransform()}
+            >
+              <RefreshIcon />
+              Reset
+            </button>
+            <button
+              className="m-2 bg-gray-500 hover:bg-gray-700 text-white p-2 rounded-lg flex items-center gap-2"
+              onClick={() => downloadHeatMap()}
+            >
+              <DownloadIcon />
+              Download
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  };
+
   return (
     <div className="flex flex-col justify-center items-center p-4 overflow-x-auto">
-      <p className="mb-2 text-3xl">
-        <strong>Heatmap :</strong> {fileName || "Nenhum ID fornecido"}
-      </p>
-      <div className="flex justify-center mb-4">
-        <div className="bg-white">
-          <strong className="text">Escala</strong>
-          <span className="text">{radiusScale}</span>
-
-          <input
-            id="scale-slider"
-            type="range"
-            min="0.2"
-            max="2"
-            step="0.2"
-            value={radiusScale}
-            onChange={(e) => createHeatMap(parseFloat(e.target.value))}
-          />
-          <button className="scale-btn" onClick={() => downloadHeatMap()}>
-            Download
-          </button>
-        </div>
-      </div>
       <div className="flex flex-row">
         <div className="bg-white p-4 rounded-lg">
-          {canvasSize.width > 0 && canvasSize.height > 0 && (
-            <div>
-              <div
-                className="heatmapContainer"
-                style={{
-                  width: `${canvasSize.width}px`,
-                  height: `${canvasSize.height}px`,
-                }}
-              >
-                {img ? (
-                  <img
-                    ref={imgRef}
-                    src={img}
-                    crossOrigin="anonymous"
-                    className="image-area"
+          <TransformWrapper>
+            <Controls />
+            <TransformComponent>
+              {canvasSize.width > 0 && canvasSize.height > 0 && (
+                <div>
+                  <div
+                    className="heatmapContainer"
                     style={{
                       width: `${canvasSize.width}px`,
                       height: `${canvasSize.height}px`,
                     }}
-                  />
-                ) : (
-                  <div></div>
-                )}
-              </div>
-            </div>
-          )}
+                  >
+                    {img ? (
+                      <img
+                        ref={imgRef}
+                        src={img}
+                        crossOrigin="anonymous"
+                        className="image-area"
+                        style={{
+                          width: `${canvasSize.width}px`,
+                          height: `${canvasSize.height}px`,
+                        }}
+                      />
+                    ) : (
+                      <div></div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </TransformComponent>
+          </TransformWrapper>
         </div>
       </div>
     </div>

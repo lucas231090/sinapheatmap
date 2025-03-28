@@ -51,8 +51,8 @@ function FileUpload({ fetchData }) {
       method: "POST",
       body: submit,
     })
-      .then((response) => {
-        console.log(response);
+      .then(() => {
+        console.log("teste");
         fetchData(); // Atualiza a lista de arquivos
       })
       .catch((error) => console.log(error));
