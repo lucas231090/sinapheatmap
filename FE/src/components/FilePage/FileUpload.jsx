@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-function FileUpload({ fetchData }) {
+function FileUpload({ fetchData, showNotification }) {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const inputFile = useRef(null);
   const imageFile = useRef(null);
@@ -35,9 +35,9 @@ function FileUpload({ fetchData }) {
     }
   };
 
-  const handleFileSubmit = () => {
+  const handleFileSubmit = async () => {
     if (!selectedFile || selectedName === "" || !selectedImage) {
-      alert("Por favor, selecione um arquivo, uma imagem e insira um nome.");
+      showNotification("Nenhum arquivo selecionado", "warning");
       return;
     }
 
@@ -47,15 +47,22 @@ function FileUpload({ fetchData }) {
     submit.append("mediaFile", selectedImage);
     submit.append("description", "Teste");
 
-    fetch(`${API_BASE_URL}/heatmap`, {
-      method: "POST",
-      body: submit,
-    })
-      .then(() => {
-        console.log("teste");
-        fetchData(); // Atualiza a lista de arquivos
-      })
-      .catch((error) => console.log(error));
+    try {
+      const response = await fetch(`${API_BASE_URL}/heatmap`, {
+        method: "POST",
+        body: submit,
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao fazer upload do arquivo");
+      }
+
+      showNotification("Arquivo enviado com sucesso!", "success");
+      fetchData(); // Atualiza a lista de arquivos
+    } catch (err) {
+      console.error(err.message);
+      showNotification(err.message, "error");
+    }
 
     handleFileRemove();
   };

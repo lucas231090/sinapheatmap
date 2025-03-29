@@ -11,7 +11,7 @@ import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import DownloadIcon from "@mui/icons-material/Download";
 
-const HeatmapStatic = () => {
+const HeatmapStatic = ({ showNotification }) => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const { id } = useParams();
 
@@ -36,6 +36,9 @@ const HeatmapStatic = () => {
   const fetchData = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/eyetracking/${id}`);
+      if (!res.ok) {
+        throw new Error("Erro ao buscar os dados");
+      }
       const data = await res.json();
       console.log("data : ", data);
       setFileName(data.filename);
@@ -65,7 +68,8 @@ const HeatmapStatic = () => {
         console.log("No media file found");
       }
     } catch (err) {
-      console.log(err.message);
+      console.error(err.message);
+      showNotification(err.message, "error"); // Exibe a notificação de erro
     }
   };
 
