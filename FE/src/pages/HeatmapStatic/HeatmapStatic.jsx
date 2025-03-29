@@ -1,4 +1,4 @@
-import { React, useEffect, useState, useRef } from "react";
+import { React, useEffect, useState, useRef, use } from "react";
 import { useParams } from "react-router-dom";
 import h337 from "@mars3d/heatmap.js";
 import {
@@ -11,7 +11,7 @@ import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import DownloadIcon from "@mui/icons-material/Download";
 
-const HeatmapStatic = ({ showNotification }) => {
+const HeatmapStatic = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const { id } = useParams();
 
@@ -19,12 +19,19 @@ const HeatmapStatic = ({ showNotification }) => {
   const [fileName, setFileName] = useState();
   const [dataFile, setDataFile] = useState();
   const [img, setImg] = useState(null);
+  const imgRef = useRef(null);
 
   //   Canvas e Heatmap
   const [coords, setCoords] = useState([]);
   const [radiusScale, setRadiusScale] = useState(1);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-  const imgRef = useRef(null);
+  const [done, setDone] = useState(false);
+  const canvasRef = useRef(null);
+  const heatmapCanvasRef = useRef(null);
+
+  //   Visibilidade do canvas
+  const [canvasVisible, setCanvasVisible] = useState(false);
+  const [heatmapCanvasVisible, setHeatmapCanvasVisible] = useState(false);
 
   // Chama fetchData apenas uma vez na montagem do componente
   // 'id' como dependência
@@ -36,9 +43,6 @@ const HeatmapStatic = ({ showNotification }) => {
   const fetchData = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/eyetracking/${id}`);
-      if (!res.ok) {
-        throw new Error("Erro ao buscar os dados");
-      }
       const data = await res.json();
       console.log("data : ", data);
       setFileName(data.filename);
@@ -68,8 +72,7 @@ const HeatmapStatic = ({ showNotification }) => {
         console.log("No media file found");
       }
     } catch (err) {
-      console.error(err.message);
-      showNotification(err.message, "error"); // Exibe a notificação de erro
+      console.log(err.message);
     }
   };
 
@@ -133,13 +136,16 @@ const HeatmapStatic = ({ showNotification }) => {
       heatmapInstance.setData({
         data: coords, // Define os dados do heatmap
       });
+
+      setDone(true);
     }
   }, [coords, canvasSize, radiusScale]); // Dependências adequadas
 
   const downloadHeatMap = () => {
     // A ideia é criar um canvas novo (nao colocando na tela) e baixar como imagem esse novo canvas
     // Pega o canvas do heatmap e cria um novo canvas
-    const overlayCanvas = document.querySelectorAll(".heatmap-canvas")[0];
+    const overlayCanvas = heatmapCanvasRef.current.querySelector("canvas");
+    const bubbleCanvas = canvasRef.current;
     const finalCanvas = document.createElement("canvas");
     const finalContext = finalCanvas.getContext("2d");
 
@@ -157,7 +163,13 @@ const HeatmapStatic = ({ showNotification }) => {
     ); // Using imgRef.current
 
     // Desenha o heatmap emcima do canvas
-    finalContext.drawImage(overlayCanvas, 0, 0);
+    if (!heatmapCanvasVisible) {
+      finalContext.drawImage(overlayCanvas, 0, 0);
+    }
+    // Desenha o canvas com os pontos em cima do heatmap
+    if (canvasVisible) {
+      finalContext.drawImage(bubbleCanvas, 0, 0);
+    }
 
     // Cria a Imagem do Canvas
     const dataURL = finalCanvas.toDataURL("image/png");
@@ -169,6 +181,123 @@ const HeatmapStatic = ({ showNotification }) => {
     link.click();
   };
 
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+
+    // Configurações de alinhamento do texto
+    context.textAlign = "center"; // Centraliza o texto horizontalmente
+    context.textBaseline = "middle"; // Centraliza o texto verticalmente
+
+    // Função para redesenhar o canvas
+    const drawCanvas = (mouseX = null, mouseY = null) => {
+      // Clear the canvas
+      context.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Array de cores predefinidas (ou você pode gerar dinamicamente)
+      const colors = [
+        "red",
+        "blue",
+        "orange",
+        "purple",
+        "cyan",
+        "pink",
+        "yellow",
+        "brown",
+        "gray",
+        "black",
+        "lime",
+      ];
+
+      // Desenhar linhas conectando os pontos
+      coords.forEach(({ x, y }, index) => {
+        if (index === 0) return; // Não desenha linha para o primeiro ponto
+
+        const prevX = Math.floor(coords[index - 1].x);
+        const prevY = Math.floor(coords[index - 1].y);
+        const currX = Math.floor(x);
+        const currY = Math.floor(y);
+
+        // Define a cor da linha com base no índice
+        context.strokeStyle = colors[index % colors.length]; // Cicla pelas cores
+        context.lineWidth = 2;
+
+        // Desenha a linha
+        context.beginPath();
+        context.moveTo(prevX, prevY);
+        context.lineTo(currX, currY);
+        context.stroke();
+      });
+
+      // Desenhar círculos e números em cada ponto
+      coords.forEach(({ x, y }, index) => {
+        const intX = Math.floor(x);
+        const intY = Math.floor(y);
+
+        // Verifica se o mouse está sobre o círculo
+        const isHovered =
+          mouseX !== null &&
+          mouseY !== null &&
+          Math.sqrt((mouseX - intX) ** 2 + (mouseY - intY) ** 2) <= 10;
+
+        // Desenha o círculo
+        context.beginPath();
+        context.arc(intX, intY, isHovered ? 15 : 10, 0, 2 * Math.PI); // Diminui o círculo se estiver hover
+        context.fillStyle = isHovered
+          ? "rgba(90, 90, 90, 0.25)"
+          : "rgba(90, 90, 90,0.75)"; // Transparente se hover
+        context.fill();
+        context.strokeStyle = "rgba(120,120,120, 0.25)"; // Cor da borda do círculo
+        context.stroke();
+
+        // Desenha o número dentro do círculo
+        context.fillStyle = "white"; // Cor do texto
+        context.fillText(index + 1, intX, intY); // Desenha o índice (baseado em 1)
+
+        // Desenha uma caixa acima do círculo se estiver hover
+        if (isHovered) {
+          context.fillStyle = "black";
+          context.fillRect(intX - 15, intY - 30, 30, 20); // Caixa preta
+          context.fillStyle = "white";
+          context.fillText(index + 1, intX, intY - 20); // Número dentro da caixa
+        }
+      });
+    };
+
+    // Desenha o canvas inicialmente
+    drawCanvas();
+
+    // Evento de mousemove para detectar hover
+    const handleMouseMove = (event) => {
+      const rect = canvas.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+
+      // Redesenha o canvas com a posição do mouse
+      drawCanvas(mouseX, mouseY);
+    };
+
+    canvas.addEventListener("mousemove", handleMouseMove);
+
+    // Cleanup do evento
+    return () => {
+      canvas.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, [coords, canvasSize]);
+
+  useEffect(() => {
+    const context = canvasRef.current;
+    if (!context) return;
+    context.style.visibility = !canvasVisible ? "hidden" : "visible";
+    const heatmapCanvas = heatmapCanvasRef.current;
+    if (!heatmapCanvas) return;
+    heatmapCanvas.style.visibility = heatmapCanvasVisible
+      ? "hidden"
+      : "visible";
+  }, [done, canvasVisible, heatmapCanvasVisible]);
+
   const Controls = () => {
     const { zoomIn, zoomOut, resetTransform } = useControls();
     return (
@@ -178,6 +307,18 @@ const HeatmapStatic = ({ showNotification }) => {
             <strong>Heatmap :</strong> {fileName || "Nenhum ID fornecido"}
           </p>
           <div className="flex flex-row">
+            <button
+              className="m-2 bg-indigo-500 hover:bg-indigo-700 text-white p-2 rounded-lg flex items-center gap-2"
+              onClick={() => setHeatmapCanvasVisible(!heatmapCanvasVisible)} // Alterna o estado
+            >
+              {heatmapCanvasVisible ? "Hide Heatmap" : "Show Heatmap"}
+            </button>
+            <button
+              className="m-2 bg-purple-500 hover:bg-purple-700 text-white p-2 rounded-lg flex items-center gap-2"
+              onClick={() => setCanvasVisible(!canvasVisible)} // Alterna o estado
+            >
+              {canvasVisible ? "Hide Bubbles" : "Show Bubbles"}
+            </button>
             <button
               className="m-2 bg-blue-500 hover:bg-blue-700 text-white p-2 rounded-lg flex items-center gap-2"
               onClick={() => zoomIn()}
@@ -223,9 +364,11 @@ const HeatmapStatic = ({ showNotification }) => {
                 <div>
                   <div
                     className="heatmapContainer"
+                    ref={heatmapCanvasRef}
                     style={{
                       width: `${canvasSize.width}px`,
                       height: `${canvasSize.height}px`,
+                      position: "relative",
                     }}
                   >
                     {img ? (
@@ -233,10 +376,10 @@ const HeatmapStatic = ({ showNotification }) => {
                         ref={imgRef}
                         src={img}
                         crossOrigin="anonymous"
-                        className="image-area"
                         style={{
                           width: `${canvasSize.width}px`,
                           height: `${canvasSize.height}px`,
+                          visibility: "visible",
                         }}
                       />
                     ) : (
@@ -245,6 +388,17 @@ const HeatmapStatic = ({ showNotification }) => {
                   </div>
                 </div>
               )}
+              <canvas
+                ref={canvasRef}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  zIndex: 2, // Ensure it's above the heatmap canvas
+                }}
+                width={canvasSize.width}
+                height={canvasSize.height}
+              ></canvas>
             </TransformComponent>
           </TransformWrapper>
         </div>
