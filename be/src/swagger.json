@@ -316,6 +316,107 @@
         "tags": ["upload"]
       }
     },
+    
+    "/heatmap/{id}": {
+      "put": {
+        "summary": "Atualiza metadados e mídia de um heatmap existente",
+        "description": "Permite atualizar o nome, descrição e imagem de um arquivo de heatmap existente.",
+        "tags": ["update"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID do heatmap a ser atualizado"
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "filename": {
+                    "type": "string",
+                    "description": "Novo nome do experimento (opcional)"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Nova descrição do experimento (opcional)"
+                  },
+                  "mediaFile": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Nova mídia para substituir a existente (opcional)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Arquivo atualizado com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Arquivo atualizado com sucesso!"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/File"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Arquivo não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Arquivo não encontrado"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Erro interno no servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "Erro ao atualizar o arquivo"
+                    },
+                    "details": {
+                      "type": "string",
+                      "example": "Detalhes do erro interno"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
 
     "/eyetracking": {
       "get": {

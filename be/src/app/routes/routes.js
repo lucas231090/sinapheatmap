@@ -15,6 +15,7 @@ routes.post("/sign-up", routeAdapter(SignUpController));
 
 //routes.use(authMiddleware);
 routes.post("/heatmap", HeatMapController.store);
+routes.put("/heatmap/:id", HeatMapController.update);
 routes.get("/eyetracking", EyeTrackingController.index);
 routes.get("/eyetracking/:_id", EyeTrackingController.show);
 routes.put("/eyetracking/:_id", EyeTrackingController.updateActiveStatus);
