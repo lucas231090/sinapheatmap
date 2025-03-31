@@ -7,3 +7,5 @@ src/uploads/*
 !src/uploads/.gitkeep
 
 .env
+yarn.lock
+package-lock.json
