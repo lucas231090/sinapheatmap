@@ -7,7 +7,6 @@ const SignUpController = require("../controllers/SignUpController");
 const CsvController = require("../controllers/CsvController");
 const EyeTrackingController = require("../controllers/EyeTrackingController");
 const HeatMapController = require("../controllers/HeatMapController");
-const MockDataController = require("../controllers/MockDataController");
 
 const routes = Router();
 
@@ -15,9 +14,6 @@ routes.post("/sign-in", routeAdapter(SignInController));
 routes.post("/sign-up", routeAdapter(SignUpController));
 
 //routes.use(authMiddleware);
-
-routes.get("/data-mock", MockDataController.getData);
-routes.post("/upload", CsvController.store);
 routes.post("/heatmap", HeatMapController.store);
 routes.get("/eyetracking", EyeTrackingController.index);
 routes.get("/eyetracking/:_id", EyeTrackingController.show);
