@@ -194,6 +194,44 @@ const HeatmapStatic = () => {
     context.textAlign = "center"; // Centraliza o texto horizontalmente
     context.textBaseline = "middle"; // Centraliza o texto verticalmente
 
+    // Função para desenhar uma flecha ajustada para não entrar na bolha
+    const drawArrow = (
+      context,
+      fromX,
+      fromY,
+      toX,
+      toY,
+      bubbleRadius = 10, // Raio da bolha
+      arrowHeadLength = 10
+    ) => {
+      const angle = Math.atan2(toY - fromY, toX - fromX);
+
+      // Ajusta o ponto final da flecha para parar na borda da bolha
+      const adjustedToX = toX - bubbleRadius * Math.cos(angle);
+      const adjustedToY = toY - bubbleRadius * Math.sin(angle);
+
+      // Desenhar a linha principal
+      context.beginPath();
+      context.moveTo(fromX, fromY);
+      context.lineTo(adjustedToX, adjustedToY);
+      context.stroke();
+
+      // Desenhar a cabeça da flecha
+      context.beginPath();
+      context.moveTo(adjustedToX, adjustedToY);
+      context.lineTo(
+        adjustedToX - arrowHeadLength * Math.cos(angle - Math.PI / 6),
+        adjustedToY - arrowHeadLength * Math.sin(angle - Math.PI / 6)
+      );
+      context.lineTo(
+        adjustedToX - arrowHeadLength * Math.cos(angle + Math.PI / 6),
+        adjustedToY - arrowHeadLength * Math.sin(angle + Math.PI / 6)
+      );
+      context.lineTo(adjustedToX, adjustedToY);
+      context.fillStyle = context.strokeStyle; // Cor da cabeça da flecha
+      context.fill();
+    };
+
     // Função para redesenhar o canvas
     const drawCanvas = (mouseX = null, mouseY = null) => {
       // Clear the canvas
@@ -214,25 +252,21 @@ const HeatmapStatic = () => {
         "lime",
       ];
 
-      // Desenhar linhas conectando os pontos
+      // Desenhar flechas conectando os pontos
       coords.forEach(({ x, y }, index) => {
-        if (index === 0) return; // Não desenha linha para o primeiro ponto
+        if (index === 0) return; // Não desenha flecha para o primeiro ponto
 
-        // Pega as coordenadas do ponto anterior
         const prevX = Math.floor(coords[index - 1].x);
         const prevY = Math.floor(coords[index - 1].y);
         const currX = Math.floor(x);
         const currY = Math.floor(y);
 
-        // Define a cor da linha com base no índice
+        // Define a cor da flecha com base no índice
         context.strokeStyle = colors[index % colors.length]; // Cicla pelas cores
         context.lineWidth = 2;
 
-        // Desenha a linha
-        context.beginPath();
-        context.moveTo(prevX, prevY);
-        context.lineTo(currX, currY);
-        context.stroke();
+        // Desenha a flecha ajustada
+        drawArrow(context, prevX, prevY, currX, currY, 10); // 10 é o raio da bolha
       });
 
       // Desenhar círculos e números em cada ponto
