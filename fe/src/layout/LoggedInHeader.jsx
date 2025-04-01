@@ -6,7 +6,7 @@ function LoggedInHeader() {
       <nav>
         <a href="/">
           <img
-            src={"SinapsenseLogo.png"}
+            src={"/SinapsenseLogo.png"}
             alt="Sinapsense Logo"
             className="h-25 w-auto mr-4"
           />

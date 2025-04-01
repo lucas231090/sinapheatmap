@@ -32,6 +32,7 @@ const HeatmapStatic = () => {
   //   Visibilidade do canvas
   const [canvasVisible, setCanvasVisible] = useState(false);
   const [heatmapCanvasVisible, setHeatmapCanvasVisible] = useState(false);
+  const transformComponentRef = useRef(null);
 
   // Chama fetchData apenas uma vez na montagem do componente
   // 'id' como dependência
@@ -182,8 +183,10 @@ const HeatmapStatic = () => {
   };
 
   useEffect(() => {
+    // Se o canvas não existir, não faz nada
     if (!canvasRef.current) return;
 
+    // Pega o canvas e o contexto
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
 
@@ -215,6 +218,7 @@ const HeatmapStatic = () => {
       coords.forEach(({ x, y }, index) => {
         if (index === 0) return; // Não desenha linha para o primeiro ponto
 
+        // Pega as coordenadas do ponto anterior
         const prevX = Math.floor(coords[index - 1].x);
         const prevY = Math.floor(coords[index - 1].y);
         const currX = Math.floor(x);
@@ -261,7 +265,7 @@ const HeatmapStatic = () => {
           context.fillStyle = "black";
           context.fillRect(intX - 15, intY - 30, 30, 20); // Caixa preta
           context.fillStyle = "white";
-          context.fillText(index + 1, intX, intY - 20); // Número dentro da caixa
+          context.fillText(`${intX} & ${intY}`, intX, intY - 20); // Número dentro da caixa
         }
       });
     };
@@ -269,14 +273,22 @@ const HeatmapStatic = () => {
     // Desenha o canvas inicialmente
     drawCanvas();
 
-    // Evento de mousemove para detectar hover
     const handleMouseMove = (event) => {
       const rect = canvas.getBoundingClientRect();
-      const mouseX = event.clientX - rect.left;
-      const mouseY = event.clientY - rect.top;
 
-      // Redesenha o canvas com a posição do mouse
-      drawCanvas(mouseX, mouseY);
+      // Grab the transformState
+      const { scale } = transformComponentRef.current.instance.transformState;
+
+      // Mouse position relative to the top-left of the canvas
+      const rawMouseX = event.clientX - rect.left;
+      const rawMouseY = event.clientY - rect.top;
+
+      // Calcula a posição do mouse considerando o zoom
+      const adjustedMouseX = rawMouseX / scale;
+      const adjustedMouseY = rawMouseY / scale;
+
+      // Desenha o canvas com a nova posição do mouse
+      drawCanvas(adjustedMouseX, adjustedMouseY);
     };
 
     canvas.addEventListener("mousemove", handleMouseMove);
@@ -285,7 +297,7 @@ const HeatmapStatic = () => {
     return () => {
       canvas.removeEventListener("mousemove", handleMouseMove);
     };
-  }, [coords, canvasSize]);
+  }, [coords, canvasSize, transformComponentRef]);
 
   useEffect(() => {
     const context = canvasRef.current;
@@ -357,7 +369,7 @@ const HeatmapStatic = () => {
     <div className="flex flex-col justify-center items-center p-4 overflow-x-auto">
       <div className="flex flex-row">
         <div className="bg-white p-4 rounded-lg">
-          <TransformWrapper>
+          <TransformWrapper ref={transformComponentRef}>
             <Controls />
             <TransformComponent>
               {canvasSize.width > 0 && canvasSize.height > 0 && (
