@@ -31,14 +31,26 @@ npm install
 Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis de ambiente:
 
 ```makefile
-PORT=3000
-MONGO_URI=mongodb://localhost:27017/sinapheatmap
+PORT=3333
+MONGO_URL=mongodb://localhost:27017/sinapheatmap
 JWT_SECRET=sua_chave_secreta_aqui
 ```
 
 Substitua `sua_chave_secreta_aqui` por uma chave segura para autenticação via JWT.
 
 ### 3. Iniciando o Projeto
+
+#### Pré-requisitos
+
+Considerando que o Docker já esteja instalado. Certifique-se de estar dentro da pasta do projeto.
+
+Caso não tenha a imagem do container de compilação, ou precise reconstruir a imagem do Docker execute o seguinte comando:
+
+```sh
+npm run build
+```
+
+Obs.: Só é necessário gerar a imagem uma vez.
 
 Para iniciar a aplicação, você tem duas opções:
 
@@ -47,18 +59,14 @@ Para iniciar a aplicação, você tem duas opções:
 Caso prefira utilizar o **Docker** para rodar os serviços, execute o seguinte comando para iniciar a aplicação e o banco de dados MongoDB:
 
 ```bash
-npm run start-docker
+npm run start
 ```
 
-Ou, caso queira compilar a aplicação manualmente e iniciar os containers, utilize:
-
-```bash
-npm run docker
-```
+Este comando vai subir tanto o MongoDB quanto a API em containers Docker.
 
 ##### Portas Expostas
 
-- **API**: `localhost:3000`
+- **API**: `localhost:3333`
 - **MongoDB**: `localhost:27017`
 
 #### 3.2. Sem Docker
