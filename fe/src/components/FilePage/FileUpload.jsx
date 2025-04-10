@@ -125,7 +125,7 @@ function FileUpload({ fetchData, showNotification }) {
               handleFileChange(event, setSelectedImage, setSelectedImageName)
             }
             ref={imageFile}
-            accept="image/png"
+            accept="image/*"
             className="hidden"
           />
         </div>
