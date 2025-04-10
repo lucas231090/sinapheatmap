@@ -18,6 +18,7 @@ const HeatmapStatic = () => {
   //   Arquivos e Imagem
   const [fileName, setFileName] = useState();
   const [dataFile, setDataFile] = useState();
+  const [jsonFile, setJsonFile] = useState();
   const [img, setImg] = useState(null);
   const imgRef = useRef(null);
 
@@ -33,6 +34,7 @@ const HeatmapStatic = () => {
   const [canvasVisible, setCanvasVisible] = useState(false);
   const [heatmapCanvasVisible, setHeatmapCanvasVisible] = useState(false);
   const transformComponentRef = useRef(null);
+  const [selectedTestIndex, setSelectedTestIndex] = useState("all"); // "all" for combining all tests
 
   // Chama fetchData apenas uma vez na montagem do componente
   // 'id' como dependência
@@ -52,11 +54,12 @@ const HeatmapStatic = () => {
         console.log("Erro: 0 Data");
         return;
       }
+      setDataFile(data);
 
       if (data.jsonData.length !== 0) {
-        setDataFile(data.jsonData[0]);
+        setJsonFile(data.jsonData[0]);
       } else if (data.length !== 0) {
-        setDataFile(data);
+        setJsonFile(data);
       }
 
       if (data.mediaPath !== null) {
@@ -95,33 +98,57 @@ const HeatmapStatic = () => {
   }
 
   useEffect(() => {
-    createHeatMap(0.7);
-  }, [dataFile]); // 'id' como dependência
+    const combineCoordinates = (dataFiles, selectedIndex) => {
+      let combinedCoords = [];
 
-  const createHeatMap = (scale) => {
-    if (dataFile) {
-      // Remove o canvas anterior
-      document.querySelectorAll(".heatmap-canvas").forEach((e) => e.remove());
-
-      // Modifica as coordenadas de forma imutável
-      if (dataFile.coordinates === undefined) {
-        const coords = transformToCoordinates(dataFile.x, dataFile.y);
-        dataFile.coordinates = coords;
+      if (selectedIndex === "all") {
+        // Combina todos os testes
+        dataFiles.jsonData.forEach((dataFile) => {
+          if (dataFile.coordinates) {
+            combinedCoords = combinedCoords.concat(dataFile.coordinates);
+          } else if (dataFile.x && dataFile.y) {
+            const coords = transformToCoordinates(dataFile.x, dataFile.y);
+            combinedCoords = combinedCoords.concat(coords);
+          }
+        });
+      } else {
+        // Mostra apenas o teste selecionado
+        const dataFile = dataFiles.jsonData[selectedIndex];
+        if (dataFile.coordinates) {
+          combinedCoords = dataFile.coordinates;
+        } else if (dataFile.x && dataFile.y) {
+          combinedCoords = transformToCoordinates(dataFile.x, dataFile.y);
+        }
       }
-      const scaledCoords = dataFile.coordinates.map((coord) => ({
-        x: coord.x * scale,
-        y: coord.y * scale,
-      }));
 
-      const canvasWidth = dataFile["Largura Tela"] * scale * 1.1;
-      const canvasHeight = dataFile["Altura Tela"] * scale * 1.1;
+      return combinedCoords;
+    };
 
-      // Atualiza o estado do tamanho do canvas e as coordenadas
-      setCanvasSize({ width: canvasWidth, height: canvasHeight });
-      setRadiusScale(scale);
-      setCoords(scaledCoords);
-    }
-  };
+    const createHeatMap = (scale) => {
+      if (jsonFile) {
+        // Remove o canvas anterior
+        document.querySelectorAll(".heatmap-canvas").forEach((e) => e.remove());
+
+        const allCoords = combineCoordinates(dataFile, selectedTestIndex);
+
+        const scaledCoords = allCoords.map((coord) => ({
+          x: coord.x * scale,
+          y: coord.y * scale,
+        }));
+
+        const canvasWidth = jsonFile["Largura Tela"] * scale * 1;
+        const canvasHeight = jsonFile["Altura Tela"] * scale * 1;
+
+        // Atualiza o estado do tamanho do canvas e as coordenadas
+        setCanvasSize({ width: canvasWidth, height: canvasHeight });
+        setRadiusScale(scale);
+        setCoords(scaledCoords);
+        console.log("Canvas W", canvasWidth, "\nCanvas H", canvasHeight);
+      }
+    };
+
+    createHeatMap(0.7);
+  }, [jsonFile, selectedTestIndex]); // 'id' como dependência
 
   // Criação do heatmap quando coords ou canvasSize mudar
   useEffect(() => {
@@ -299,7 +326,7 @@ const HeatmapStatic = () => {
           context.fillStyle = "black";
           context.fillRect(intX - 15, intY - 30, 30, 20); // Caixa preta
           context.fillStyle = "white";
-          context.fillText(`${intX} & ${intY}`, intX, intY - 20); // Número dentro da caixa
+          context.fillText(index + 1, intX, intY - 20); // Número dentro da caixa
         }
       });
     };
@@ -349,9 +376,6 @@ const HeatmapStatic = () => {
     return (
       <>
         <div className="flex flex-row justify-between items-center">
-          <p className="mb-2 text-3xl text-black">
-            <strong>Heatmap :</strong> {fileName || "Nenhum ID fornecido"}
-          </p>
           <div className="flex flex-row">
             <button
               className="m-2 bg-indigo-500 hover:bg-indigo-700 text-white p-2 rounded-lg flex items-center gap-2"
@@ -393,6 +417,22 @@ const HeatmapStatic = () => {
               <DownloadIcon />
               Download
             </button>
+            <div className="flex flex-col items-center justify-center">
+              {dataFile?.jsonData?.length > 1 && (
+                <select
+                  className="p-2 border rounded "
+                  value={selectedTestIndex}
+                  onChange={(e) => setSelectedTestIndex(e.target.value)}
+                >
+                  <option value="all">Combine All Tests</option>
+                  {dataFile.jsonData.map((_, index) => (
+                    <option key={index} value={index}>
+                      Test {index + 1}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
           </div>
         </div>
       </>
@@ -402,9 +442,13 @@ const HeatmapStatic = () => {
   return (
     <div className="flex flex-col justify-center items-center p-4 overflow-x-auto">
       <div className="flex flex-row">
-        <div className="bg-white p-4 rounded-lg">
+        <div className="bg-white p-4 rounded-lg flex flex-col items-center ">
           <TransformWrapper ref={transformComponentRef}>
+            <p className="mb-2 text-3xl text-black">
+              <strong>Heatmap :</strong> {fileName || "Nenhum ID fornecido"}
+            </p>
             <Controls />
+
             <TransformComponent>
               {canvasSize.width > 0 && canvasSize.height > 0 && (
                 <div>
