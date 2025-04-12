@@ -1,8 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useFileContext } from "../../context/FileContext";
 
-function FileUpload({ fetchData, showNotification }) {
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+function FileUpload() {
+  const { fetchData, showNotification, API_BASE_URL } = useFileContext();
+
   const inputFile = useRef(null);
   const imageFile = useRef(null);
   const imageCSVRef = useRef();
