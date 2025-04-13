@@ -6,8 +6,12 @@
   --color-bermuda: #78dcca;
   --color-bluegray: #bbcada;
   --color-black50opacity: rgba(0, 0, 0, 0.5);
-  --color-black75opacity: rgba(0, 0, 0, 0.75)
+  --color-black75opacity: rgba(0, 0, 0, 0.75);
+  --color-sinapgreen: #3EBDD5;
+  --color-sinapgray: #505253;
 }
+
+@custom-variant dark (&:where(.dark, .dark *)) {}
 
 .bg-opacity-500 {
   opacity: 0.5;
@@ -19,7 +23,7 @@
   line-height: 1.5;
   font-weight: 400;
 
-  background-color: #242424;
+
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;

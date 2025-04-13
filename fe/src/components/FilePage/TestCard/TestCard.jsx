@@ -118,37 +118,41 @@ function TestCard({ file, callFunction, index }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-8 justify-center items-start rounded-lg shadow-md">
+    <div className="flex flex-col gap-4 p-8 justify-center items-start rounded-lg shadow-md h-full bg-stone-50 dark:bg-gray-700">
       {/* Área de informações/formulário de edição */}
       <div className="flex flex-col gap-2 justify-center items-start w-full">
         {isEditing ? (
           // Formulário de edição - mostrado quando isEditing é true
           <>
             <div className="w-full mb-2">
-              <label className="text-gray-600">Nome:</label>
+              <label className="text-gray-600 dark:text-white">Nome:</label>
               <input
                 type="text"
                 name="filename"
                 value={editedData.filename}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 dark:bg-white rounded px-2 py-1"
               />
             </div>
             <div className="w-full mb-2">
-              <label className="text-gray-600">Descrição:</label>
+              <label className="text-gray-600 dark:text-white">
+                Descrição:
+              </label>
               <input
                 type="text"
                 name="description"
                 value={editedData.description}
                 onChange={handleInputChange}
-                className="w-full border border-gray-300 rounded px-2 py-1"
+                className="w-full border border-gray-300 dark:bg-white  rounded px-2 py-1"
               />
             </div>
             <div className="w-full">
-              <label className="text-gray-600">Nova imagem (opcional):</label>
+              <label className="text-gray-600 dark:text-white">
+                Nova imagem (opcional):
+              </label>
               <div
                 onClick={() => fileInputRef.current.click()}
-                className="flex items-center gap-2 cursor-pointer p-2 border border-dashed border-gray-300 rounded hover:bg-gray-50"
+                className="flex items-center gap-2 cursor-pointer p-2 border border-dashed border-gray-300 rounded hover:bg-gray-50 dark:bg-white dark:hover:bg-gray-200 dark:border-gray-600"
               >
                 <ImageIcon color="action" />
                 <span>
@@ -167,11 +171,13 @@ function TestCard({ file, callFunction, index }) {
         ) : (
           // Exibição das informações - mostrada quando não está editando
           <>
-            <h3 className="text-black font-bold">{file.filename}</h3>
-            <p className="text-gray-500">
+            <h3 className="text-black dark:text-white font-bold">
+              {file.filename}
+            </h3>
+            <p className="text-gray-500 dark:text-slate-300 ">
               <strong>Descrição:</strong> {file.description}
             </p>
-            <p className="text-gray-500 text-start">
+            <p className="text-gray-500 dark:text-slate-300 text-start">
               <strong>Data de upload:</strong> {file.jsonData[0]["Data-Hora"]}
             </p>
           </>
