@@ -132,9 +132,12 @@ const HeatmapStatic = () => {
         const allCoords = combineCoordinates(dataFile, selectedTestIndex);
 
         const scaledCoords = allCoords.map((coord) => ({
-          x: coord.x * scale,
-          y: coord.y * scale,
+          x: parseFloat((coord.x * scale).toFixed(1)),
+          y: parseFloat((coord.y * scale).toFixed(1)),
+          value: 50,
         }));
+
+        console.log("scaledCoords : ", scaledCoords);
 
         const canvasWidth = jsonFile["Largura Tela"] * scale * 1;
         const canvasHeight = jsonFile["Altura Tela"] * scale * 1;
@@ -143,7 +146,6 @@ const HeatmapStatic = () => {
         setCanvasSize({ width: canvasWidth, height: canvasHeight });
         setRadiusScale(scale);
         setCoords(scaledCoords);
-        console.log("Canvas W", canvasWidth, "\nCanvas H", canvasHeight);
       }
     };
 
@@ -155,8 +157,9 @@ const HeatmapStatic = () => {
     if (coords.length > 0 && canvasSize.width > 0 && canvasSize.height > 0) {
       const heatmapInstance = h337.create({
         container: document.querySelector(".heatmapContainer"),
-        maxOpacity: 1,
         radius: Math.max(10, 50 * radiusScale),
+        maxOpacity: 1,
+        minOpacity: 0.2,
         blur: 0.9,
         backgroundColor: "rgba(255, 255, 255, 0)",
       });
