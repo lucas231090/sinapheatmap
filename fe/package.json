@@ -15,6 +15,7 @@
     "@mars3d/heatmap.js": "^2.0.7",
     "@mui/icons-material": "^7.0.0",
     "@tailwindcss/vite": "^4.0.17",
+    "axios": "^1.8.4",
     "heatmap.js": "^2.0.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
