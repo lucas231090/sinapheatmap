@@ -6,33 +6,33 @@ import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import ImageIcon from "@mui/icons-material/Image";
-// Hook para navegação entre rotas
+// Hook para navegação entre rotas e hook customizado para o contexto de arquivos
 import { useNavigate } from "react-router-dom";
-// Hook customizado para acessar o contexto de arquivos
 import { useFileContext } from "../../../context/FileContext";
 
+// Serviço para operações de arquivos
+import { updateFile } from "../../../services/fileService";
+
 function TestCard({ file, callFunction, index }) {
-  // Hook de navegação para redirecionar para a página de heatmap
+  // navigate: Hook para navegação entre rotas
+  // [fetchData, showNotification]: Funções e variáveis do contexto de arquivos
+  // fileInputRef: Referência para o input de arquivo
+  // isEditing: Estado para controlar se o card está em modo de edição
+  // editedData: Estado para armazenar os dados editáveis do arquivo
+  // selectedImage: Estado para armazenar a imagem selecionada
+  // selectedImageName: Estado para armazenar o nome da imagem selecionada
   const navigate = useNavigate();
-  // Extração das funções e variáveis necessárias do contexto
-  const { fetchData, showNotification, API_BASE_URL } = useFileContext();
-
-  // Referência para o input de arquivo
+  const { fetchData, showNotification } = useFileContext();
   const fileInputRef = useRef(null);
-
-  // Estado para controlar se o card está em modo de edição
   const [isEditing, setIsEditing] = useState(false);
-  // Estado para armazenar os dados editáveis do arquivo
   const [editedData, setEditedData] = useState({
     filename: file.filename,
     description: file.description,
   });
-  // Estado para armazenar a nova imagem selecionada
   const [selectedImage, setSelectedImage] = useState(null);
-  // Nome do arquivo de imagem para exibição
   const [selectedImageName, setSelectedImageName] = useState("");
 
-  // Função para chamar a exclusão do arquivo (recebida via props)
+  // Manipula o clique no botão de exclusão
   function handleClick() {
     callFunction(file._id);
   }
@@ -61,42 +61,26 @@ function TestCard({ file, callFunction, index }) {
       setSelectedImageName(file.name);
     }
   }
+
   // Salva as alterações feitas no arquivo
   async function handleSaveEdit() {
     try {
-      // Create base object for our request
+      // Objeto com os dados atualizados do arquivo
       const updateData = {
         filename: editedData.filename,
         description: editedData.description,
       };
 
-      // Remove the typo 'f' that was in your code
-      // Fazer a requisição PUT com os dados do formulário
-      const res = await fetch(`${API_BASE_URL}/heatmap/${file._id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updateData),
-      });
+      // Chama o serviço para atualizar o arquivo no backend
+      await updateFile(file._id, updateData);
 
-      // Verifica se a requisição foi bem-sucedida
-      if (!res.ok) {
-        throw new Error("Erro ao atualizar o arquivo");
-      }
-
-      console.log(res);
-
-      // Exibe notificação de sucesso
+      // Exibe notificação de sucesso e Atualiza a lista de arquivos para refletir as mudanças
+      // Desativa o modo de edição e Limpa a seleção de imagem, nome da imagem e dados editáveis
       showNotification("Arquivo atualizado com sucesso!", "success");
-      // Atualiza a lista de arquivos para refletir as mudanças
       fetchData();
-      // Desativa o modo de edição
       setIsEditing(false);
-      // Limpa a seleção de imagem
       setSelectedImage(null);
       setSelectedImageName("");
-      // Limpa os dados editáveis
       setEditedData({
         filename: "",
         description: "",
@@ -104,7 +88,7 @@ function TestCard({ file, callFunction, index }) {
     } catch (err) {
       // Tratamento de erro com log no console e notificação ao usuário
       console.error("Erro ao atualizar arquivo:", err.message);
-      showNotification(err.message, "error");
+      showNotification(err.message || "Erro ao atualizar o arquivo", "error");
     }
   }
 

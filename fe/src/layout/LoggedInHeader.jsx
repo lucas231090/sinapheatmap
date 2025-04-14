@@ -32,7 +32,7 @@ function LoggedInHeader({ body }) {
   }, []);
 
   return (
-    <header className="bg-white dark:bg-gray-700 text-black dark:text-white flex flex-row justify-start p-4 items-center transition-colors duration-300">
+    <header className="bg-white dark:bg-gray-800 text-black dark:text-white flex flex-row justify-start p-4 items-center transition-colors duration-300">
       <nav className="flex flex-row items-center justify-between w-full px-7">
         <Link to="/">
           <img

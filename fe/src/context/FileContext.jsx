@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
+import { getAllFiles } from "../services/fileService";
 
 // Create the context
 const FileContext = createContext();
@@ -23,16 +24,12 @@ export const FileProvider = ({ children }) => {
 
   const fetchData = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/eyetracking`);
-      if (!res.ok) {
-        throw new Error("Erro ao buscar os arquivos");
-      }
-      const data = await res.json();
+      const data = await getAllFiles();
       setFiles(data);
       return data;
     } catch (err) {
       console.log("Erro ao buscar arquivos:", err.message);
-      showNotification(err.message, "error");
+      showNotification(err.message || "Erro ao buscar os arquivos", "error");
       return [];
     }
   };

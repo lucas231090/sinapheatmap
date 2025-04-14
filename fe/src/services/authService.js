@@ -1,11 +1,9 @@
-import axios from "axios";
-
-const API_URL = import.meta.env.VITE_API_BASE_URL;
+import api from "./api";
 
 // Login do usuário
 export const loginUser = async (email, password) => {
     try {
-        const response = await axios.post(`${API_URL}/sign-in`, {
+        const response = await api.post("/sign-in", {
             email,
             password,
         });
@@ -22,7 +20,7 @@ export const loginUser = async (email, password) => {
 // Registro de novo usuário
 export const registerUser = async (name, email, password) => {
     try {
-        const response = await axios.post(`${API_URL}/sign-up`, {
+        const response = await api.post("/sign-up", {
             name,
             email,
             password,
@@ -43,14 +41,4 @@ export const logout = () => {
 export const isAuthenticated = () => {
     const token = localStorage.getItem("accessToken");
     return !!token;
-};
-
-// Configurar o cabeçalho de autorização para requisições autenticadas
-export const getAuthHeader = () => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-        return { Authorization: `Bearer ${token}` };
-    } else {
-        return {};
-    }
 };

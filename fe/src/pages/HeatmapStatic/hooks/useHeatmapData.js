@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { getFileById, getFileMedia } from "../../../services/fileService";
 
 const useHeatmapData = (id, selectedTestIndex, canvasRef, heatmapCanvasRef, imgRef, heatmapVisible, canvasVisible) => {
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -38,8 +39,7 @@ const useHeatmapData = (id, selectedTestIndex, canvasRef, heatmapCanvasRef, imgR
     // Fetch data from API
     const fetchData = async () => {
         try {
-            const res = await fetch(`${API_BASE_URL}/eyetracking/${id}`);
-            const data = await res.json();
+            const data = await getFileById(id);
             console.log("data : ", data);
             setFileName(data.filename);
 
@@ -58,13 +58,13 @@ const useHeatmapData = (id, selectedTestIndex, canvasRef, heatmapCanvasRef, imgR
             if (data.mediaPath !== null) {
                 const mediaPath = data.mediaPath;
                 const imgName = mediaPath.split("/").pop();
-                const imageRes = await fetch(
-                    `${API_BASE_URL}/uploads/media/${imgName}`
-                );
-                const imageResBlob = await imageRes.blob();
-                const imageResUrl = URL.createObjectURL(imageResBlob);
-                console.log(imageResUrl);
-                setImg(imageResUrl);
+                try {
+                    const imageUrl = await getFileMedia(imgName);
+                    console.log(imageUrl);
+                    setImg(imageUrl);
+                } catch (mediaError) {
+                    console.log("Error loading media:", mediaError);
+                }
             } else {
                 console.log("No media file found");
             }

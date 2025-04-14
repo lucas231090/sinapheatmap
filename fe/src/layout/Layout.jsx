@@ -39,7 +39,7 @@ function Layout({ children }) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-700 min-h-screen flex flex-col">
+    <div className="bg-white dark:bg-gray-800 min-h-screen flex flex-col">
       <header>
         <nav>
           <div className="nav-links">

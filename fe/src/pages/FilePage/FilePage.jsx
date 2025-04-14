@@ -4,6 +4,7 @@ import FileList from "../../components/FilePage/FileList";
 import CustomDialog from "../../components/General/CustomDialog";
 import Notification from "../../components/General/Notification";
 import { useFileContext } from "../../context/FileContext";
+import { deactivateFile } from "../../services/fileService";
 
 function FilePage() {
   const [modalIsOpen, setIsOpen] = useState({ open: false, id: "" });
@@ -12,7 +13,6 @@ function FilePage() {
     fetchData,
     showNotification,
     notification,
-    API_BASE_URL,
   } = useFileContext();
 
   const abrirModal = (id) => {
@@ -22,27 +22,17 @@ function FilePage() {
   const fecharModal = async (confirm) => {
     if (confirm) {
       try {
-        const res = await fetch(
-          `${API_BASE_URL}/eyetracking/${modalIsOpen.id}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ active: false }),
-          }
-        );
-
-        if (!res.ok) {
-          throw new Error("Erro ao atualizar visibilidade do arquivo");
-        }
+        await deactivateFile(modalIsOpen.id);
 
         console.log("Arquivo atualizado com sucesso");
         fetchData(); // Atualiza a lista após a exclusão
         showNotification("Arquivo atualizado com sucesso!", "success");
       } catch (err) {
         console.error("Erro ao excluir arquivo:", err.message);
-        showNotification(err.message, "error");
+        showNotification(
+          err.message || "Erro ao atualizar visibilidade do arquivo",
+          "error"
+        );
       }
     }
     setIsOpen({ open: false, id: "" });
@@ -54,7 +44,7 @@ function FilePage() {
       <Notification
         message={notification.message}
         type={notification.type}
-        onClose={() => setNotification({ message: "", type: "" })}
+        onClose={() => showNotification("", "")}
       />
 
       {/* Custom Dialog */}

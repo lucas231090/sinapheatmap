@@ -1,9 +1,10 @@
 import React, { useRef, useState, useEffect } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useFileContext } from "../../context/FileContext";
+import { uploadHeatmap } from "../../services/fileService";
 
 function FileUpload() {
-  const { fetchData, showNotification, API_BASE_URL } = useFileContext();
+  const { fetchData, showNotification } = useFileContext();
 
   const inputFile = useRef(null);
   const imageFile = useRef(null);
@@ -50,20 +51,15 @@ function FileUpload() {
     submit.append("description", "Teste");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/heatmap`, {
-        method: "POST",
-        body: submit,
-      });
-
-      if (!response.ok) {
-        throw new Error("Erro ao fazer upload do arquivo");
-      }
-
+      await uploadHeatmap(submit);
       showNotification("Arquivo enviado com sucesso!", "success");
       fetchData(); // Atualiza a lista de arquivos
     } catch (err) {
       console.error(err.message);
-      showNotification(err.message, "error");
+      showNotification(
+        err.message || "Erro ao fazer upload do arquivo",
+        "error"
+      );
     }
 
     handleFileRemove();
