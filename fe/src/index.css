@@ -7,9 +7,35 @@
   --color-bluegray: #bbcada;
   --color-black50opacity: rgba(0, 0, 0, 0.5);
   --color-black75opacity: rgba(0, 0, 0, 0.75);
-  --color-sinapgreen: #3EBDD5;
+  --color-sinapgreen-500: #3EBDD5;
+  --color-sinapgreen-800: #2B8DA3;
+
   --color-sinapgray: #505253;
 }
+
+/* 
+  Cores do Projeto
+  White-Mode
+  - Background : bg-white
+  - Background 2 : bg-gradient-to-l bg-radial-[at_50%_55%] to-green-300 from-white from-40% 
+  - Card : bg-white shadow-md rounded-lg;
+  - Card 2 : bg-gray-50 shadow-sm rounded-md;
+  - Card 3 : bg-gray-100 border border-gray-200 dark:border-gray-500 rounded;
+  - Title : text-black
+  - small text : text-gray-700
+  - smaller text : text-gray-500
+  - input text : bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500
+  Dark-Mode
+  - Background : bg-gray-800 
+  - Background 2 : bg-gradient-to-l bg-radial-[at_50%_55%] dark:to-black dark:from-gray-600 from-40%
+  - Card : bg-gray-600 shadow-md rounded-lg;
+  - Card 2 : bg-gray-500 shadow-sm rounded- md;
+  - Card 3 : bg-gray-400 border border-gray-500 dark:border-gray-500 rounded;
+  - Title : text-white
+  - small text : text-gray-300
+  - smaller text : text-gray-500
+  - input text :  border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white
+*/
 
 @custom-variant dark (&:where(.dark, .dark *)) {}
 
@@ -22,23 +48,10 @@
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
 }
 
 body {
@@ -48,28 +61,7 @@ body {
 
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-
-  a:hover {
-    color: #747bff;
-  }
-
-  button {
-    background-color: #f9f9f9;
-  }
 }

@@ -102,7 +102,7 @@ function TestCard({ file, callFunction, index }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-8 justify-center items-start rounded-lg shadow-md h-full bg-stone-50 dark:bg-gray-700">
+    <div className="flex flex-col gap-4 p-8 justify-center items-start rounded-lg shadow-md h-full bg-gray-50 dark:bg-gray-700">
       {/* Área de informações/formulário de edição */}
       <div className="flex flex-col gap-2 justify-center items-start w-full">
         {isEditing ? (
