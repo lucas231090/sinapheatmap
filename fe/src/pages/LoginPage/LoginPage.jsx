@@ -54,7 +54,7 @@ const LoginPage = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] ">
-      <div className="flex flex-col md:flex-row items-center justify-center w-full max-w-lg md:max-w-2xl p-6 bg-white dark:bg-gray-600 shadow-md rounded-md">
+      <div className="flex flex-col md:flex-row items-center justify-center w-full max-w-lg md:max-w-2xl p-6 bg-card dark:bg-darkcard shadow-md rounded-lg">
         {/* Logo Section */}
         <div className="md:w-1/2 flex justify-center items-center pb-6 md:pr-6 md:pb-0 border-b border-gray-300 dark:border-gray-500 md:border-b-0 md:border-r md:dark:border-gray-500">
           <img
@@ -65,7 +65,7 @@ const LoginPage = () => {
         </div>
         {/* Login Form Section */}
         <div className="md:w-1/2 md:pl-6 mt-6 md:mt-0">
-          <h2 className="text-2xl font-bold mb-4 text-black dark:text-white">
+          <h2 className="text-2xl font-bold mb-4 text-tittle dark:text-darktitle">
             Login
           </h2>
           {error && <div className="text-red-500 mb-4">{error}</div>}
@@ -73,7 +73,7 @@ const LoginPage = () => {
             <div className="mb-4">
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-medium text-smalltext dark:text-darksmalltext"
               >
                 Email
               </label>
@@ -83,13 +83,13 @@ const LoginPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="mt-1 block w-full px-3 py-2  rounded-md shadow-sm focus:outline-none focus:ring-inputtextfocus focus:border-inputtextfocusborder border bg-inputtext border-inputtextborder dark:bg-darkinputtext dark:border-darkinputtextborder dark:text-darkinputtextdarktext"
               />
             </div>
             <div className="mb-4">
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-medium text-smalltext dark:text-darksmalltext"
               >
                 Senha
               </label>
@@ -99,7 +99,7 @@ const LoginPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="mt-1 block w-full px-3 py-2  rounded-md shadow-sm focus:outline-none focus:ring-inputtextfocus focus:border-inputtextfocusborder border bg-inputtext border-inputtextborder dark:bg-darkinputtext dark:border-darkinputtextborder dark:text-darkinputtextdarktext"
               />
             </div>
             <button
@@ -109,7 +109,7 @@ const LoginPage = () => {
               Entrar
             </button>
           </form>
-          <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">
+          <p className="mt-4 text-sm text-smalltext dark:text-darksmalltext">
             Não tem uma conta?{" "}
             <Link
               to="/signup"

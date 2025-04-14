@@ -20,7 +20,7 @@ const Controls = ({
   const { zoomIn, zoomOut, resetTransform } = useControls();
 
   return (
-    <div className="flex flex-wrap justify-between items-center w-full">
+    <div className="flex flex-wrap justify-center items-center w-full mb-4">
       <div className="flex flex-wrap items-center justify-center">
         <button
           className="m-2 bg-indigo-500 hover:bg-indigo-700 text-white p-2 rounded-lg flex items-center gap-2"

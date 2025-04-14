@@ -34,8 +34,41 @@
   - Title : text-white
   - small text : text-gray-300
   - smaller text : text-gray-500
-  - input text :  border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white
+  - input text : dark:bg-gray-700 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500  dark:border-gray-600 dark:text-white
 */
+
+@theme inline {
+  /* White Mode */
+  --color-bg: var(--color-white);
+  --color-bgoffcolor: var(--color-green-300);
+  --color-card: var(--color-white);
+  --color-card2: var(--color-gray-50);
+  --color-card3: var(--color-gray-100);
+  --color-title: var(--color-black);
+  --color-smalltext: var(--color-gray-700);
+  --color-smallertext: var(--color-gray-500);
+  --color-inputtext: var(--color-white);
+  --color-inputtextborder: var(--color-gray-300);
+  --color-inputtextfocus: var(--color-indigo-500);
+  --color-inputtextfocusborder: var(--color-indigo-500);
+  --color-inputtextdarktext: var(--color-black);
+  --color-inputfilehover: var(--color-gray-200);
+  /* Dark Mode */
+  --color-darkbg: var(--color-gray-800);
+  --color-darkbgoffcolor: var(--color-gray-600);
+  --color-darkcard: var(--color-gray-700);
+  --color-darkcard2: var(--color-gray-600);
+  --color-darkcard3: var(--color-gray-500);
+  --color-darktitle: var(--color-white);
+  --color-darksmalltext: var(--color-gray-300);
+  --color-darksmallertext: var(--color-gray-400);
+  --color-darkinputtext: var(--color-gray-800);
+  --color-darkinputtextborder: var(--color-gray-300);
+  --color-darkinputtextdarktext: var(--color-white);
+  --color-darkinputfilehover: var(--color-gray-700);
+}
+
+
 
 @custom-variant dark (&:where(.dark, .dark *)) {}
 

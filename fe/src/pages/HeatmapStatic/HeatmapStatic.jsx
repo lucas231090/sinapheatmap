@@ -48,9 +48,9 @@ const HeatmapStatic = () => {
   return (
     <div className="flex flex-col items-start md:items-center p-4 overflow-x-auto">
       <div className="flex flex-row">
-        <div className="bg-white dark:bg-gray-600 p-4 rounded-lg flex flex-col items-center">
+        <div className="bg-card dark:bg-darkcard p-4 rounded-lg flex flex-col items-center">
           <TransformWrapper ref={transformComponentRef}>
-            <p className="mb-2 text-3xl text-black dark:text-white">
+            <p className="mb-2 text-3xl text-title dark:text-darktitle">
               <strong>Heatmap:</strong> {fileName || "Nenhum ID fornecido"}
             </p>
 

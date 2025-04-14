@@ -12,7 +12,7 @@ const TestSelector = ({
   return (
     <div className="flex flex-col items-center justify-center">
       <select
-        className="p-2 border rounded dark:bg-white"
+        className="p-2 border rounded bg-inputtext dark:bg-darkinputtext text-title dark:text-darktitle"
         value={selectedTestIndex}
         onChange={(e) => setSelectedTestIndex(e.target.value)}
       >

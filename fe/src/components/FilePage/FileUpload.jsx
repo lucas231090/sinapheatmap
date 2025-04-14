@@ -77,11 +77,11 @@ function FileUpload() {
 
   return (
     // White Box
-    <div className="flex flex-col justify-center gap-10 bg-white dark:bg-gray-600 p-4 rounded-lg shadow w-auto h-full">
+    <div className="flex flex-col justify-center gap-10 bg-card dark:bg-darkcard p-4 rounded-lg shadow-md w-auto h-full">
       {/* Area de Input de Csv */}
       <div
         onClick={() => inputFile.current.click()}
-        className="p-4 shadow-md rounded-xl dark:bg-gray-700"
+        className="p-4 shadow-md rounded-lg bg-card2 dark:bg-darkcard2"
       >
         <div className="border-4 border-dashed  border-gray-300 dark:border-gray-100  rounded-lg p-4 flex flex-col items-center">
           <img
@@ -89,7 +89,7 @@ function FileUpload() {
             alt="upload"
             className="h-12 w-12 object-contain pb-2"
           />
-          <h3 className="text-bluegray dark:text-white">
+          <h3 className="text-smallertext dark:text-darksmalltext">
             {selectedFileName || "Upload Arquivo .csv"}
           </h3>
           <input
@@ -105,16 +105,16 @@ function FileUpload() {
       </div>
       {/* Area de Input da Imagem */}
       <div
-        className="p-4 shadow-md rounded-xl dark:bg-gray-700"
+        className="p-4 shadow-md rounded-lg bg-card2 dark:bg-darkcard2"
         onClick={() => imageFile.current.click()}
       >
         <div className="border-4 border-dashed border-gray-300 dark:border-gray-100 rounded-lg p-4 flex flex-col items-center">
           <img
             ref={imageIMGRef}
             alt="upload"
-            className="h-12 w-12 object-contain"
+            className="h-12 w-12 object-contain pb-2"
           />
-          <h3 className="text-bluegray dark:text-white">
+          <h3 className="text-smallertext dark:text-darksmalltext">
             {selectedImageName || "Upload Arquivo de Imagem"}
           </h3>
           <input
@@ -130,13 +130,13 @@ function FileUpload() {
       </div>
       {/* Area do nome do Arquivo e apagar e enviar */}
       <div className="flex flex-col justify-center items-center md:items-start">
-        <h2 className="text-gray-600 dark:text-white font-bold py-2 ">
+        <h2 className="text-title dark:text-darktitle font-bold py-2 ">
           Nome do Arquivo
         </h2>
         <div className="flex flex-col lg:flex-row w-full gap-2">
           <input
             type="text"
-            className="text-black border border-gray-300 dark:bg-white dark:border-gray-700 rounded px-2 py-1 flex-1"
+            className="px-2 py-1 flex-1 rounded-md shadow-sm focus:outline-none focus:ring-inputtextfocus focus:border-inputtextfocusborder border bg-inputtext border-inputtextborder dark:bg-darkinputtext dark:border-darkinputtextborder dark:text-darkinputtextdarktext"
             value={selectedName}
             onChange={(e) => setSelectedName(e.target.value)}
           />

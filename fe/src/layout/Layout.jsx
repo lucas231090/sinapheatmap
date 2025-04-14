@@ -39,7 +39,7 @@ function Layout({ children }) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 min-h-screen flex flex-col">
+    <div className="bg-bg dark:bg-darkbg min-h-screen flex flex-col">
       <header>
         <nav>
           <div className="nav-links">
@@ -69,7 +69,7 @@ function Layout({ children }) {
           </div>
         </nav>
       </header>
-      <main className="m-4 h-max flex flex-col flex-grow rounded-lg bg-gradient-to-l bg-radial-[at_50%_55%] to-green-300 dark:to-black from-white dark:from-gray-600 from-40% ">
+      <main className="m-4 h-max flex flex-col flex-grow rounded-lg bg-gradient-to-l bg-radial-[at_50%_55%] to-bgoffcolor  from-bg from-40%  dark:to-darkbg dark:from-darkbgoffcolor ">
         {children}
       </main>
     </div>
