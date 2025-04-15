@@ -109,10 +109,14 @@ function TestCard({ file, callFunction, index }) {
           // Formulário de edição - mostrado quando isEditing é true
           <>
             <div className="w-full mb-2">
-              <label className="text-smalltext dark:text-darksmalltext">
+              <label
+                htmlFor="filename"
+                className="text-smalltext dark:text-darksmalltext"
+              >
                 Nome:
               </label>
               <input
+                id="filename"
                 type="text"
                 name="filename"
                 value={editedData.filename}
@@ -121,10 +125,14 @@ function TestCard({ file, callFunction, index }) {
               />
             </div>
             <div className="w-full mb-2">
-              <label className="text-smalltext dark:text-darksmalltext">
+              <label
+                htmlFor="description"
+                className="text-smalltext dark:text-darksmalltext"
+              >
                 Descrição:
               </label>
               <input
+                id="description"
                 type="text"
                 name="description"
                 value={editedData.description}
@@ -207,6 +215,7 @@ function TestCard({ file, callFunction, index }) {
               type="button"
               className="px-4 py-2 bg-red-500 hover:bg-red-700 rounded-lg"
               onClick={() => handleClick()}
+              aria-label="Excluir"
             >
               <DeleteIcon style={{ color: "white" }} />
             </button>

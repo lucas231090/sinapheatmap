@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { getFileById, getFileMedia } from "../../../services/fileService";
+import config from "../../../../config";
+
 
 const useHeatmapData = (id, selectedTestIndex, canvasRef, heatmapCanvasRef, imgRef, heatmapVisible, canvasVisible) => {
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+    const API_BASE_URL = config.API_BASE_URL;
 
     // Estados
     const [fileName, setFileName] = useState();

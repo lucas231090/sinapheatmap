@@ -1,5 +1,12 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useRef,
+} from "react";
 import { getAllFiles } from "../services/fileService";
+import config from "../../config";
 
 // Create the context
 const FileContext = createContext();
@@ -11,26 +18,48 @@ export const useFileContext = () => useContext(FileContext);
 export const FileProvider = ({ children }) => {
   const [files, setFiles] = useState([]);
   const [notification, setNotification] = useState({ message: "", type: "" });
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const [loading, setLoading] = useState(false); // Adicionar estado de carregamento
+  const notificationTimeoutRef = useRef(null); // Ref para armazenar o ID do setTimeout
+  const API_BASE_URL = config.API_BASE_URL;
 
   const showNotification = (message, type = "info") => {
+    // Cancelar qualquer timeout anterior
+    if (notificationTimeoutRef.current) {
+      clearTimeout(notificationTimeoutRef.current);
+    }
+
     setNotification({ message, type });
 
     // Auto-dismiss notification after 5 seconds
-    setTimeout(() => {
+    notificationTimeoutRef.current = setTimeout(() => {
       setNotification({ message: "", type: "" });
+      notificationTimeoutRef.current = null; // Limpar a referência
     }, 5000);
+  };
+
+  const clearNotification = () => {
+    // Cancelar o timeout ativo
+    if (notificationTimeoutRef.current) {
+      clearTimeout(notificationTimeoutRef.current);
+      notificationTimeoutRef.current = null;
+    }
+
+    // Limpar a notificação imediatamente
+    setNotification({ message: "", type: "" });
   };
 
   const fetchData = async () => {
     try {
+      setLoading(true); // Ativar estado de carregamento
       const data = await getAllFiles();
-      setFiles(data);
+      setFiles(data); // Atualizar os arquivos no estado
       return data;
     } catch (err) {
       console.log("Erro ao buscar arquivos:", err.message);
       showNotification(err.message || "Erro ao buscar os arquivos", "error");
       return [];
+    } finally {
+      setLoading(false); // Desativar estado de carregamento
     }
   };
 
@@ -45,8 +74,10 @@ export const FileProvider = ({ children }) => {
     setFiles,
     fetchData,
     showNotification,
+    clearNotification, // Adicionar clearNotification ao contexto
     notification,
     setNotification,
+    loading, // Adicionar estado de carregamento ao contexto
     API_BASE_URL,
   };
 

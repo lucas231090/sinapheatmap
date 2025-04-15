@@ -1,4 +1,5 @@
 import axios from "axios";
+import config from "../../config";
 
 // Função para obter o cabeçalho de autorização
 const getAuthHeader = () => {
@@ -8,7 +9,7 @@ const getAuthHeader = () => {
 
 // Cria uma instância do axios com configurações base
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL,
+    baseURL: config.API_BASE_URL,
     headers: {
         "Content-Type": "application/json",
     },
