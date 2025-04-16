@@ -1,8 +1,11 @@
 import React, { useRef, useState, useEffect } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useFileContext } from "../../context/FileContext";
+import { uploadHeatmap } from "../../services/fileService";
 
-function FileUpload({ fetchData, showNotification }) {
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+function FileUpload() {
+  const { fetchData, showNotification } = useFileContext();
+
   const inputFile = useRef(null);
   const imageFile = useRef(null);
   const imageCSVRef = useRef();
@@ -48,20 +51,15 @@ function FileUpload({ fetchData, showNotification }) {
     submit.append("description", "Teste");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/heatmap`, {
-        method: "POST",
-        body: submit,
-      });
-
-      if (!response.ok) {
-        throw new Error("Erro ao fazer upload do arquivo");
-      }
-
+      await uploadHeatmap(submit);
       showNotification("Arquivo enviado com sucesso!", "success");
       fetchData(); // Atualiza a lista de arquivos
     } catch (err) {
       console.error(err.message);
-      showNotification(err.message, "error");
+      showNotification(
+        err.message || "Erro ao fazer upload do arquivo",
+        "error"
+      );
     }
 
     handleFileRemove();
@@ -79,19 +77,19 @@ function FileUpload({ fetchData, showNotification }) {
 
   return (
     // White Box
-    <div className="bg-white p-4 rounded-lg shadow w-auto h-full">
+    <div className="flex flex-col justify-center gap-10 bg-card dark:bg-darkcard p-4 rounded-lg shadow-md w-auto h-full">
       {/* Area de Input de Csv */}
       <div
         onClick={() => inputFile.current.click()}
-        className="mb-4 p-4 shadow-md rounded-xl"
+        className="p-4 shadow-md rounded-lg bg-card2 dark:bg-darkcard2"
       >
-        <div className="border-4 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center">
+        <div className="border-4 border-dashed  border-gray-300 dark:border-gray-100  rounded-lg p-4 flex flex-col items-center">
           <img
             ref={imageCSVRef}
             alt="upload"
             className="h-12 w-12 object-contain pb-2"
           />
-          <h3 className="text-bluegray">
+          <h3 className="text-smallertext dark:text-darksmalltext">
             {selectedFileName || "Upload Arquivo .csv"}
           </h3>
           <input
@@ -107,16 +105,16 @@ function FileUpload({ fetchData, showNotification }) {
       </div>
       {/* Area de Input da Imagem */}
       <div
-        className="mb-4 p-4 shadow-md rounded-xl"
+        className="p-4 shadow-md rounded-lg bg-card2 dark:bg-darkcard2"
         onClick={() => imageFile.current.click()}
       >
-        <div className="border-4 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center">
+        <div className="border-4 border-dashed border-gray-300 dark:border-gray-100 rounded-lg p-4 flex flex-col items-center">
           <img
             ref={imageIMGRef}
             alt="upload"
-            className="h-12 w-12 object-contain"
+            className="h-12 w-12 object-contain pb-2"
           />
-          <h3 className="text-bluegray">
+          <h3 className="text-smallertext dark:text-darksmalltext">
             {selectedImageName || "Upload Arquivo de Imagem"}
           </h3>
           <input
@@ -132,11 +130,13 @@ function FileUpload({ fetchData, showNotification }) {
       </div>
       {/* Area do nome do Arquivo e apagar e enviar */}
       <div className="flex flex-col justify-center items-center md:items-start">
-        <h2 className="text-gray-600 font-bold py-2 ">Nome do Arquivo</h2>
+        <h2 className="text-title dark:text-darktitle font-bold py-2 ">
+          Nome do Arquivo
+        </h2>
         <div className="flex flex-col lg:flex-row w-full gap-2">
           <input
             type="text"
-            className="text-black border border-gray-300 rounded px-2 py-1 flex-1"
+            className="px-2 py-1 flex-1 rounded-md shadow-sm focus:outline-none focus:ring-inputtextfocus focus:border-inputtextfocusborder border bg-inputtext border-inputtextborder dark:bg-darkinputtext dark:border-darkinputtextborder dark:text-darkinputtextdarktext"
             value={selectedName}
             onChange={(e) => setSelectedName(e.target.value)}
           />

@@ -1,43 +1,44 @@
 import React, { useState } from "react";
-import { Route, Routes, useNavigate } from "react-router-dom";
+import { Route, Routes, useNavigate, Navigate } from "react-router-dom";
 import "./App.css";
 import FilePage from "./pages/FilePage/FilePage";
 import Layout from "./layout/Layout";
 import HeatmapStatic from "./pages/HeatmapStatic/HeatmapStatic";
-import Notification from "./components/General/Notification";
+import LoginPage from "./pages/LoginPage/LoginPage";
+import SignupPage from "./pages/SignupPage/SignupPage";
+import { FileProvider } from "./context/FileContext";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute/ProtectedRoute";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(true); // Estado de login
-  const [notification, setNotification] = useState({ message: "", type: "" });
-
-  const showNotification = (message, type = "info") => {
-    setNotification({ message, type });
-
-    // Remove a notificação automaticamente após 5 segundos
-    setTimeout(() => {
-      setNotification({ message: "", type: "" });
-    }, 5000);
-  };
 
   return (
-    <>
-      {/* Notificação */}
-      <Notification
-        message={notification.message}
-        type={notification.type}
-        onClose={() => setNotification({ message: "", type: "" })}
-      />
+    <AuthProvider>
+      <FileProvider>
+        <Layout isLoggedIn={isLoggedIn}>
+          <Routes>
+            {/* Rotas públicas */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/eyeheatmap/:id" element={<HeatmapStatic />} />
 
-      <Layout isLoggedIn={isLoggedIn}>
-        <Routes>
-          <Route path="/" element={<FilePage />} />
-          <Route
-            path="/eyeheatmap/:id"
-            element={<HeatmapStatic showNotification={showNotification} />}
-          />
-        </Routes>
-      </Layout>
-    </>
+            {/* Rotas protegidas (requerem autenticação) */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <FilePage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Rota de fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Layout>
+      </FileProvider>
+    </AuthProvider>
   );
 }
 
