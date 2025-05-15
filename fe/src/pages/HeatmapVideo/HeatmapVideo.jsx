@@ -1,100 +1,39 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { Player } from "@remotion/player";
-import { HeatmapComposition } from "../../remotion/HeatmapComposition";
-import VideoControls from "./components/VideoControls";
-import useHeatmapData from "../HeatmapStatic/hooks/useHeatmapData";
+import { HeatmapComposition } from "../../components/Heatmap/HeatmapComposition";
+import VideoControls from "../../components/Heatmap/VideoControls";
+import useHeatmapVideo from "../../hooks/useHeatmapVideo";
 
 const HeatmapVideo = () => {
   const { id } = useParams();
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [showPlayer, setShowPlayer] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
-  const [playerKey, setPlayerKey] = useState(0); // New state to force player remount
-  const playerRef = useRef(null);
-  const canvasRef = useRef(null);
-  const heatmapCanvasRef = useRef(null);
-  const imgRef = useRef(null);
-
-  // State variables
   const [selectedTestIndex, setSelectedTestIndex] = useState("");
-  const [heatmapCanvasVisible] = useState(true);
-  const [canvasVisible] = useState(false);
 
-  // Handler for test selection
-  const handleTestSelect = (newTestIndex) => {
-    // Only proceed if the test is actually changing
-    if (newTestIndex !== selectedTestIndex) {
-      // Hide the current player
-      setShowPlayer(false);
-      setIsPlaying(false);
+  // Usando nosso hook personalizado para gerenciar o estado e comportamento do vídeo
+  const {
+    playerRef,
+    isPlaying,
+    setIsPlaying,
+    showPlayer,
+    playbackSpeed,
+    setPlaybackSpeed,
+    playerKey,
+    fileName,
+    dataFile,
+    img,
+    width,
+    height,
+    totalFrames,
+    hasValidData,
+    heatmapData,
+    handleTestSelect,
+    handleVideoStart,
+  } = useHeatmapVideo(id, selectedTestIndex);
 
-      // Update the test index
-      setSelectedTestIndex(newTestIndex);
-
-      // Set a timeout to create a new player
-      setTimeout(() => {
-        // Increment key to force remount
-        setPlayerKey((prevKey) => prevKey + 1);
-        // Show the new player
-        setShowPlayer(true);
-      }, 100);
-    }
-  };
-
-  // Use the same hook as HeatmapStatic to get data
-  const { fileName, dataFile, img, coords, canvasSize, radiusScale } =
-    useHeatmapData(
-      id,
-      selectedTestIndex,
-      canvasRef,
-      heatmapCanvasRef,
-      imgRef,
-      heatmapCanvasVisible,
-      canvasVisible
-    );
-
-  // Handle video start
-  const handleVideoStart = () => {
-    if (!showPlayer) {
-      setShowPlayer(true);
-    }
-
-    // Use requestAnimationFrame for smoother playback start
-    requestAnimationFrame(() => {
-      if (playerRef.current) {
-        playerRef.current.seekTo(0);
-        playerRef.current.play();
-        setIsPlaying(true);
-      }
-    });
-  };
-
-  // Verify we have valid data
-  const hasValidData =
-    coords &&
-    coords.length > 0 &&
-    canvasSize.width > 0 &&
-    canvasSize.height > 0;
-
-  // Parse dimensions with fallbacks
-  const width = parseInt(canvasSize.width, 10) || 1280;
-  const height = parseInt(canvasSize.height, 10) || 720;
-
-  // Calculate frames needed
-  const FRAMES_PER_POINT = 10;
-  const totalFrames = hasValidData
-    ? coords.length * FRAMES_PER_POINT + 60
-    : 150;
-
-  // Prepare heatmap data
-  const heatmapData = {
-    coords: coords || [],
-    radiusScale: radiusScale || 1,
-    canvasSize: {
-      width: width,
-      height: height,
-    },
+  // Handler para seleção de teste
+  const onTestSelect = (newTestIndex) => {
+    const updatedTestIndex = handleTestSelect(newTestIndex);
+    setSelectedTestIndex(updatedTestIndex);
   };
 
   return (
@@ -112,7 +51,7 @@ const HeatmapVideo = () => {
             duration={totalFrames}
             dataFile={dataFile}
             selectedTestIndex={selectedTestIndex || ""}
-            setSelectedTestIndex={handleTestSelect} // Use our custom handler
+            setSelectedTestIndex={onTestSelect}
             onVideoStart={handleVideoStart}
             playbackSpeed={playbackSpeed}
             setPlaybackSpeed={setPlaybackSpeed}

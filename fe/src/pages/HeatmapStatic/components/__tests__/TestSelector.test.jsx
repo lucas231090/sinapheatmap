@@ -70,15 +70,16 @@ describe("TestSelector Component", () => {
     const selector = screen.getByRole("combobox");
     expect(selector).toBeInTheDocument();
 
-    // Verifica se tem opções para "Todos" mais cada teste
+    // Verifica se tem opções para default, "Todos" mais cada teste
     const options = screen.getAllByRole("option");
-    expect(options).toHaveLength(4); // "Todos" + 3 testes
+    expect(options).toHaveLength(5); // Default + "Todos" + 3 testes
 
     // Verifica os textos de cada opção
-    expect(options[0]).toHaveTextContent("Combine All Tests");
-    expect(options[1]).toHaveTextContent("Test 1");
-    expect(options[2]).toHaveTextContent("Test 2");
-    expect(options[3]).toHaveTextContent("Test 3");
+    expect(options[0]).toHaveTextContent("-- Selecione um teste --");
+    expect(options[1]).toHaveTextContent("Combine All Tests");
+    expect(options[2]).toHaveTextContent("Test 1");
+    expect(options[3]).toHaveTextContent("Test 2");
+    expect(options[4]).toHaveTextContent("Test 3");
 
     // Verifica se a primeira opção (Todos) está selecionada
     expect(selector.value).toBe("all");
@@ -144,10 +145,10 @@ describe("TestSelector Component", () => {
     const options = screen.getAllByRole("option");
 
     // Verifica se as datas são exibidas corretamente
-    expect(options[1]).toHaveTextContent("Test 1");
-    expect(options[2]).toHaveTextContent("Test 2");
+    expect(options[2]).toHaveTextContent("Test 1");
+    expect(options[3]).toHaveTextContent("Test 2");
 
     // Data inválida deve mostrar apenas o número do teste
-    expect(options[3]).toHaveTextContent("Test 3");
+    expect(options[4]).toHaveTextContent("Test 3");
   });
 });

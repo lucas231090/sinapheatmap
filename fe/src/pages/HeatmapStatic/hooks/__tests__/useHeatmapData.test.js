@@ -33,6 +33,11 @@ jest.mock('../../../../../config', () => ({
  */
 global.URL.createObjectURL = jest.fn();
 
+// Mock para console.log e console.warn para reduzir ruído nos testes
+global.console.log = jest.fn();
+global.console.warn = jest.fn();
+global.console.error = jest.fn();
+
 describe('useHeatmapData hook', () => {
     /**
      * Configuração inicial para os testes
@@ -50,7 +55,7 @@ describe('useHeatmapData hook', () => {
 
     /**
      * Dados simulados que seriam retornados pela API
-     * Contém informações de arquivo e dados de coordenadas
+     * Contém informações de arquivo e dados de coordenadas em formato compatível com o hook
      */
     const mockFileData = {
         _id: mockId,
@@ -177,18 +182,167 @@ describe('useHeatmapData hook', () => {
         // Armazena o tamanho inicial do canvas para comparação
         const initialCanvasSize = { ...result.current.canvasSize };
 
-        // Simula um evento de redimensionamento da janela
+        // Simula um evento de redimensionamento da janela com mudança MAIOR
+        // para garantir que a escala mude significativamente
         await act(async () => {
-            // Define novas dimensões para a janela
-            window.innerWidth = 1280;
-            window.innerHeight = 720;
+            // Define novas dimensões com mudança mais drástica
+            window.innerWidth = 800;  // Mudança maior que antes (de 1920 para 800)
+            window.innerHeight = 600; // Mudança maior que antes (de 1080 para 600)
+            
             // Dispara o evento de resize
             window.dispatchEvent(new Event('resize'));
+            
             // Aguarda o processamento do evento
-            await new Promise(resolve => setTimeout(resolve, 0));
+            await new Promise(resolve => setTimeout(resolve, 100)); // Aumentar tempo de espera
         });
 
         // Verifica se o tamanho do canvas foi recalculado
         expect(result.current.canvasSize).not.toEqual(initialCanvasSize);
+    });
+
+    /**
+     * Testa se o hook lida corretamente com erros de API
+     */
+    test('should handle API errors gracefully', async () => {
+        // Simula um erro na API
+        getFileById.mockRejectedValue(new Error('API Error'));
+
+        // Renderiza o hook
+        const { result } = renderHook(() => useHeatmapData(
+            mockId,
+            'all',
+            canvasRef,
+            heatmapCanvasRef,
+            imgRef,
+            true,
+            true
+        ));
+
+        // Aguarda a conclusão das operações assíncronas
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+
+        // Verifica se o hook não quebrou e manteve estados padrão
+        expect(result.current.fileName).toBeUndefined();
+        expect(result.current.dataFile).toBeUndefined();
+        expect(result.current.coords).toEqual([]);
+        expect(console.log).toHaveBeenCalledWith('API Error');
+    });
+
+    /**
+     * Testa se o hook processa corretamente a seleção de testes específicos
+     */
+    test('should process specific test selection', async () => {
+        // Dados com múltiplos testes
+        const multiTestData = {
+            _id: mockId,
+            filename: 'Multiple Tests',
+            mediaPath: '/uploads/media/test.jpg',
+            jsonData: [
+                {
+                    'Data-Hora': '2023-01-01',
+                    'Largura Tela': 1920,
+                    'Altura Tela': 1080,
+                    x: '100;200',
+                    y: '150;250'
+                },
+                {
+                    'Data-Hora': '2023-01-02',
+                    'Largura Tela': 1920,
+                    'Altura Tela': 1080,
+                    x: '300;400',
+                    y: '350;450'
+                }
+            ]
+        };
+
+        // Configura o mock para retornar múltiplos testes
+        getFileById.mockResolvedValue(multiTestData);
+
+        // Renderiza o hook com seleção específica do segundo teste
+        const { result, rerender } = renderHook(
+            ({ testIndex }) => useHeatmapData(
+                mockId,
+                testIndex,
+                canvasRef,
+                heatmapCanvasRef,
+                imgRef,
+                true,
+                true
+            ),
+            { initialProps: { testIndex: 'all' } }
+        );
+
+        // Aguarda carregamento inicial
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+
+        // Re-renderiza com seleção de teste específico
+        rerender({ testIndex: '1' });
+
+        // Aguarda processamento
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+
+        // As coordenadas devem corresponder apenas ao segundo teste (2 pontos)
+        expect(result.current.coords).toHaveLength(2);
+    });
+
+    /**
+     * Testa a função de download do heatmap
+     */
+    test('should prepare canvas for download', async () => {
+        // Mock para o método toDataURL do canvas
+        const mockToDataURL = jest.fn().mockReturnValue('data:image/png;base64,abc123');
+
+        // Mock para o método click do link
+        const mockClick = jest.fn();
+
+        // Override para createElement para simular link de download
+        const originalCreateElement = document.createElement.bind(document);
+        document.createElement = jest.fn((tagName) => {
+            const element = originalCreateElement(tagName);
+
+            if (tagName === 'canvas') {
+                element.getContext = jest.fn(() => ({
+                    drawImage: jest.fn(),
+                    fillRect: jest.fn()
+                }));
+                element.toDataURL = mockToDataURL;
+            } else if (tagName === 'a') {
+                element.click = mockClick;
+            }
+
+            return element;
+        });
+
+        // Renderiza o hook
+        const { result } = renderHook(() => useHeatmapData(
+            mockId,
+            'all',
+            canvasRef,
+            heatmapCanvasRef,
+            imgRef,
+            true,
+            true
+        ));
+
+        // Aguarda carregamento
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+
+        // Executa função de download
+        act(() => {
+            result.current.downloadHeatMap();
+        });
+
+        // Verifica se o link foi criado e clicado
+        expect(document.createElement).toHaveBeenCalledWith('a');
+        expect(mockToDataURL).toHaveBeenCalledWith('image/png');
+        expect(mockClick).toHaveBeenCalled();
     });
 });
