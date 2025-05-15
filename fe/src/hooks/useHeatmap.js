@@ -46,7 +46,6 @@ const useHeatmap = (id, selectedTestIndex, canvasRef, heatmapCanvasRef, imgRef, 
     const fetchData = async () => {
         try {
             const data = await getFileById(id);
-            console.log("data : ", data);
             setFileName(data.filename);
 
             if (!data) {
@@ -129,8 +128,6 @@ const useHeatmap = (id, selectedTestIndex, canvasRef, heatmapCanvasRef, imgRef, 
                         y: Math.round(coord.y * scale),
                         value: 50,
                     }));
-
-                console.log(`Coordenadas escaladas: ${scaledCoords.length} de ${allCoords.length} originais`);
 
                 setCanvasSize({ width: canvasWidth, height: canvasHeight });
                 setRadiusScale(scale);

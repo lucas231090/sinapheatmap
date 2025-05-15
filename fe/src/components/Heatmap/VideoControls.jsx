@@ -1,13 +1,11 @@
-import React from "react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { Player } from "@remotion/player";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import SpeedIcon from "@mui/icons-material/Speed";
+import DownloadIcon from "@mui/icons-material/Download"; // Add this import
 
-import TestSelector from "../../components/Heatmap/TestSelector";
+import TestSelector from "./TestSelector"; // Import your TestSelector component
 
-/**
- * Componente que gerencia os controles do vídeo de heatmap
- */
 const VideoControls = ({
   playerRef,
   isPlaying,
@@ -19,6 +17,7 @@ const VideoControls = ({
   onVideoStart,
   playbackSpeed,
   setPlaybackSpeed,
+  onDownloadVideo, // Add this prop
 }) => {
   const [hasStarted, setHasStarted] = useState(false);
 
@@ -73,6 +72,18 @@ const VideoControls = ({
           <option value="2">2x</option>
           <option value="4">4x</option>
         </select>
+      </div>
+      {/* Add download button */}
+      <div className="m-2">
+        <button
+          onClick={onDownloadVideo}
+          disabled={!selectedTestIndex || !hasStarted}
+          className="flex items-center p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Download heatmap video"
+        >
+          <DownloadIcon className="mr-1" fontSize="small" />
+          Download Video
+        </button>
       </div>
     </div>
   );
