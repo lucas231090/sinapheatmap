@@ -7,6 +7,21 @@ import h337 from "@mars3d/heatmap.js";
  * Responsável por renderizar o heatmap em formato de vídeo
  */
 export const HeatmapComposition = ({ heatmapData, img }) => {
+  // Obtém o frame atual e as configurações do vídeo
+  // frame: Frame atual do vídeo
+  // fps: Frames por segundo
+  // durationInFrames: Duração total do vídeo em frames
+  // containerRef: Referência para o container do heatmap
+  // heatmapInstanceRef: Referência para a instância do heatmap
+  // canvasSize: Tamanho do canvas do heatmap
+  // heatmapInitialized: Estado para verificar se o heatmap foi inicializado
+  // windowSize: Tamanho da janela do navegador
+  // pointsToShow: Número de pontos a serem exibidos no heatmap
+  // currentCoords: Coordenadas atuais a serem exibidas
+  // isComplete: Verifica se todos os pontos foram exibidos
+  // currentGazePoint: Ponto de gaze atual a ser destacado
+  // FRAMES_PER_POINT: Número de frames por ponto
+  // pointsToShow: Número de pontos a serem exibidos
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const containerRef = useRef(null);
@@ -160,7 +175,7 @@ export const HeatmapComposition = ({ heatmapData, img }) => {
     windowSize.height,
   ]);
 
-  // When all points are shown, stop the animation
+  // Quando o vídeo estiver completo, exiba uma mensagem de conclusão
   if (isComplete && frame > heatmapData.coords.length * FRAMES_PER_POINT + 60) {
     return (
       <AbsoluteFill style={{ backgroundColor: "#fff" }}>
@@ -185,7 +200,7 @@ export const HeatmapComposition = ({ heatmapData, img }) => {
             />
           )}
 
-          {/* Show completion message */}
+          {/* Mostra mensagem de conclusão */}
           <div
             style={{
               position: "absolute",
@@ -201,8 +216,9 @@ export const HeatmapComposition = ({ heatmapData, img }) => {
               zIndex: 30,
             }}
           >
-            <h2>Analysis Complete</h2>
-            <p>All {heatmapData.coords.length} gaze points visualized</p>
+            <strong>Vídeo completo!</strong>
+            <br />
+            {`Visualização de ${heatmapData.coords.length} pontos concluída.`}
           </div>
         </div>
       </AbsoluteFill>
@@ -232,7 +248,7 @@ export const HeatmapComposition = ({ heatmapData, img }) => {
           />
         )}
 
-        {/* Current gaze point indicator */}
+        {/* Apontador do ponto atual */}
         {currentGazePoint && !isComplete && (
           <div
             style={{
@@ -272,7 +288,7 @@ export const HeatmapComposition = ({ heatmapData, img }) => {
           </div>
         )}
 
-        {/* Frame counter and information */}
+        {/* Contador de Frames e Contador de pontos */}
         <div
           style={{
             position: "absolute",
@@ -288,11 +304,15 @@ export const HeatmapComposition = ({ heatmapData, img }) => {
           }}
         >
           {isComplete ? (
-            <span>Complete: {heatmapData.coords.length} points visualized</span>
+            <span>
+              {" "}
+              Frame: {frame} | Pontos de gaze: {currentCoords.length} /{" "}
+              {heatmapData.coords.length}{" "}
+            </span>
           ) : (
             <span>
-              Frame: {frame} | Gaze points: {currentCoords.length} /{" "}
-              {heatmapData.coords.length}
+              Frame: {frame} | Pontos de gaze: {currentCoords.length} /{" "}
+              {heatmapData.coords.length}{" "}
             </span>
           )}
         </div>
