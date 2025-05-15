@@ -179,7 +179,7 @@ function TestCard({ file, callFunction, index }) {
       </div>
 
       {/* Área de botões de ação */}
-      <div className="flex flex-col md:flex-row gap-2 justify-center md:justify-start w-full">
+      <div className="flex flex-col lg:flex-row gap-2  justify-center md:justify-start w-full">
         {isEditing ? (
           // Botões para o modo de edição
           <>
@@ -204,6 +204,12 @@ function TestCard({ file, callFunction, index }) {
               onClick={() => navigate(`eyeheatmap/${file._id}`)}
             >
               Ver Heatmap
+            </button>
+            <button
+              className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+              onClick={() => navigate(`heatmap-video/${file._id}`)}
+            >
+              Video
             </button>
             <button
               className="bg-yellow-500 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg"

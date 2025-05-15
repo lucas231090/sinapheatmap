@@ -62,7 +62,6 @@ const useHeatmapData = (id, selectedTestIndex, canvasRef, heatmapCanvasRef, imgR
                 const imgName = mediaPath.split("/").pop();
                 try {
                     const imageUrl = await getFileMedia(imgName);
-                    console.log(imageUrl);
                     setImg(imageUrl);
                 } catch (mediaError) {
                     console.log("Error loading media:", mediaError);
@@ -92,67 +91,152 @@ const useHeatmapData = (id, selectedTestIndex, canvasRef, heatmapCanvasRef, imgR
 
     // Process data and create heatmap when data changes
     useEffect(() => {
+
+        // Substitua a função combineCoordinates por esta versão mais robusta:
         const combineCoordinates = (dataFiles, selectedIndex) => {
+            console.log("Combinando coordenadas com selectedIndex:", selectedIndex);
+
             let combinedCoords = [];
 
-            if (!dataFiles?.jsonData) return [];
-
-            if (selectedIndex === "all") {
-                dataFiles.jsonData.forEach((dataFile) => {
-                    if (dataFile.coordinates) {
-                        combinedCoords = combinedCoords.concat(dataFile.coordinates);
-                    } else if (dataFile.x && dataFile.y) {
-                        const coords = transformToCoordinates(dataFile.x, dataFile.y);
-                        combinedCoords = combinedCoords.concat(coords);
-                    }
-                });
-            } else {
-                const dataFile = dataFiles.jsonData[selectedIndex];
-                if (dataFile.coordinates) {
-                    combinedCoords = dataFile.coordinates;
-                } else if (dataFile.x && dataFile.y) {
-                    combinedCoords = transformToCoordinates(dataFile.x, dataFile.y);
-                }
+            // Verificações de segurança para dados
+            if (!dataFiles || !dataFiles.jsonData || !Array.isArray(dataFiles.jsonData)) {
+                console.warn("Dados JSON não válidos");
+                return [];
             }
 
+            try {
+                if (selectedIndex === "all") {
+                    // Combine todos os testes
+                    dataFiles.jsonData.forEach((dataItem, index) => {
+                        if (!dataItem) {
+                            console.warn("Teste", index, "é undefined");
+                            return;
+                        }
+
+                        if (dataItem.coordinates && Array.isArray(dataItem.coordinates)) {
+                            console.log(`Adicionando ${dataItem.coordinates.length} coordenadas do teste ${index}`);
+                            combinedCoords = combinedCoords.concat(dataItem.coordinates);
+                        } else if (dataItem.x && dataItem.y) {
+                            const coords = transformToCoordinates(dataItem.x, dataItem.y);
+                            combinedCoords = combinedCoords.concat(coords);
+                        } else {
+                            console.warn(`Teste ${index} não tem coordenadas válidas`);
+                        }
+                    });
+                } else {
+                    // Verifica se é um número válido
+                    const index = parseInt(selectedIndex, 10);
+
+                    if (isNaN(index)) {
+                        console.warn("selectedIndex não é um número válido:", selectedIndex);
+                        return [];
+                    }
+
+                    // Verifica se o índice está dentro dos limites
+                    if (index < 0 || index >= dataFiles.jsonData.length) {
+                        console.warn("Índice fora dos limites:", index, "para array de tamanho", dataFiles.jsonData.length);
+                        return [];
+                    }
+
+                    const dataItem = dataFiles.jsonData[index];
+
+                    if (!dataItem) {
+                        console.warn("Teste", index, "é undefined");
+                        return [];
+                    }
+
+                    if (dataItem.coordinates && Array.isArray(dataItem.coordinates)) {
+                        console.log(`Usando ${dataItem.coordinates.length} coordenadas do teste ${index}`);
+                        combinedCoords = dataItem.coordinates;
+                    } else if (dataItem.x && dataItem.y) {
+                        combinedCoords = transformToCoordinates(dataItem.x, dataItem.y);
+                    } else {
+                        console.warn(`Teste ${index} não tem coordenadas válidas`);
+                    }
+                }
+            } catch (error) {
+                console.error("Erro ao combinar coordenadas:", error);
+            }
+
+            console.log(`Retornando ${combinedCoords.length} coordenadas combinadas`);
             return combinedCoords;
         };
 
         const calculateResponsiveScale = () => {
             if (!jsonFile) return 1;
 
-            const availableWidth = windowSize.width * 0.85;
-            const availableHeight = windowSize.height * 0.7;
+            const availableWidth = windowSize.width;
+            const availableHeight = windowSize.height;
 
             const originalWidth = jsonFile["Largura Tela"];
             const originalHeight = jsonFile["Altura Tela"];
 
-            const widthScale = availableWidth / originalWidth;
-            const heightScale = availableHeight / originalHeight;
+            const widthScale = Math.round(availableWidth / originalWidth);
+            const heightScale = Math.round(availableHeight / originalHeight);
 
             const scale = Math.min(widthScale, heightScale);
 
-            return Math.max(0.3, Math.min(scale, 1.2));
+            return scale / 2;
         };
 
+        // E também atualize a função createHeatMap para garantir valores válidos:
         const createHeatMap = (scale) => {
-            if (jsonFile) {
+            if (!jsonFile) {
+                console.warn("jsonFile não está disponível");
+                return;
+            }
+
+            try {
                 document.querySelectorAll(".heatmap-canvas").forEach((e) => e.remove());
 
+                // Obtenha as coordenadas de forma segura
                 const allCoords = combineCoordinates(dataFile, selectedTestIndex);
 
-                const scaledCoords = allCoords.map((coord) => ({
-                    x: parseFloat((coord.x * scale).toFixed(1)),
-                    y: parseFloat((coord.y * scale).toFixed(1)),
-                    value: 50,
-                }));
+                // Verifique se temos coordenadas
+                if (!allCoords || allCoords.length === 0) {
+                    console.warn("Nenhuma coordenada disponível para visualização");
+                    setCoords([]);
+                    return;
+                }
 
-                const canvasWidth = jsonFile["Largura Tela"] * scale;
-                const canvasHeight = jsonFile["Altura Tela"] * scale;
+                // Parse para garantir que temos números válidos
+                const canvasWidth = parseFloat(jsonFile["Largura Tela"]) * scale || 1280;
+                const canvasHeight = parseFloat(jsonFile["Altura Tela"]) * scale || 720;
+
+                // Verifique se scale é um número razoável
+                if (isNaN(scale) || scale <= 0 || scale > 10) {
+                    console.warn("Escala inválida:", scale, "usando 1.0");
+                    scale = 1.0;
+                }
+
+                // Verificação adicional nas coordenadas
+                const scaledCoords = allCoords
+                    .filter(coord => {
+                        // Verifica se x e y são números válidos
+                        const isValid = coord &&
+                            typeof coord.x === 'number' && !isNaN(coord.x) &&
+                            typeof coord.y === 'number' && !isNaN(coord.y);
+
+                        if (!isValid) {
+                            console.warn("Coordenada inválida descartada:", coord);
+                        }
+
+                        return isValid;
+                    })
+                    .map((coord) => ({
+                        x: Math.round(coord.x * scale),
+                        y: Math.round(coord.y * scale),
+                        value: 50,
+                    }));
+
+                console.log(`Coordenadas escaladas: ${scaledCoords.length} de ${allCoords.length} originais`);
 
                 setCanvasSize({ width: canvasWidth, height: canvasHeight });
                 setRadiusScale(scale);
                 setCoords(scaledCoords);
+            } catch (error) {
+                console.error("Erro ao criar heatmap:", error);
+                setCoords([]);
             }
         };
 

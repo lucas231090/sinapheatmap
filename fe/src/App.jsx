@@ -4,6 +4,7 @@ import "./App.css";
 import FilePage from "./pages/FilePage/FilePage";
 import Layout from "./layout/Layout";
 import HeatmapStatic from "./pages/HeatmapStatic/HeatmapStatic";
+import HeatmapVideo from "./pages/HeatmapVideo/HeatmapVideo";
 import LoginPage from "./pages/LoginPage/LoginPage";
 import SignupPage from "./pages/SignupPage/SignupPage";
 import { FileProvider } from "./context/FileContext";
@@ -22,6 +23,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/eyeheatmap/:id" element={<HeatmapStatic />} />
+            <Route path="/heatmap-video/:id" element={<HeatmapVideo />} />
 
             {/* Rotas protegidas (requerem autenticação) */}
             <Route
