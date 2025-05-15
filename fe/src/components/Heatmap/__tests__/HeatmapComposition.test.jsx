@@ -110,9 +110,9 @@ describe("HeatmapComposition Component", () => {
     render(<HeatmapComposition {...defaultProps} />);
 
     // Verifica se a mensagem de conclusão é exibida
-    expect(screen.getByText("Analysis Complete")).toBeInTheDocument();
+    expect(screen.getByText("Vídeo completo!")).toBeInTheDocument();
     expect(
-      screen.getByText("All 3 gaze points visualized")
+      screen.getByText("Visualização de 3 pontos concluída.")
     ).toBeInTheDocument();
   });
 
