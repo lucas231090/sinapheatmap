@@ -18,15 +18,18 @@ const VideoControls = ({
   playbackSpeed,
   setPlaybackSpeed,
   onDownloadVideo, // Add this prop
+  hasSingleTest = false, // Nova prop
+  shouldShowSelector = true, // Nova prop
+  currentTestIndex = "", // Nova prop
 }) => {
   const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
-    if (selectedTestIndex !== null && selectedTestIndex !== "" && !hasStarted) {
+    if (currentTestIndex !== null && currentTestIndex !== "" && !hasStarted) {
       onVideoStart();
       setHasStarted(true);
     }
-  }, [selectedTestIndex, hasStarted, onVideoStart]);
+  }, [currentTestIndex, hasStarted, onVideoStart]);
 
   // Manipula mudança de velocidade
   const handleSpeedChange = (e) => {
@@ -47,13 +50,21 @@ const VideoControls = ({
   return (
     <div className="flex flex-wrap justify-center items-center w-full mb-4">
       <div className="flex flex-wrap items-center justify-center">
-        <div className="m-2">
-          <TestSelector
-            dataFile={dataFile}
-            selectedTestIndex={selectedTestIndex}
-            setSelectedTestIndex={setSelectedTestIndex}
-          />
-        </div>
+        {shouldShowSelector ? (
+          <div className="m-2">
+            <TestSelector
+              dataFile={dataFile}
+              selectedTestIndex={selectedTestIndex}
+              setSelectedTestIndex={setSelectedTestIndex}
+            />
+          </div>
+        ) : hasSingleTest ? (
+          <div className="m-2 p-2 border rounded-md bg-green-100 dark:bg-green-800">
+            <p className="text-sm text-green-700 dark:text-green-300 text-center">
+              📹 Teste único detectado - Vídeo pronto para reprodução
+            </p>
+          </div>
+        ) : null}
       </div>
       <div className="m-2 p-2 border rounded-md bg-white dark:bg-gray-800">
         <label className="flex items-center text-sm text-gray-600 dark:text-gray-300 mb-1">
@@ -77,7 +88,7 @@ const VideoControls = ({
       <div className="m-2">
         <button
           onClick={onDownloadVideo}
-          disabled={!selectedTestIndex || !hasStarted}
+          disabled={!currentTestIndex || !hasStarted}
           className="flex items-center p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
           title="Download heatmap video"
         >

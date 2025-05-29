@@ -1,5 +1,5 @@
 import axios from "axios";
-import config from "../../config";
+import config from "@/../config";
 
 // Função para obter o cabeçalho de autorização
 const getAuthHeader = () => {

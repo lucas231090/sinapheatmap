@@ -1,29 +1,23 @@
-import React, { use, useState, useEffect, useContext } from "react";
-import { useLocation, Link, useNavigate } from "react-router-dom";
-import { AuthContext } from "../context/AuthContext";
+import React from "react";
+import { useLocation } from "react-router-dom";
 import LoggedInHeader from "./LoggedInHeader";
 import WbSunnyIcon from "@mui/icons-material/WbSunny";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
+import useLayout from "../hooks/useLayout";
 
+/**
+ * Componente de Layout Principal
+ * Responsável apenas pela apresentação da estrutura da aplicação
+ * Toda a lógica está separada no hook useLayout
+ */
 function Layout({ children }) {
   const location = useLocation();
-  const [darkMode, setDarkMode] = useState(false);
-  const { isLoggedIn, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
 
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-  };
+  // Hook centralizado para lógica do layout
+  const { darkMode, toggleDarkMode, isLoggedIn, handleLogout } = useLayout();
 
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [darkMode]);
-
+  // Componente do botão de modo escuro
   const darkModeButton = (
     <button
       onClick={toggleDarkMode}
@@ -32,11 +26,6 @@ function Layout({ children }) {
       {darkMode ? <WbSunnyIcon /> : <DarkModeIcon />}
     </button>
   );
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
 
   return (
     <div className="bg-bg dark:bg-darkbg min-h-screen flex flex-col">

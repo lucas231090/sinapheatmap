@@ -1,49 +1,72 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef } from "react";
 import { useParams } from "react-router-dom";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 // Componentes
-import Controls from "./components/Controls";
-import HeatmapRenderer from "./components/HeatmapRenderer";
-import BubbleCanvas from "./components/BubbleCanvas";
+import Controls from "@/components/HeatmapStatic/Controls";
+import HeatmapRenderer from "@/components/HeatmapStatic/HeatmapRenderer";
+import BubbleCanvas from "@/components/HeatmapStatic/BubbleCanvas";
 
 // Hooks
-import useHeatmapData from "./hooks/useHeatmapData";
+import useHeatmapStaticLogic from "@/hooks/useHeatmapStaticLogic";
 
+/**
+ * Página de Heatmap Estático
+ * Componente responsável apenas pela apresentação da interface de heatmap estático
+ * Toda a lógica está separada no hook useHeatmapStaticLogic
+ */
 const HeatmapStatic = () => {
   const { id } = useParams();
   const transformComponentRef = useRef(null);
 
-  // Defina todos os refs aqui para passar ao hook
-  const canvasRef = useRef(null);
-  const heatmapCanvasRef = useRef(null);
-  const imgRef = useRef(null);
-
-  // Estados compartilhados
-  const [canvasVisible, setCanvasVisible] = useState(false);
-  const [heatmapCanvasVisible, setHeatmapCanvasVisible] = useState(true);
-  const [selectedTestIndex, setSelectedTestIndex] = useState("all");
-
-  // Custom hook para gerenciar dados do heatmap
+  // Hook centralizado para toda a lógica do heatmap estático
   const {
+    // Refs
+    canvasRef,
+    heatmapCanvasRef,
+    imgRef,
+
+    // Estados de visibilidade
+    canvasVisible,
+    setCanvasVisible,
+    heatmapCanvasVisible,
+    setHeatmapCanvasVisible,
+
+    // Dados do heatmap
     fileName,
     dataFile,
     img,
     coords,
     canvasSize,
     radiusScale,
-    done,
-    windowSize,
-    downloadHeatMap,
-  } = useHeatmapData(
-    id,
+    isLoading,
+    error,
+
+    // Estados de seleção
     selectedTestIndex,
-    canvasRef,
-    heatmapCanvasRef,
-    imgRef,
-    heatmapCanvasVisible,
-    canvasVisible
-  );
+    setSelectedTestIndex,
+
+    // Funções
+    downloadHeatMap,
+  } = useHeatmapStaticLogic(id);
+
+  // Exibe loading se estiver carregando
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-xl">Carregando heatmap...</div>
+      </div>
+    );
+  }
+
+  // Exibe erro se houver
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-xl text-red-500">Erro: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-start md:items-center p-4 overflow-x-auto">

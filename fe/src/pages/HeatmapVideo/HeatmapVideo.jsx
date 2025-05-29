@@ -1,15 +1,19 @@
-import React, { useState } from "react";
+import React from "react";
 import { useParams } from "react-router-dom";
 import { Player } from "@remotion/player";
 import { HeatmapComposition } from "../../components/Heatmap/HeatmapComposition";
 import VideoControls from "../../components/Heatmap/VideoControls";
-import useHeatmapVideo from "../../hooks/useHeatmapVideo";
+import useHeatmapVideoLogic from "../../hooks/useHeatmapVideoLogic";
 
+/**
+ * Página de Vídeo Heatmap
+ * Componente responsável apenas pela apresentação da interface de vídeo
+ * Toda a lógica está separada no hook useHeatmapVideoLogic
+ */
 const HeatmapVideo = () => {
   const { id } = useParams();
-  const [selectedTestIndex, setSelectedTestIndex] = useState("");
 
-  // Usando nosso hook personalizado para gerenciar o estado e comportamento do vídeo
+  // Hook centralizado para toda a lógica do vídeo
   const {
     playerRef,
     isPlaying,
@@ -26,15 +30,33 @@ const HeatmapVideo = () => {
     totalFrames,
     hasValidData,
     heatmapData,
+    isLoading,
+    error,
+    hasSingleTest,
+    shouldShowSelector,
+    currentTestIndex,
+    selectedTestIndex,
     handleTestSelect,
     handleVideoStart,
-  } = useHeatmapVideo(id, selectedTestIndex);
+  } = useHeatmapVideoLogic(id);
 
-  // Handler para seleção de teste
-  const onTestSelect = (newTestIndex) => {
-    const updatedTestIndex = handleTestSelect(newTestIndex);
-    setSelectedTestIndex(updatedTestIndex);
-  };
+  // Exibe loading se estiver carregando
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-xl">Carregando dados do vídeo...</div>
+      </div>
+    );
+  }
+
+  // Exibe erro se houver
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-xl text-red-500">Erro: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-start md:items-center p-4 overflow-x-auto">
@@ -52,10 +74,13 @@ const HeatmapVideo = () => {
             duration={totalFrames}
             dataFile={dataFile}
             selectedTestIndex={selectedTestIndex || ""}
-            setSelectedTestIndex={onTestSelect}
+            setSelectedTestIndex={handleTestSelect}
             onVideoStart={handleVideoStart}
             playbackSpeed={playbackSpeed}
             setPlaybackSpeed={setPlaybackSpeed}
+            hasSingleTest={hasSingleTest}
+            shouldShowSelector={shouldShowSelector}
+            currentTestIndex={currentTestIndex}
           />
 
           <div className="border border-gray-300 rounded shadow-lg">
@@ -72,13 +97,17 @@ const HeatmapVideo = () => {
               >
                 <div className="text-center p-8">
                   <h3 className="text-xl mb-4">
-                    {selectedTestIndex
+                    {currentTestIndex
                       ? "Carregando dados do heatmap..."
+                      : hasSingleTest
+                      ? "Preparando vídeo..."
                       : "Selecione um teste para começar"}
                   </h3>
                   <p className="text-gray-600">
-                    {!hasValidData && selectedTestIndex
+                    {!hasValidData && currentTestIndex
                       ? "Nenhum dado disponível para este teste."
+                      : hasSingleTest
+                      ? "O vídeo será iniciado automaticamente."
                       : "O vídeo será iniciado automaticamente após a seleção."}
                   </p>
                 </div>

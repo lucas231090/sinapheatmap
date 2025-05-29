@@ -9,8 +9,13 @@ const TestSelector = ({
   selectedTestIndex,
   setSelectedTestIndex,
   disabled = false,
+  allowSingleTest = false, // Nova prop para permitir mostrar quando há apenas um teste
 }) => {
-  if (!dataFile?.jsonData?.length || dataFile.jsonData.length <= 1) {
+  // Se não há dados ou não há testes suficientes (e não permite teste único), retorna null
+  if (
+    !dataFile?.jsonData?.length ||
+    (dataFile.jsonData.length <= 1 && !allowSingleTest)
+  ) {
     return null;
   }
 
