@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import "./TestCard.css";
 // Importação de ícones necessários para as ações do card
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -8,10 +8,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import ImageIcon from "@mui/icons-material/Image";
 // Hook para navegação entre rotas e hook customizado para o contexto de arquivos
 import { useNavigate } from "react-router-dom";
-import { useFileContext } from "../../../context/FileContext";
+import { useFileContext } from "@/context/FileContext";
 
 // Serviço para operações de arquivos
-import { updateFile } from "../../../services/fileService";
+import { updateFile } from "@/services/fileService";
 
 function TestCard({ file, callFunction, index }) {
   // navigate: Hook para navegação entre rotas

@@ -1,9 +1,8 @@
-import React from "react";
-import FileUpload from "../../components/FilePage/FileUpload";
-import FileList from "../../components/FilePage/FileList";
-import CustomDialog from "../../components/General/CustomDialog";
-import Notification from "../../components/General/Notification";
-import { useFilePage } from "../../hooks/useFilePage";
+import FileUpload from "@/components/FilePage/FileUpload";
+import FileList from "@/components/FilePage/FileList";
+import CustomDialog from "@/components/General/CustomDialog";
+import Notification from "@/components/General/Notification";
+import { useFilePage } from "@/hooks/useFilePage";
 
 function FilePage() {
   const {

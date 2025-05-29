@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import h337 from "@mars3d/heatmap.js";
 
 const HeatmapRenderer = ({

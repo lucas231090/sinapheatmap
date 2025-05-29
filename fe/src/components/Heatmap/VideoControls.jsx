@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { Player } from "@remotion/player";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import { useEffect, useState } from "react";
 import SpeedIcon from "@mui/icons-material/Speed";
-import DownloadIcon from "@mui/icons-material/Download"; // Add this import
+import DownloadIcon from "@mui/icons-material/Download";
 
-import TestSelector from "./TestSelector"; // Import your TestSelector component
+import TestSelector from "@/components/HeatmapStatic/TestSelector";
 
 const VideoControls = ({
   playerRef,
@@ -17,10 +15,10 @@ const VideoControls = ({
   onVideoStart,
   playbackSpeed,
   setPlaybackSpeed,
-  onDownloadVideo, // Add this prop
-  hasSingleTest = false, // Nova prop
-  shouldShowSelector = true, // Nova prop
-  currentTestIndex = "", // Nova prop
+  onDownloadVideo,
+  hasSingleTest = false,
+  shouldShowSelector = true,
+  currentTestIndex = "",
 }) => {
   const [hasStarted, setHasStarted] = useState(false);
 
@@ -84,7 +82,6 @@ const VideoControls = ({
           <option value="4">4x</option>
         </select>
       </div>
-      {/* Add download button */}
       <div className="m-2">
         <button
           onClick={onDownloadVideo}

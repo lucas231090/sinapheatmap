@@ -12,7 +12,7 @@ const Logo = React.memo(({ logoSrc }) => {
         src={logoSrc || "/SinapsenseLogo.png"}
         alt="Sinapsense Logo"
         className="h-30 w-auto"
-        loading="lazy" // Lazy loading para otimização
+        loading="lazy"
       />
     </div>
   );

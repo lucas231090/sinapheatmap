@@ -25,7 +25,7 @@ export const useFilePage = () => {
                 await deactivateFile(modalIsOpen.id);
 
                 console.log("Arquivo atualizado com sucesso");
-                fetchData(); // Atualiza a lista após a exclusão
+                fetchData();
                 showNotification("Arquivo atualizado com sucesso!", "success");
             } catch (err) {
                 console.error("Erro ao excluir arquivo:", err.message);

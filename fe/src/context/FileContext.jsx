@@ -5,16 +5,13 @@ import React, {
   useEffect,
   useRef,
 } from "react";
-import { getAllFiles } from "../services/fileService";
-import config from "../../config";
+import { getAllFiles } from "@/services/fileService";
+import config from "@/../config";
 
-// Create the context
 const FileContext = createContext();
 
-// Custom hook to use the context
 export const useFileContext = () => useContext(FileContext);
 
-// Provider component
 export const FileProvider = ({ children }) => {
   const [files, setFiles] = useState([]);
   const [notification, setNotification] = useState({ message: "", type: "" });
@@ -30,7 +27,6 @@ export const FileProvider = ({ children }) => {
 
     setNotification({ message, type });
 
-    // Auto-dismiss notification after 5 seconds
     notificationTimeoutRef.current = setTimeout(() => {
       setNotification({ message: "", type: "" });
       notificationTimeoutRef.current = null; // Limpar a referência
@@ -63,21 +59,19 @@ export const FileProvider = ({ children }) => {
     }
   };
 
-  // Initial data fetch
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Values to share through context
   const contextValue = {
     files,
     setFiles,
     fetchData,
     showNotification,
-    clearNotification, // Adicionar clearNotification ao contexto
+    clearNotification,
     notification,
     setNotification,
-    loading, // Adicionar estado de carregamento ao contexto
+    loading,
     API_BASE_URL,
   };
 

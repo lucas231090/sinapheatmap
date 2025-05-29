@@ -33,7 +33,7 @@ const useHeatmapVideoLogic = (id) => {
         radiusScale,
         isLoading,
         error,
-    } = useHeatmapLogic(id, selectedTestIndex || autoSelectedTest);
+    } = useHeatmapLogic(id, selectedTestIndex || autoSelectedTest || "");
 
     // Handler para mudança de teste
     const handleTestSelect = (newTestIndex) => {

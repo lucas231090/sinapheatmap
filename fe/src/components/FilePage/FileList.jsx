@@ -1,6 +1,4 @@
-import React from "react";
-import TestCard from "../FilePage/TestCard/TestCard";
-import { useFileContext } from "../../context/FileContext";
+import TestCard from "@/components/FilePage/TestCard/TestCard";
 
 function FileList({ getFiles, abrirModal }) {
   return (

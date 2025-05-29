@@ -8,11 +8,16 @@ import { useState, useEffect, useCallback } from "react";
 export const useThemeManager = () => {
     // Inicializar com o tema salvo no localStorage ou padrão
     const [isDark, setIsDark] = useState(() => {
-        const saved = localStorage.getItem('theme');
-        if (saved) {
-            return saved === 'dark';
+        try {
+            const saved = localStorage.getItem('theme');
+            if (saved) {
+                return saved === 'dark';
+            }
+        } catch (error) {
+            // Fallback to system preference if localStorage fails
+            console.warn('localStorage not available, using system preference');
         }
-        // Usar preferência do sistema se não houver tema salvo
+        // Usar preferência do sistema se não houver tema salvo ou localStorage falhar
         return window.matchMedia('(prefers-color-scheme: dark)').matches;
     });
 
@@ -20,10 +25,14 @@ export const useThemeManager = () => {
     const applyTheme = useCallback((dark) => {
         if (dark) {
             document.documentElement.classList.add("dark");
-            localStorage.setItem('theme', 'dark');
         } else {
             document.documentElement.classList.remove("dark");
-            localStorage.setItem('theme', 'light');
+        }
+
+        try {
+            localStorage.setItem('theme', dark ? 'dark' : 'light');
+        } catch (error) {
+            console.warn('Could not save theme preference to localStorage');
         }
     }, []);
 
@@ -47,7 +56,15 @@ export const useThemeManager = () => {
 
         const handleSystemThemeChange = (e) => {
             // Só alterar se não houver preferência salva
-            if (!localStorage.getItem('theme')) {
+            let hasStoredTheme = false;
+            try {
+                hasStoredTheme = !!localStorage.getItem('theme');
+            } catch (error) {
+                // If localStorage fails, always respond to system changes
+                hasStoredTheme = false;
+            }
+
+            if (!hasStoredTheme) {
                 setIsDark(e.matches);
                 applyTheme(e.matches);
             }

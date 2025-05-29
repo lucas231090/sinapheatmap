@@ -1,10 +1,9 @@
-import React from "react";
 import { useLocation } from "react-router-dom";
-import LoggedInHeader from "./LoggedInHeader";
+import LoggedInHeader from "@/layout/LoggedInHeader";
 import WbSunnyIcon from "@mui/icons-material/WbSunny";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
-import useLayout from "../hooks/useLayout";
+import useLayout from "@/hooks/useLayout";
 
 /**
  * Componente de Layout Principal

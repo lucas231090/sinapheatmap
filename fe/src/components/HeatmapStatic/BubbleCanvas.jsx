@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
 const BubbleCanvas = ({
   canvasRef,
@@ -8,10 +8,12 @@ const BubbleCanvas = ({
 }) => {
   // Efeito para desenhar as bolhas e flechas no canvas
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!canvasRef || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
+
+    if (!context) return;
 
     context.textAlign = "center";
     context.textBaseline = "middle";

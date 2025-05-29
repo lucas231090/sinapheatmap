@@ -1,5 +1,3 @@
-import React from "react";
-
 /**
  * Componente genérico para seleção de testes
  * Usado tanto na visualização estática quanto no vídeo
@@ -9,7 +7,7 @@ const TestSelector = ({
   selectedTestIndex,
   setSelectedTestIndex,
   disabled = false,
-  allowSingleTest = false, // Nova prop para permitir mostrar quando há apenas um teste
+  allowSingleTest = false,
 }) => {
   // Se não há dados ou não há testes suficientes (e não permite teste único), retorna null
   if (

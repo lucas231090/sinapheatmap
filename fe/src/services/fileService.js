@@ -1,4 +1,4 @@
-import api from "./api";
+import api from "@/services/api";
 
 // Obter todos os arquivos de eyetracking
 export const getAllFiles = async () => {

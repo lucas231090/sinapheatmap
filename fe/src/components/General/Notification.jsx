@@ -1,7 +1,5 @@
-import React from "react";
-
 const Notification = ({ message, type, onClose }) => {
-  if (!message) return null; // Não renderiza nada se não houver mensagem
+  if (!message) return null;
 
   const getBackgroundColor = () => {
     switch (type) {

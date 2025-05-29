@@ -1,7 +1,7 @@
-import React, { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useFileContext } from "../../context/FileContext";
-import { uploadHeatmap } from "../../services/fileService";
+import { useFileContext } from "@/context/FileContext";
+import { uploadHeatmap } from "@/services/fileService";
 
 function FileUpload() {
   const { fetchData, showNotification } = useFileContext();

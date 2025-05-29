@@ -1,9 +1,8 @@
-import React from "react";
 import { useParams } from "react-router-dom";
 import { Player } from "@remotion/player";
-import { HeatmapComposition } from "../../components/Heatmap/HeatmapComposition";
-import VideoControls from "../../components/Heatmap/VideoControls";
-import useHeatmapVideoLogic from "../../hooks/useHeatmapVideoLogic";
+import { HeatmapComposition } from "@/components/Heatmap/HeatmapComposition";
+import VideoControls from "@/components/Heatmap/VideoControls";
+import useHeatmapVideoLogic from "@/hooks/useHeatmapVideoLogic";
 
 /**
  * Página de Vídeo Heatmap

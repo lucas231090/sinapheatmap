@@ -1,7 +1,5 @@
-import React from "react";
 import { Composition } from "remotion";
-import { MyComposition } from "./Composition";
-import { HeatmapComposition } from "./HeatmapComposition";
+import { HeatmapComposition } from "@/components/Heatmap/HeatmapComposition";
 
 export const RemotionRoot = () => {
   return (

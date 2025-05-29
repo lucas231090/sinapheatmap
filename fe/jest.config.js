@@ -24,6 +24,8 @@ export default {
    */
   moduleNameMapper: {
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+    "^@/(.*)$": "<rootDir>/src/$1",
+    "^@/../config$": "<rootDir>/src/__mocks__/config.js",
     "^../../config$": "<rootDir>/src/__mocks__/config.js",
     "^../../../config$": "<rootDir>/src/__mocks__/config.js",
     "^../../../../config$": "<rootDir>/src/__mocks__/config.js",

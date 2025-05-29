@@ -1,12 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import useLoggedInHeader from "../hooks/useLoggedInHeader";
+import useLoggedInHeader from "@/hooks/useLoggedInHeader";
 
 /**
  * Componente LoggedInHeader otimizado
  * Responsável apenas pela apresentação do cabeçalho quando o usuário está logado
- * Toda a lógica está separada no hook useLoggedInHeader
- * Usa React.memo para evitar re-renderizações desnecessárias quando body não muda
  */
 const LoggedInHeader = React.memo(({ body }) => {
   // Hook centralizado para lógica do header
@@ -20,7 +18,7 @@ const LoggedInHeader = React.memo(({ body }) => {
             src={logoSrc}
             alt="Sinapsense Logo"
             className="h-25 w-auto mr-4"
-            loading="lazy" // Lazy loading para otimização
+            loading="lazy"
           />
         </Link>
         {body}

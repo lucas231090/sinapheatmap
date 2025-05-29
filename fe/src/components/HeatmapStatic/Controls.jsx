@@ -1,10 +1,9 @@
-import React from "react";
 import { useControls } from "react-zoom-pan-pinch";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import DownloadIcon from "@mui/icons-material/Download";
-import TestSelector from "./TestSelector";
+import TestSelector from "@/components/HeatmapStatic/TestSelector";
 
 const Controls = ({
   transformComponentRef,

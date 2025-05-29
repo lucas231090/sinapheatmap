@@ -2,6 +2,6 @@
  * Índice centralizado dos utilitários
  */
 
-export * from './coordinateUtils';
-export * from './scaleUtils';
-export * from './downloadUtils';
+export * from '@/utils/coordinateUtils';
+export * from '@/utils/scaleUtils';
+export * from '@/utils/downloadUtils';

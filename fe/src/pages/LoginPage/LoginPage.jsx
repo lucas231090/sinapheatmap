@@ -1,4 +1,3 @@
-import React from "react";
 import { useTheme } from "@/hooks/useTheme";
 import { useLogin } from "@/hooks/useLogin";
 import Logo from "@/components/General/Logo";
