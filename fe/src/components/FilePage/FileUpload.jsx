@@ -123,7 +123,7 @@ function FileUpload() {
               handleFileChange(event, setSelectedImage, setSelectedImageName)
             }
             ref={imageFile}
-            accept="image/*"
+            accept="image/*,video/*"
             className="hidden"
           />
         </div>

@@ -32,6 +32,9 @@ function TestCard({ file, callFunction, index }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedImageName, setSelectedImageName] = useState("");
 
+  console.log("File data:", file);
+  
+
   // Manipula o clique no botão de exclusão
   function handleClick() {
     callFunction(file._id);
@@ -156,7 +159,7 @@ function TestCard({ file, callFunction, index }) {
                   type="file"
                   ref={fileInputRef}
                   onChange={handleImageChange}
-                  accept="image/*"
+                  accept="image/*,video/*"
                   className="hidden"
                 />
               </div>
@@ -199,12 +202,15 @@ function TestCard({ file, callFunction, index }) {
         ) : (
           // Botões para o modo de visualização
           <>
-            <button
-              className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-              onClick={() => navigate(`eyeheatmap/${file._id}`)}
-            >
-              Ver Heatmap
-            </button>
+            {file.mediaType === 0 && (
+              <button
+                className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                onClick={() => navigate(`eyeheatmap/${file._id}`)}
+              >
+                Ver Heatmap
+              </button>
+            )}
+            
             <button
               className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
               onClick={() => navigate(`heatmap-video/${file._id}`)}

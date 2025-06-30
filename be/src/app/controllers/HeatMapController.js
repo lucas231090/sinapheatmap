@@ -13,7 +13,7 @@ class HeatMapController {
         response
       );
 
-      const { filename, description, mediaType } = request.body;
+      const { filename, description } = request.body;
 
       if (!filename) {
         if (csvFile) fs.unlinkSync(csvFile.path);
@@ -43,7 +43,7 @@ class HeatMapController {
           description,
           path: csvFile.path,
           mediaPath: mediaFile?.path || null,
-          mediaType: parseInt(mediaType) || 0,
+          mediaType: mediaFile?.detectedMediaType || 0,
         },
         processedData
       );

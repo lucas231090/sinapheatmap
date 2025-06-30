@@ -8,6 +8,10 @@ const fileSchema = new mongoose.Schema({
   mediaPath: {
     type: String,
   },
+  mediaType: {
+    type: Number,
+    default: 0, // 0 for image, 1 for video
+  },
   description: {
     type: String,
   },
