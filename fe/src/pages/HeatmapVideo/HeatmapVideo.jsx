@@ -136,7 +136,7 @@ const VideoHeatmap = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 py-8 px-4">
+        <div className="min-h-screen py-8 px-4">
             <div className="max-w-4xl mx-auto">
                 {/* Caixa branca principal no meio da tela */}
                 <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
@@ -174,29 +174,32 @@ const VideoHeatmap = () => {
                             />
                         </div>
                         
-                        <div className="space-y-2 mb-6">
-                            <p className="text-lg text-gray-600">ID: {id}</p>
-                            <p className="text-lg text-gray-600">
-                                Tipo de arquivo: {mediaType === 1 ? 'Vídeo' : 'Imagem'}
-                            </p>
-                            {dataFile?.jsonData?.length > 1 && (
+                        <div className="flex flex-row gap-4 justify-center items-center space-y-2 mb-6">
+                            <div>
                                 <p className="text-lg text-gray-600">
-                                    Teste selecionado: {
-                                        selectedTestIndex === "all" ? "Todos os testes combinados" :
-                                        selectedTestIndex === "" ? "Nenhum teste selecionado" :
-                                        `Teste ${parseInt(selectedTestIndex) + 1}`
-                                    }
+                                Tipo de arquivo: {mediaType === 1 ? 'Vídeo' : 'Imagem'}
                                 </p>
-                            )}
-                            <p className="text-lg text-gray-600">
-                                Coordenadas disponíveis: {totalCoordinates}
-                            </p>
-                            <p className="text-lg text-gray-600">
-                                Velocidade: {pointsSpeed} pontos/segundo
-                            </p>
-                            <p className="text-lg text-gray-600">
-                                Duração estimada: {videoDuration.toFixed(1)}s
-                            </p>
+                                {dataFile?.jsonData?.length > 1 && (
+                                    <p className="text-lg text-gray-600">
+                                        Teste selecionado: {
+                                            selectedTestIndex === "all" ? "Todos os testes combinados" :
+                                            selectedTestIndex === "" ? "Nenhum teste selecionado" :
+                                            `Teste ${parseInt(selectedTestIndex) + 1}`
+                                        }
+                                    </p>
+                                )}
+                                <p className="text-lg text-gray-600">
+                                    Coordenadas disponíveis: {totalCoordinates}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-lg text-gray-600">
+                                    Velocidade: {pointsSpeed} pontos/segundo
+                                </p>
+                                <p className="text-lg text-gray-600">
+                                    Duração estimada: {videoDuration.toFixed(1)}s
+                                </p>
+                            </div>
                         </div>
 
                         <div className="flex justify-center space-x-4">
