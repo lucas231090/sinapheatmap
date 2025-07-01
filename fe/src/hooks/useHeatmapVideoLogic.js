@@ -1,14 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import h337 from '@mars3d/heatmap.js';
 import useHeatmapBase from '@/hooks/useHeatmapBase';
-import { downloadHeatMapImage } from "@/utils";
 
 /**
  * Hook específico para gerenciar a lógica do HeatmapVideo
  * Usa o hook base para funcionalidades compartilhadas e adiciona gravação de vídeo
  */
 const useHeatmapVideoLogic = (id) => {
-    console.log(`🎥 useHeatmapVideoLogic initialized with id: ${id}`);
     
     // Estados específicos do vídeo
     const [selectedTestIndex, setSelectedTestIndex] = useState("all");
@@ -19,7 +17,6 @@ const useHeatmapVideoLogic = (id) => {
         // Estados de dados do hook base
         fileName,
         dataFile,
-        jsonFile,
         mediaUrl,
         mediaType,
         coords,
@@ -30,7 +27,6 @@ const useHeatmapVideoLogic = (id) => {
         imageRef,
         // Funções do hook base
         calculateDuration,
-        setCanvasSize,
         setError,
     } = useHeatmapBase(id, selectedTestIndex, {
         useResponsiveCanvas: false,
@@ -70,13 +66,7 @@ const useHeatmapVideoLogic = (id) => {
     
     // Controle de timing mais preciso para vídeos - usar refs para persistir entre re-renders
     const currentCoordinateIndex = useRef(-1); // Começar com -1 para que o primeiro ponto (índice 0) seja adicionado
-    const lastProcessedIndex = useRef(0);
-    const videoTimerRef = useRef(null);
     const isInitialized = useRef(false); // Flag para evitar re-inicializações
-    
-    // Throttle para atualizações do heatmap
-    const lastHeatmapUpdate = useRef(0);
-    const heatmapUpdateThrottle = 100; // ms - permite máximo 10 atualizações por segundo
 
     // Configurações específicas do vídeo
     const fps = 30;
@@ -85,13 +75,7 @@ const useHeatmapVideoLogic = (id) => {
     // Calcula duração e total de coordenadas quando coords mudam
     useEffect(() => {
         if (coords.length > 0) {
-            console.log(`📊 Coordinates loaded: ${coords.length} points`);
-            console.log(`🎯 First 5 coordinates:`, coords.slice(0, 5));
-            console.log(`🎯 Last 5 coordinates:`, coords.slice(-5));
-            console.log(`⚡ Points per second: ${coordinatesPerSecond}`);
-            
             const duration = calculateDuration(coordinatesPerSecond);
-            console.log(`⏱️ Calculated duration: ${duration.toFixed(2)}s`);
             
             setVideoDuration(duration);
             setTotalCoordinates(coords.length);
@@ -104,7 +88,6 @@ const useHeatmapVideoLogic = (id) => {
      * Adiciona ponto do heatmap baseado nas coordenadas reais
      */
     const addHeatmapPoint = (timeElapsed) => {
-        console.log(`🔍 addHeatmapPoint called with timeElapsed: ${timeElapsed.toFixed(3)}s`);
         
         if (coords.length === 0) {
             console.log(`⚠️ No coordinates available`);
@@ -113,24 +96,19 @@ const useHeatmapVideoLogic = (id) => {
 
         // Calcula qual coordenada mostrar baseado no tempo
         const targetIndex = Math.floor(timeElapsed * coordinatesPerSecond);
-        console.log(`📊 Calculated target index: ${targetIndex} (timeElapsed: ${timeElapsed.toFixed(3)} * coordinatesPerSecond: ${coordinatesPerSecond})`);
-        console.log(`📈 Current coordinate index: ${currentCoordinateIndex.current}, Total coords: ${coords.length}`);
         
         if (targetIndex >= coords.length) {
-            console.log(`🏁 Reached end of coordinates (${targetIndex} >= ${coords.length})`);
             stopRecording(); // Para a gravação quando os pontos acabam
             return false; // Retorna false se chegou ao fim
         }
 
         // 🔧 CORREÇÃO: Evita adicionar pontos duplicados - só adiciona se targetIndex é maior que o atual
         if (targetIndex < currentCoordinateIndex.current) {
-            console.log(`⏭️ Skipping - target index ${targetIndex} < current index ${currentCoordinateIndex.current}`);
             return true; // Ainda há pontos, mas não adiciona pontos já processados
         }
 
         // Se targetIndex == currentCoordinateIndex.current, já foi processado (exceto no caso inicial)
         if (targetIndex === currentCoordinateIndex.current && currentCoordinateIndex.current >= 0) {
-            console.log(`⏭️ Skipping - target index ${targetIndex} == current index ${currentCoordinateIndex.current} (already processed)`);
             return true;
         }
 
@@ -145,7 +123,6 @@ const useHeatmapVideoLogic = (id) => {
         
         while (nextIndex <= targetIndex && nextIndex < coords.length) {
             const coordinate = coords[nextIndex];
-            console.log(`📍 Processing coordinate at index ${nextIndex}:`, coordinate);
             
             if (coordinate && coordinate.x !== undefined && coordinate.y !== undefined) {
                 // Garantir que as coordenadas estejam dentro dos limites
@@ -158,11 +135,9 @@ const useHeatmapVideoLogic = (id) => {
                     value: 100
                 };
                 
-                console.log(`✅ Adding point ${nextIndex}: (${x}, ${y}) from raw (${coordinate.x}, ${coordinate.y})`);
                 
                 setHeatmapData((prevData) => {
                     const newData = [...prevData, newPoint];
-                    console.log(`📋 Heatmap data updated. Previous length: ${prevData.length}, New length: ${newData.length}`);
                     return newData;
                 });
                 
@@ -177,7 +152,6 @@ const useHeatmapVideoLogic = (id) => {
         // Atualiza o índice atual para o último processado
         if (addedPoints > 0) {
             currentCoordinateIndex.current = targetIndex;
-            console.log(`🎯 Updated currentCoordinateIndex to: ${targetIndex} (added ${addedPoints} points)`);
         }
         
         return targetIndex < coords.length; // Retorna true se ainda há pontos para processar (targetIndex vai de 0 a coords.length-1)
@@ -264,40 +238,6 @@ const useHeatmapVideoLogic = (id) => {
         // Continua o loop de desenho se estiver gravando
         if (isRecording) {
             requestAnimationFrame(drawFrame);
-        }
-    };
-
-    /**
-     * Atualiza heatmap baseado no tempo - DEPRECADO
-     * Mantido apenas para compatibilidade, mas agora usamos simulateVideoPlayback
-     */
-    const updateHeatmapBasedOnTime = () => {
-        console.log(`⚠️ updateHeatmapBasedOnTime called - this method is deprecated, using timer-based approach instead`);
-        
-        // Para vídeos, agora usamos simulateVideoPlayback() em vez desta função
-        // Esta função é mantida apenas para compatibilidade mas não deveria ser chamada
-        
-        // Para imagens, o tempo é controlado pelo simulateImagePlayback
-    };
-
-    /**
-     * Inicia o loop de atualização precisa do heatmap para vídeos - DEPRECADO
-     * Agora usamos simulateVideoPlayback() que funciona de forma similar a simulateImagePlayback()
-     */
-    const startPreciseHeatmapUpdates = () => {
-        console.log(`⚠️ startPreciseHeatmapUpdates called - this method is deprecated`);
-        // Esta função não é mais necessária pois usamos timer-based approach
-    };
-
-    /**
-     * Para o loop de atualização precisa do heatmap - DEPRECADO
-     */
-    const stopPreciseHeatmapUpdates = () => {
-        console.log(`⚠️ stopPreciseHeatmapUpdates called - this method is deprecated`);
-        // Esta função não é mais necessária pois usamos timer-based approach
-        if (videoTimerRef.current) {
-            clearInterval(videoTimerRef.current);
-            videoTimerRef.current = null;
         }
     };
 
@@ -414,9 +354,6 @@ const useHeatmapVideoLogic = (id) => {
             mediaRecorderRef.current.stop();
             setIsRecording(false);
         }
-        
-        // Para o loop de atualização (não é mais necessário pois usamos timer simples)
-        // stopPreciseHeatmapUpdates(); // DEPRECADO
     };
 
     /**
@@ -542,9 +479,7 @@ const useHeatmapVideoLogic = (id) => {
             if (mediaType === 1) {
                 // É vídeo - inicia timer controlado em vez de depender de timeupdate
                 if (video) {
-                    console.log(`🎬 Starting video playback`);
                     video.play().then(() => {
-                        console.log(`▶️ Video started playing`);
                         startRecording();
                         drawFrame();
                         // Para vídeos, usar timer controlado como nas imagens
@@ -557,7 +492,6 @@ const useHeatmapVideoLogic = (id) => {
                 }
             } else {
                 // É imagem - inicia gravação imediatamente
-                console.log(`🖼️ Starting image mode`);
                 drawFrame(); // Desenha frame inicial
                 startRecording();
                 simulateImagePlayback();
@@ -579,8 +513,6 @@ const useHeatmapVideoLogic = (id) => {
             return;
         }
         
-        console.log(`🖼️ Starting image simulation with ${coords.length} points at ${coordinatesPerSecond} points/second`);
-        
         // Marcar como inicializado
         isInitialized.current = true;
         
@@ -595,19 +527,16 @@ const useHeatmapVideoLogic = (id) => {
         const interval = setInterval(() => {
             elapsed += 1 / fps;
             frameCount++;
-            console.log(`⏰ Image simulation frame ${frameCount}, time: ${elapsed.toFixed(3)}s`);
             setCurrentTime(elapsed);
             
             // Adiciona ponto do heatmap e verifica se ainda há pontos
             const hasMorePoints = addHeatmapPoint(elapsed);
-            console.log(`🔄 Image simulation - Has more points: ${hasMorePoints}`);
             
             // Desenha frame
             drawFrame();
             
             // Para quando os pontos do heatmap acabam (prioridade) ou quando atinge a duração máxima
             if (!hasMorePoints) {
-                console.log(`🏁 Image simulation finished - no more points`);
                 clearInterval(interval);
                 isInitialized.current = false; // Reset flag
                 return; // stopRecording já foi chamado em addHeatmapPoint
@@ -615,7 +544,6 @@ const useHeatmapVideoLogic = (id) => {
             
             // Fallback: para se exceder a duração estimada (para evitar loops infinitos)
             if (elapsed >= videoDuration) {
-                console.log(`⏱️ Image simulation finished - reached duration limit (${videoDuration}s)`);
                 clearInterval(interval);
                 isInitialized.current = false; // Reset flag
                 stopRecording();
@@ -633,7 +561,6 @@ const useHeatmapVideoLogic = (id) => {
             return;
         }
         
-        console.log(`🎬 Starting video simulation with ${coords.length} points at ${coordinatesPerSecond} points/second`);
         
         // Marcar como inicializado
         isInitialized.current = true;
@@ -651,7 +578,6 @@ const useHeatmapVideoLogic = (id) => {
             
             // Verificar se o vídeo ainda está disponível e tocando
             if (!video || video.paused || video.ended) {
-                console.log(`⏸️ Video stopped, paused, or ended - stopping simulation`);
                 clearInterval(interval);
                 isInitialized.current = false;
                 return;
@@ -659,7 +585,6 @@ const useHeatmapVideoLogic = (id) => {
             
             elapsed += 1 / fps;
             frameCount++;
-            console.log(`⏰ Video simulation frame ${frameCount}, time: ${elapsed.toFixed(3)}s`);
             
             // Sincronizar com o tempo do vídeo (permitir pequenas diferenças)
             const videoTime = video.currentTime;
@@ -667,7 +592,6 @@ const useHeatmapVideoLogic = (id) => {
             
             // Se a diferença for muito grande (>0.5s), resincronizar
             if (timeDiff > 0.5) {
-                console.log(`🔄 Resyncing: video time ${videoTime.toFixed(3)}s vs simulation ${elapsed.toFixed(3)}s`);
                 elapsed = videoTime;
             }
             
@@ -675,14 +599,12 @@ const useHeatmapVideoLogic = (id) => {
             
             // Adiciona ponto do heatmap e verifica se ainda há pontos
             const hasMorePoints = addHeatmapPoint(elapsed);
-            console.log(`🔄 Video simulation - Has more points: ${hasMorePoints}`);
             
             // Desenha frame
             drawFrame();
             
             // Para quando os pontos do heatmap acabam (prioridade)
             if (!hasMorePoints) {
-                console.log(`🏁 Video simulation finished - no more points`);
                 clearInterval(interval);
                 isInitialized.current = false;
                 
@@ -695,7 +617,6 @@ const useHeatmapVideoLogic = (id) => {
             
             // Fallback: para se exceder a duração estimada (para evitar loops infinitos)
             if (elapsed >= videoDuration) {
-                console.log(`⏱️ Video simulation finished - reached duration limit (${videoDuration}s)`);
                 clearInterval(interval);
                 isInitialized.current = false;
                 stopRecording();
@@ -713,9 +634,6 @@ const useHeatmapVideoLogic = (id) => {
             if (downloadLink && downloadLink.startsWith('blob:')) {
                 URL.revokeObjectURL(downloadLink);
             }
-            
-            // Para timers (não é mais necessário)
-            // stopPreciseHeatmapUpdates(); // DEPRECADO
         };
     }, [mediaUrl, downloadLink]);
 
@@ -786,7 +704,6 @@ const useHeatmapVideoLogic = (id) => {
 
     // Função para atualizar seleção de teste
     const updateTestSelection = (newSelectedIndex) => {
-        console.log(`🔄 Updating test selection from ${selectedTestIndex} to ${newSelectedIndex}`);
         // Só permite mudança quando não está gravando
         if (!isRecording) {
             setSelectedTestIndex(newSelectedIndex);
@@ -796,15 +713,11 @@ const useHeatmapVideoLogic = (id) => {
             setHeatmapData([]);
             isInitialized.current = false; // Reset flag
             
-            // Para timers (não é mais necessário)
-            // stopPreciseHeatmapUpdates(); // DEPRECADO
-            
             // Limpa download link anterior
             if (downloadLink && downloadLink.startsWith('blob:')) {
                 URL.revokeObjectURL(downloadLink);
                 setDownloadLink(null);
             }
-            console.log(`✅ Test selection updated and states reset`);
         } else {
             console.log(`⚠️ Cannot change test selection while recording`);
         }
@@ -812,7 +725,6 @@ const useHeatmapVideoLogic = (id) => {
 
     // Função para atualizar velocidade dos pontos
     const updatePointsSpeed = (newSpeed) => {
-        console.log(`🔄 Updating points speed from ${pointsSpeed} to ${newSpeed}`);
         // Só permite mudança quando não está gravando
         if (!isRecording) {
             setPointsSpeed(newSpeed);
@@ -822,15 +734,11 @@ const useHeatmapVideoLogic = (id) => {
             setHeatmapData([]);
             isInitialized.current = false; // Reset flag
             
-            // Para timers (não é mais necessário)
-            // stopPreciseHeatmapUpdates(); // DEPRECADO
-            
             // Limpa download link anterior
             if (downloadLink && downloadLink.startsWith('blob:')) {
                 URL.revokeObjectURL(downloadLink);
                 setDownloadLink(null);
             }
-            console.log(`✅ Points speed updated and states reset`);
         } else {
             console.log(`⚠️ Cannot change points speed while recording`);
         }
@@ -873,7 +781,6 @@ const useHeatmapVideoLogic = (id) => {
         // Funções
         handlePlayClick,
         stopRecording,
-        updateHeatmapBasedOnTime,
         drawFrame,
         updateTestSelection,
         updatePointsSpeed,

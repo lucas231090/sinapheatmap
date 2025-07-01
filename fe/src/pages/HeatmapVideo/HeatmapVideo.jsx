@@ -45,7 +45,6 @@ const VideoHeatmap = () => {
         // Funções
         handlePlayClick,
         stopRecording,
-        updateHeatmapBasedOnTime,
         drawFrame,
         updateTestSelection,
         updatePointsSpeed,
@@ -74,9 +73,6 @@ const VideoHeatmap = () => {
         video.addEventListener('loadedmetadata', handleLoadedMetadata);
         video.addEventListener('ended', handleEnded);
         video.addEventListener('error', handleError);
-        
-        // Event listener para atualizar heatmap conforme vídeo toca
-        video.addEventListener('timeupdate', updateHeatmapBasedOnTime);
 
         if (isRecording && mediaType === 1) {
             drawFrame();
@@ -86,9 +82,8 @@ const VideoHeatmap = () => {
             video.removeEventListener('loadedmetadata', handleLoadedMetadata);
             video.removeEventListener('ended', handleEnded);
             video.removeEventListener('error', handleError);
-            video.removeEventListener('timeupdate', updateHeatmapBasedOnTime);
         };
-    }, [isRecording, mediaType, updateHeatmapBasedOnTime, stopRecording, drawFrame, totalCoordinates]);
+    }, [isRecording, mediaType, stopRecording, drawFrame, totalCoordinates]);
 
     // Verificar se os refs estão prontos
     useEffect(() => {
