@@ -8,6 +8,9 @@ import { downloadHeatMapImage } from "@/utils";
  * Usa o hook base para funcionalidades compartilhadas e adiciona gravação de vídeo
  */
 const useHeatmapVideoLogic = (id) => {
+    // Estados específicos do vídeo
+    const [selectedTestIndex, setSelectedTestIndex] = useState("all");
+
     // Hook base para funcionalidades compartilhadas
     const {
         // Estados de dados do hook base
@@ -25,10 +28,21 @@ const useHeatmapVideoLogic = (id) => {
         calculateDuration,
         setCanvasSize,
         setError,
-    } = useHeatmapBase(id, "all", {
+    } = useHeatmapBase(id, selectedTestIndex, {
         useResponsiveCanvas: false,
         fixedCanvasSize: { width: 800, height: 450 }
     });
+
+    // Ajusta seleção padrão baseado nos dados disponíveis
+    useEffect(() => {
+        if (dataFile?.jsonData?.length > 1 && selectedTestIndex === "all") {
+            // Se há múltiplos testes, força seleção inicial vazia
+            setSelectedTestIndex("");
+        } else if (dataFile?.jsonData?.length === 1 && selectedTestIndex === "") {
+            // Se há apenas um teste, seleciona automaticamente
+            setSelectedTestIndex("all");
+        }
+    }, [dataFile, selectedTestIndex]);
 
     // Refs específicos do vídeo
     const videoRef = useRef(null);
@@ -628,6 +642,24 @@ const useHeatmapVideoLogic = (id) => {
         }
     }, [heatmapData]);
 
+    // Função para atualizar seleção de teste
+    const updateTestSelection = (newSelectedIndex) => {
+        // Só permite mudança quando não está gravando
+        if (!isRecording) {
+            setSelectedTestIndex(newSelectedIndex);
+            // Reset estados de progresso quando muda seleção
+            setCurrentTime(0);
+            setCurrentCoordinateIndex(0);
+            setHeatmapData([]);
+            
+            // Limpa download link anterior
+            if (downloadLink && downloadLink.startsWith('blob:')) {
+                URL.revokeObjectURL(downloadLink);
+                setDownloadLink(null);
+            }
+        }
+    };
+
     return {
         // Refs
         videoRef,
@@ -656,11 +688,16 @@ const useHeatmapVideoLogic = (id) => {
         isLoading,
         error,
         
+        // Estados de seleção
+        selectedTestIndex,
+        setSelectedTestIndex,
+        
         // Funções
         handlePlayClick,
         stopRecording,
         updateHeatmapBasedOnTime,
         drawFrame,
+        updateTestSelection,
     };
 };
 

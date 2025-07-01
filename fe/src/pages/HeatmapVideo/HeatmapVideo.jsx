@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import useHeatmapVideoLogic from '@/hooks/useHeatmapVideoLogic';
+import TestSelector from '@/components/HeatmapStatic/TestSelector';
 
 const VideoHeatmap = () => {
     const { id } = useParams();
@@ -34,11 +35,16 @@ const VideoHeatmap = () => {
         isLoading,
         error,
         
+        // Estados de seleção
+        selectedTestIndex,
+        setSelectedTestIndex,
+        
         // Funções
         handlePlayClick,
         stopRecording,
         updateHeatmapBasedOnTime,
         drawFrame,
+        updateTestSelection,
     } = useHeatmapVideoLogic(id);
 
     // Configurar event listeners para vídeo se for mídia de vídeo
@@ -138,11 +144,41 @@ const VideoHeatmap = () => {
                         <h1 className="text-3xl font-bold text-gray-800 mb-4">
                             {fileName || 'Teste de Eye Tracking'}
                         </h1>
+                        
+                        {/* Seletor de Teste */}
+                        {dataFile?.jsonData?.length > 1 && (
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Selecionar Teste:
+                                </label>
+                                <TestSelector
+                                    dataFile={dataFile}
+                                    selectedTestIndex={selectedTestIndex}
+                                    setSelectedTestIndex={updateTestSelection}
+                                    disabled={isRecording}
+                                />
+                                {selectedTestIndex === "" && (
+                                    <p className="text-sm text-orange-600 mt-1">
+                                        Este arquivo contém múltiplos testes. Selecione um teste para continuar.
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                        
                         <div className="space-y-2 mb-6">
                             <p className="text-lg text-gray-600">ID: {id}</p>
                             <p className="text-lg text-gray-600">
                                 Tipo de arquivo: {mediaType === 1 ? 'Vídeo' : 'Imagem'}
                             </p>
+                            {dataFile?.jsonData?.length > 1 && (
+                                <p className="text-lg text-gray-600">
+                                    Teste selecionado: {
+                                        selectedTestIndex === "all" ? "Todos os testes combinados" :
+                                        selectedTestIndex === "" ? "Nenhum teste selecionado" :
+                                        `Teste ${parseInt(selectedTestIndex) + 1}`
+                                    }
+                                </p>
+                            )}
                             <p className="text-lg text-gray-600">
                                 Coordenadas disponíveis: {totalCoordinates}
                             </p>
@@ -156,10 +192,16 @@ const VideoHeatmap = () => {
                                 <button 
                                     className="bg-sky-500 hover:bg-sky-600 active:bg-sky-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg hover:shadow-xl transform active:translate-y-1 transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
                                     onClick={handlePlayClick}
-                                    disabled={!mediaUrl || totalCoordinates === 0 || !refsReady}
+                                    disabled={
+                                        !mediaUrl || 
+                                        totalCoordinates === 0 || 
+                                        !refsReady || 
+                                        (dataFile?.jsonData?.length > 1 && selectedTestIndex === "")
+                                    }
                                 >
                                     {!refsReady ? 'Preparando...' :
                                      !mediaUrl ? 'Carregando mídia...' : 
+                                     (dataFile?.jsonData?.length > 1 && selectedTestIndex === "") ? 'Selecione um teste' :
                                      totalCoordinates === 0 ? 'Sem coordenadas disponíveis' : 
                                      'Iniciar Gravação'}
                                 </button>
