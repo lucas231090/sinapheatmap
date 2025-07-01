@@ -1,43 +1,49 @@
 import { useState, useEffect, useRef } from "react";
-import { getFileById, getFileMedia } from "@/services/fileService";
 import h337 from '@mars3d/heatmap.js';
-import {
-    combineCoordinates,
-    validateCoordinates,
-    scaleCoordinates,
-    calculateResponsiveScale,
-    calculateCanvasSize
-} from "@/utils";
+import useHeatmapBase from '@/hooks/useHeatmapBase';
+import { downloadHeatMapImage } from "@/utils";
 
 /**
  * Hook específico para gerenciar a lógica do HeatmapVideo
- * Integra com os dados reais do backend e gerencia a gravação de vídeo
+ * Usa o hook base para funcionalidades compartilhadas e adiciona gravação de vídeo
  */
 const useHeatmapVideoLogic = (id) => {
-    // Refs
+    // Hook base para funcionalidades compartilhadas
+    const {
+        // Estados de dados do hook base
+        fileName,
+        dataFile,
+        jsonFile,
+        mediaUrl,
+        mediaType,
+        coords,
+        canvasSize,
+        isLoading,
+        error,
+        imageRef,
+        // Funções do hook base
+        calculateDuration,
+        setCanvasSize,
+        setError,
+    } = useHeatmapBase(id, "all", {
+        useResponsiveCanvas: false,
+        fixedCanvasSize: { width: 800, height: 450 }
+    });
+
+    // Refs específicos do vídeo
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const heatmapContainerRef = useRef(null);
     const heatmapInstance = useRef(null);
     const mediaRecorderRef = useRef(null);
     const recordedChunks = useRef([]);
-    const imageRef = useRef(null); // Para cache da imagem
 
-    // Estados principais
-    const [fileName, setFileName] = useState("");
-    const [dataFile, setDataFile] = useState(null);
-    const [jsonFile, setJsonFile] = useState(null);
-    const [mediaUrl, setMediaUrl] = useState(null);
-    const [mediaType, setMediaType] = useState(0); // 0 = imagem, 1 = video
-    
-    // Estados de gravação
+    // Estados específicos de gravação
     const [isRecording, setIsRecording] = useState(false);
     const [downloadLink, setDownloadLink] = useState(null);
     
-    // Estados do heatmap
+    // Estados do heatmap em tempo real
     const [heatmapData, setHeatmapData] = useState([]);
-    const [coords, setCoords] = useState([]);
-    const [canvasSize, setCanvasSize] = useState({ width: 800, height: 450 });
     
     // Estados de tempo/progresso
     const [videoDuration, setVideoDuration] = useState(0);
@@ -45,133 +51,22 @@ const useHeatmapVideoLogic = (id) => {
     const [totalCoordinates, setTotalCoordinates] = useState(0);
     const [currentCoordinateIndex, setCurrentCoordinateIndex] = useState(0);
     
-    // Estados de controle
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
-    
     // Throttle para atualizações do heatmap
     const lastHeatmapUpdate = useRef(0);
     const heatmapUpdateThrottle = 100; // ms
 
-    // Configurações do heatmap
-    const fps = 30; // FPS mais realista para coordenadas
-    const coordinatesPerSecond = 10; // Quantas coordenadas por segundo mostrar
+    // Configurações específicas do vídeo
+    const fps = 30;
+    const coordinatesPerSecond = 10;
 
-    // Carrega dados quando ID muda
+    // Calcula duração e total de coordenadas quando coords mudam
     useEffect(() => {
-        if (id) {
-            fetchData();
-        }
-    }, [id]);
-
-    // Processa coordenadas quando dados mudam
-    useEffect(() => {
-        if (jsonFile && dataFile) {
-            processCoordinates();
-        }
-    }, [jsonFile, dataFile]);
-
-    /**
-     * Busca dados do backend
-     */
-    const fetchData = async () => {
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            const data = await getFileById(id);
-            
-            setFileName(data.filename);
-            setDataFile(data);
-            setMediaType(data.mediaType);
-
-            // Define o arquivo JSON
-            if (data.jsonData?.length > 0) {
-                setJsonFile(data.jsonData[0]);
-            } else {
-                console.warn('⚠️ No JSON data found');
-            }
-
-            // Carrega mídia se disponível
-            if (data.mediaPath) {
-                const mediaPath = data.mediaPath;
-                const mediaName = mediaPath.split("/").pop();
-                try {
-                    const mediaUrl = await getFileMedia(mediaName);
-                    setMediaUrl(mediaUrl);
-                    
-                    // Se for imagem, pré-carrega na referência
-                    if (data.mediaType === 0) {
-                        const img = new Image();
-                        img.onload = () => {
-                            imageRef.current = img;
-                        };
-                        img.onerror = () => {
-                            console.error('❌ Error preloading image');
-                        };
-                        img.crossOrigin = 'anonymous';
-                        img.src = mediaUrl;
-                    }
-                } catch (mediaError) {
-                    console.error("❌ Erro ao carregar mídia:", mediaError);
-                    setError(`Erro ao carregar mídia: ${mediaName} - ${mediaError.message}`);
-                }
-            } else {
-                console.warn("⚠️ Nenhuma mídia encontrada para este teste");
-                setError("Nenhuma mídia encontrada para este teste");
-            }
-        } catch (err) {
-            setError(err.message);
-            console.error("Erro ao buscar dados:", err);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    /**
-     * Processa coordenadas do teste
-     */
-    const processCoordinates = () => {
-        if (!jsonFile || !dataFile) return;
-
-        try {
-            // Combina todas as coordenadas (todos os testes)
-            const allCoords = combineCoordinates(dataFile, "all");
-            
-            // Valida coordenadas
-            const validCoords = validateCoordinates(allCoords);
-
-            if (validCoords.length === 0) {
-                console.warn("Nenhuma coordenada válida disponível");
-                setCoords([]);
-                return;
-            }
-
-            // Calcula escala baseada no tamanho da tela original
-            const screenWidth = parseInt(jsonFile["Largura Tela"]) || 1920;
-            const screenHeight = parseInt(jsonFile["Altura Tela"]) || 1080;
-            
-            const scale = Math.min(
-                canvasSize.width / screenWidth,
-                canvasSize.height / screenHeight
-            );
-
-            // Escala coordenadas
-            const scaledCoords = scaleCoordinates(validCoords, scale);
-
-            setCoords(scaledCoords);
-            setTotalCoordinates(scaledCoords.length);
-            
-            // Calcula duração baseada nas coordenadas
-            const duration = scaledCoords.length / coordinatesPerSecond;
+        if (coords.length > 0) {
+            const duration = calculateDuration(coordinatesPerSecond);
             setVideoDuration(duration);
-
-        } catch (error) {
-            console.error("Erro ao processar coordenadas:", error);
-            setCoords([]);
-            setError("Erro ao processar coordenadas do teste");
+            setTotalCoordinates(coords.length);
         }
-    };
+    }, [coords, calculateDuration]);
 
     /**
      * Adiciona ponto do heatmap baseado nas coordenadas reais
@@ -179,15 +74,17 @@ const useHeatmapVideoLogic = (id) => {
     const addHeatmapPoint = (timeElapsed) => {
         if (coords.length === 0) {
             console.log('🔍 No coordinates available');
-            return;
+            return false; // Retorna false se não há coordenadas
         }
 
         // Calcula qual coordenada mostrar baseado no tempo
         const coordinateIndex = Math.floor(timeElapsed * coordinatesPerSecond);
         
         if (coordinateIndex >= coords.length) {
-            console.log('🔍 Index out of bounds:', coordinateIndex, '/', coords.length);
-            return;
+            console.log('🔍 Index out of bounds - all heatmap points processed:', coordinateIndex, '/', coords.length);
+            console.log('🎬 Stopping recording - heatmap data finished');
+            stopRecording(); // Para a gravação quando os pontos acabam
+            return false; // Retorna false se chegou ao fim
         }
 
         const coordinate = coords[coordinateIndex];
@@ -203,7 +100,7 @@ const useHeatmapVideoLogic = (id) => {
                 value: 100
             };
 
-            console.log('🎯 Adding point:', newPoint, 'time:', timeElapsed.toFixed(2));
+            console.log('🎯 Adding point:', newPoint, 'time:', timeElapsed.toFixed(2), 'index:', coordinateIndex);
             
             setHeatmapData((prevData) => {
                 const newData = [...prevData, newPoint];
@@ -234,6 +131,8 @@ const useHeatmapVideoLogic = (id) => {
             });
             setCurrentCoordinateIndex(coordinateIndex);
         }
+        
+        return true; // Retorna true se ainda há pontos para processar
     };
 
     /**
@@ -330,7 +229,16 @@ const useHeatmapVideoLogic = (id) => {
             if (video) {
                 const videoCurrentTime = video.currentTime;
                 setCurrentTime(videoCurrentTime);
-                addHeatmapPoint(videoCurrentTime);
+                
+                // Adiciona ponto do heatmap e verifica se ainda há pontos
+                const hasMorePoints = addHeatmapPoint(videoCurrentTime);
+                
+                // Se não há mais pontos, para o vídeo e a gravação
+                if (!hasMorePoints && video) {
+                    console.log('🎬 Video paused - heatmap points finished at', videoCurrentTime.toFixed(2), 's');
+                    video.pause(); // Para o vídeo quando os pontos acabam
+                    // stopRecording já foi chamado em addHeatmapPoint
+                }
             }
         }
         // Para imagens, o tempo é controlado pelo simulateImagePlayback
@@ -612,13 +520,22 @@ const useHeatmapVideoLogic = (id) => {
             elapsed += 1 / fps;
             setCurrentTime(elapsed);
             
-            // Adiciona ponto do heatmap
-            addHeatmapPoint(elapsed);
+            // Adiciona ponto do heatmap e verifica se ainda há pontos
+            const hasMorePoints = addHeatmapPoint(elapsed);
             
             // Desenha frame
             drawFrame();
             
+            // Para quando os pontos do heatmap acabam (prioridade) ou quando atinge a duração máxima
+            if (!hasMorePoints) {
+                console.log('🎬 Simulation ended - heatmap points finished at', elapsed.toFixed(2), 's');
+                clearInterval(interval);
+                return; // stopRecording já foi chamado em addHeatmapPoint
+            }
+            
+            // Fallback: para se exceder a duração estimada (para evitar loops infinitos)
             if (elapsed >= videoDuration) {
+                console.log('🎬 Simulation ended - duration limit reached at', elapsed.toFixed(2), 's');
                 clearInterval(interval);
                 stopRecording();
             }
@@ -744,9 +661,6 @@ const useHeatmapVideoLogic = (id) => {
         stopRecording,
         updateHeatmapBasedOnTime,
         drawFrame,
-        
-        // Função para refetch
-        refetchData: fetchData,
     };
 };
 

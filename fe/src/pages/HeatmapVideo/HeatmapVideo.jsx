@@ -189,11 +189,18 @@ const VideoHeatmap = () => {
                             <div className="w-full bg-gray-200 rounded-full h-3">
                                 <div 
                                     className="bg-sky-500 h-3 rounded-full transition-all duration-300"
-                                    style={{ width: `${(currentTime / videoDuration) * 100}%` }}
+                                    style={{ 
+                                        width: `${totalCoordinates > 0 ? (currentCoordinateIndex / totalCoordinates) * 100 : 0}%` 
+                                    }}
                                 ></div>
                             </div>
                             <p className="text-lg text-gray-600">
-                                Tempo: {currentTime.toFixed(1)}s / {videoDuration.toFixed(1)}s
+                                Tempo: {currentTime.toFixed(1)}s
+                                {totalCoordinates > 0 && (
+                                    <span className="ml-2 text-sm text-gray-500">
+                                        (Ponto {currentCoordinateIndex + 1} de {totalCoordinates})
+                                    </span>
+                                )}
                             </p>
                         </div>
                     </div>

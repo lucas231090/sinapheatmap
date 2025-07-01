@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
-import useHeatmapLogic from "@/hooks/useHeatmapLogic";
+import useHeatmapBase from "@/hooks/useHeatmapBase";
+import { downloadHeatMapImage } from "@/utils";
 
 /**
  * Hook específico para gerenciar a visualização estática do heatmap
- * Usa o hook de lógica geral e adiciona funcionalidades específicas da visualização estática
+ * Usa o hook base e adiciona funcionalidades específicas da visualização estática
  */
 const useHeatmapStaticLogic = (id) => {
     // Refs necessários para a visualização estática
@@ -16,18 +17,43 @@ const useHeatmapStaticLogic = (id) => {
     const [heatmapCanvasVisible, setHeatmapCanvasVisible] = useState(true);
     const [selectedTestIndex, setSelectedTestIndex] = useState("all");
 
-    // Usa o hook de lógica geral
-    const heatmapLogic = useHeatmapLogic(id, selectedTestIndex);
+    // Usa o hook base diretamente
+    const {
+        // Estados de dados
+        fileName,
+        dataFile,
+        jsonFile,
+        mediaUrl: img,
+        coords,
+        canvasSize,
+        radiusScale,
+        windowSize,
+        
+        // Estados de controle
+        isLoading,
+        error,
+        
+        // Funções
+        reprocessData,
+    } = useHeatmapBase(id, selectedTestIndex);
 
     // Função para download que inclui as referências necessárias
     const downloadHeatMap = () => {
-        heatmapLogic.downloadHeatMap({
+        downloadHeatMapImage({
             heatmapCanvasRef,
             canvasRef,
             imgRef,
             heatmapVisible: heatmapCanvasVisible,
             canvasVisible: canvasVisible,
+            canvasSize,
+            fileName
         });
+    };
+
+    // Função para atualizar seleção de teste
+    const updateTestSelection = (newSelectedIndex) => {
+        setSelectedTestIndex(newSelectedIndex);
+        // O hook base já reprocessará automaticamente quando selectedTestIndex mudar
     };
 
     return {
@@ -46,11 +72,24 @@ const useHeatmapStaticLogic = (id) => {
         selectedTestIndex,
         setSelectedTestIndex,
 
-        // Dados do heatmap (delegados)
-        ...heatmapLogic,
+        // Estados de dados (do hook base)
+        fileName,
+        dataFile,
+        jsonFile,
+        img,
+        coords,
+        radiusScale,
+        canvasSize,
+        windowSize,
 
-        // Função de download customizada
+        // Estados de controle (do hook base)
+        isLoading,
+        error,
+
+        // Funções
         downloadHeatMap,
+        updateTestSelection,
+        refetchData: reprocessData,
     };
 };
 
