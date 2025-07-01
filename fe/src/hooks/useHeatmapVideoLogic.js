@@ -268,122 +268,33 @@ const useHeatmapVideoLogic = (id) => {
     };
 
     /**
-     * Atualiza heatmap baseado no tempo com controle preciso
+     * Atualiza heatmap baseado no tempo - DEPRECADO
+     * Mantido apenas para compatibilidade, mas agora usamos simulateVideoPlayback
      */
     const updateHeatmapBasedOnTime = () => {
-        const now = performance.now();
-        const timeSinceLastUpdate = now - lastHeatmapUpdate.current;
+        console.log(`⚠️ updateHeatmapBasedOnTime called - this method is deprecated, using timer-based approach instead`);
         
-        console.log(`🔄 updateHeatmapBasedOnTime called - Time since last: ${timeSinceLastUpdate.toFixed(1)}ms`);
+        // Para vídeos, agora usamos simulateVideoPlayback() em vez desta função
+        // Esta função é mantida apenas para compatibilidade mas não deveria ser chamada
         
-        if (mediaType === 1) {
-            // Para vídeos, usa o currentTime do vídeo
-            const video = videoRef.current;
-            if (video && !video.paused && !video.ended) {
-                const videoCurrentTime = video.currentTime;
-                console.log(`🎬 Video time update: ${videoCurrentTime.toFixed(3)}s (called ${timeSinceLastUpdate.toFixed(1)}ms after last)`);
-                
-                // Throttle para evitar chamadas excessivas
-                if (timeSinceLastUpdate < heatmapUpdateThrottle) {
-                    console.log(`⏭️ Throttling update (${timeSinceLastUpdate}ms < ${heatmapUpdateThrottle}ms)`);
-                    return;
-                }
-                
-                lastHeatmapUpdate.current = now;
-                setCurrentTime(videoCurrentTime);
-                
-                // 🔧 CORREÇÃO: Adiciona TODOS os pontos intermediários que foram perdidos
-                const targetIndex = Math.floor(videoCurrentTime * coordinatesPerSecond);
-                console.log(`🎯 Target index: ${targetIndex}, Current index: ${currentCoordinateIndex.current}`);
-                
-                // Adiciona todos os pontos do currentCoordinateIndex+1 até targetIndex
-                let hasMorePoints = true;
-                let nextIndex = currentCoordinateIndex.current + 1;
-                
-                while (nextIndex <= targetIndex && hasMorePoints) {
-                    const timeForThisPoint = nextIndex / coordinatesPerSecond;
-                    console.log(`➕ Adding missed point ${nextIndex} at time ${timeForThisPoint.toFixed(3)}s`);
-                    hasMorePoints = addHeatmapPoint(timeForThisPoint);
-                    
-                    if (!hasMorePoints) {
-                        console.log(`🏁 No more points available at index ${nextIndex}`);
-                        break;
-                    }
-                    
-                    nextIndex++;
-                }
-                
-                console.log(`🔄 Has more points: ${hasMorePoints}`);
-                
-                // Se não há mais pontos, para o vídeo e a gravação
-                if (!hasMorePoints && video) {
-                    console.log(`🛑 Stopping video playback - no more points`);
-                    video.pause();
-                    // stopRecording já foi chamado em addHeatmapPoint
-                }
-            }
-        }
         // Para imagens, o tempo é controlado pelo simulateImagePlayback
     };
 
     /**
-     * Inicia o loop de atualização precisa do heatmap para vídeos
+     * Inicia o loop de atualização precisa do heatmap para vídeos - DEPRECADO
+     * Agora usamos simulateVideoPlayback() que funciona de forma similar a simulateImagePlayback()
      */
     const startPreciseHeatmapUpdates = () => {
-        console.log(`🚀 Starting precise heatmap updates with coordinatesPerSecond: ${coordinatesPerSecond}`);
-        lastProcessedIndex.current = 0;
-        
-        // Para qualquer timer anterior
-        if (videoTimerRef.current) {
-            console.log(`🛑 Clearing previous timer`);
-            clearInterval(videoTimerRef.current);
-        }
-        
-        // Cria um timer que roda na frequência desejada dos pontos
-        const timerInterval = 1000 / coordinatesPerSecond; // ms entre pontos
-        console.log(`⏱️ Timer interval: ${timerInterval}ms (${coordinatesPerSecond} points per second)`);
-        
-        videoTimerRef.current = setInterval(() => {
-            const video = videoRef.current;
-            if (!video || video.paused || video.ended) {
-                console.log(`⏸️ Video stopped or ended, stopping timer`);
-                stopPreciseHeatmapUpdates();
-                return;
-            }
-            
-            const videoCurrentTime = video.currentTime;
-            console.log(`⏰ Timer tick - Video time: ${videoCurrentTime.toFixed(3)}s`);
-            setCurrentTime(videoCurrentTime);
-            
-            // Calcula qual ponto deveria ser mostrado baseado no tempo do vídeo
-            const targetIndex = Math.floor(videoCurrentTime * coordinatesPerSecond);
-            console.log(`🎯 Target index: ${targetIndex}, Last processed: ${lastProcessedIndex.current}`);
-            
-            // Adiciona pontos se necessário (para catch up se o timer atrasou)
-            while (lastProcessedIndex.current <= targetIndex) {
-                const timeForThisPoint = lastProcessedIndex.current / coordinatesPerSecond;
-                console.log(`➕ Processing point ${lastProcessedIndex.current} at time ${timeForThisPoint.toFixed(3)}s`);
-                const hasMorePoints = addHeatmapPoint(timeForThisPoint);
-                
-                if (!hasMorePoints) {
-                    console.log(`🏁 No more points available, stopping`);
-                    video.pause();
-                    stopPreciseHeatmapUpdates();
-                    return;
-                }
-                
-                lastProcessedIndex.current++;
-                console.log(`📈 Incremented lastProcessedIndex to: ${lastProcessedIndex.current}`);
-            }
-        }, timerInterval);
-        
-        console.log(`✅ Precise timer started with interval ${timerInterval}ms`);
+        console.log(`⚠️ startPreciseHeatmapUpdates called - this method is deprecated`);
+        // Esta função não é mais necessária pois usamos timer-based approach
     };
 
     /**
-     * Para o loop de atualização precisa do heatmap
+     * Para o loop de atualização precisa do heatmap - DEPRECADO
      */
     const stopPreciseHeatmapUpdates = () => {
+        console.log(`⚠️ stopPreciseHeatmapUpdates called - this method is deprecated`);
+        // Esta função não é mais necessária pois usamos timer-based approach
         if (videoTimerRef.current) {
             clearInterval(videoTimerRef.current);
             videoTimerRef.current = null;
@@ -504,8 +415,8 @@ const useHeatmapVideoLogic = (id) => {
             setIsRecording(false);
         }
         
-        // Para o loop de atualização precisa
-        stopPreciseHeatmapUpdates();
+        // Para o loop de atualização (não é mais necessário pois usamos timer simples)
+        // stopPreciseHeatmapUpdates(); // DEPRECADO
     };
 
     /**
@@ -629,14 +540,15 @@ const useHeatmapVideoLogic = (id) => {
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             if (mediaType === 1) {
-                // É vídeo - reproduz normalmente
+                // É vídeo - inicia timer controlado em vez de depender de timeupdate
                 if (video) {
                     console.log(`🎬 Starting video playback`);
                     video.play().then(() => {
                         console.log(`▶️ Video started playing`);
                         startRecording();
                         drawFrame();
-                        // Para vídeos, o heatmap é atualizado via event listener timeupdate
+                        // Para vídeos, usar timer controlado como nas imagens
+                        simulateVideoPlayback();
                     }).catch(err => {
                         console.error('❌ Erro ao reproduzir vídeo:', err);
                         setError(`Erro ao reproduzir vídeo: ${err.message}`);
@@ -711,6 +623,86 @@ const useHeatmapVideoLogic = (id) => {
         }, 1000 / fps);
     };
 
+    /**
+     * Simula reprodução para vídeos com controle preciso de timing
+     */
+    const simulateVideoPlayback = () => {
+        // Evitar múltiplas inicializações
+        if (isInitialized.current) {
+            console.log(`⚠️ simulateVideoPlayback already running, ignoring duplicate call`);
+            return;
+        }
+        
+        console.log(`🎬 Starting video simulation with ${coords.length} points at ${coordinatesPerSecond} points/second`);
+        
+        // Marcar como inicializado
+        isInitialized.current = true;
+        
+        // Reset states para garantir que comece do zero
+        setCurrentTime(0);
+        currentCoordinateIndex.current = -1; // Começar com -1 para que o índice 0 seja o primeiro
+        setHeatmapData([]);
+        
+        let elapsed = 0;
+        let frameCount = 0;
+        
+        const interval = setInterval(() => {
+            const video = videoRef.current;
+            
+            // Verificar se o vídeo ainda está disponível e tocando
+            if (!video || video.paused || video.ended) {
+                console.log(`⏸️ Video stopped, paused, or ended - stopping simulation`);
+                clearInterval(interval);
+                isInitialized.current = false;
+                return;
+            }
+            
+            elapsed += 1 / fps;
+            frameCount++;
+            console.log(`⏰ Video simulation frame ${frameCount}, time: ${elapsed.toFixed(3)}s`);
+            
+            // Sincronizar com o tempo do vídeo (permitir pequenas diferenças)
+            const videoTime = video.currentTime;
+            const timeDiff = Math.abs(elapsed - videoTime);
+            
+            // Se a diferença for muito grande (>0.5s), resincronizar
+            if (timeDiff > 0.5) {
+                console.log(`🔄 Resyncing: video time ${videoTime.toFixed(3)}s vs simulation ${elapsed.toFixed(3)}s`);
+                elapsed = videoTime;
+            }
+            
+            setCurrentTime(elapsed);
+            
+            // Adiciona ponto do heatmap e verifica se ainda há pontos
+            const hasMorePoints = addHeatmapPoint(elapsed);
+            console.log(`🔄 Video simulation - Has more points: ${hasMorePoints}`);
+            
+            // Desenha frame
+            drawFrame();
+            
+            // Para quando os pontos do heatmap acabam (prioridade)
+            if (!hasMorePoints) {
+                console.log(`🏁 Video simulation finished - no more points`);
+                clearInterval(interval);
+                isInitialized.current = false;
+                
+                // Para o vídeo também
+                if (video && !video.paused) {
+                    video.pause();
+                }
+                return; // stopRecording já foi chamado em addHeatmapPoint
+            }
+            
+            // Fallback: para se exceder a duração estimada (para evitar loops infinitos)
+            if (elapsed >= videoDuration) {
+                console.log(`⏱️ Video simulation finished - reached duration limit (${videoDuration}s)`);
+                clearInterval(interval);
+                isInitialized.current = false;
+                stopRecording();
+            }
+        }, 1000 / fps);
+    };
+
     // Cleanup de URLs e timers quando componente desmonta
     useEffect(() => {
         return () => {
@@ -722,8 +714,8 @@ const useHeatmapVideoLogic = (id) => {
                 URL.revokeObjectURL(downloadLink);
             }
             
-            // Para timers
-            stopPreciseHeatmapUpdates();
+            // Para timers (não é mais necessário)
+            // stopPreciseHeatmapUpdates(); // DEPRECADO
         };
     }, [mediaUrl, downloadLink]);
 
@@ -804,8 +796,8 @@ const useHeatmapVideoLogic = (id) => {
             setHeatmapData([]);
             isInitialized.current = false; // Reset flag
             
-            // Para timers
-            stopPreciseHeatmapUpdates();
+            // Para timers (não é mais necessário)
+            // stopPreciseHeatmapUpdates(); // DEPRECADO
             
             // Limpa download link anterior
             if (downloadLink && downloadLink.startsWith('blob:')) {
@@ -830,8 +822,8 @@ const useHeatmapVideoLogic = (id) => {
             setHeatmapData([]);
             isInitialized.current = false; // Reset flag
             
-            // Para timers
-            stopPreciseHeatmapUpdates();
+            // Para timers (não é mais necessário)
+            // stopPreciseHeatmapUpdates(); // DEPRECADO
             
             // Limpa download link anterior
             if (downloadLink && downloadLink.startsWith('blob:')) {
