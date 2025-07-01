@@ -1,10 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import useHeatmapVideoLogic from '@/hooks/useHeatmapVideoLogic';
-import './HeatVideo.css';
 
 const VideoHeatmap = () => {
     const { id } = useParams();
+    const [refsReady, setRefsReady] = useState(false);
     
     // Hook centralizado para toda a lógica
     const {
@@ -79,11 +79,30 @@ const VideoHeatmap = () => {
         };
     }, [isRecording, mediaType, updateHeatmapBasedOnTime, stopRecording, drawFrame, totalCoordinates]);
 
+    // Verificar se os refs estão prontos
+    useEffect(() => {
+        const checkRefs = () => {
+            if (canvasRef.current && heatmapContainerRef.current) {
+                setRefsReady(true);
+            }
+        };
+        
+        checkRefs();
+        
+        // Se ainda não estão prontos, verificar novamente após um tempo
+        if (!refsReady) {
+            const timeout = setTimeout(checkRefs, 100);
+            return () => clearTimeout(timeout);
+        }
+    }, [canvasRef, heatmapContainerRef, refsReady]);
+
     // Exibe loading se estiver carregando
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center h-screen">
-                <div className="text-xl">Carregando dados do teste...</div>
+            <div className="min-h-screen bg-gray-100 flex justify-center items-center">
+                <div className="bg-white rounded-2xl shadow-lg p-8">
+                    <div className="text-xl text-gray-700">Carregando dados do teste...</div>
+                </div>
             </div>
         );
     }
@@ -91,8 +110,10 @@ const VideoHeatmap = () => {
     // Exibe erro se houver
     if (error) {
         return (
-            <div className="flex justify-center items-center h-screen">
-                <div className="text-xl text-red-500">Erro: {error}</div>
+            <div className="min-h-screen bg-gray-100 flex justify-center items-center">
+                <div className="bg-white rounded-2xl shadow-lg p-8">
+                    <div className="text-xl text-red-500">Erro: {error}</div>
+                </div>
             </div>
         );
     }
@@ -100,165 +121,174 @@ const VideoHeatmap = () => {
     // Se não há ID, exibe mensagem
     if (!id) {
         return (
-            <div className="flex justify-center items-center h-screen">
-                <div className="text-xl">Nenhum ID de teste fornecido</div>
+            <div className="min-h-screen bg-gray-100 flex justify-center items-center">
+                <div className="bg-white rounded-2xl shadow-lg p-8">
+                    <div className="text-xl text-gray-700">Nenhum ID de teste fornecido</div>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className='body-video'>
-            {/* Container para a área de gravação */}
-            <div 
-                style={{
-                    position: 'relative',
-                    width: `${canvasSize.width}px`,
-                    height: `${canvasSize.height}px`,
-                    margin: '20px auto',
-                    border: '2px solid #ccc',
-                    backgroundColor: '#000'
-                }}
-            >
-                {/* Mídia de fundo (vídeo ou imagem) */}
-                {mediaType === 1 && mediaUrl ? (
-                    <video
-                        ref={videoRef}
-                        src={mediaUrl}
-                        muted
-                        playsInline
-                        preload="auto"
-                        style={{ 
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover'
-                        }}
-                        onLoadStart={() => console.log('Video load started')}
-                        onLoadedData={() => console.log('Video data loaded')}
-                        onCanPlay={() => console.log('Video can play')}
-                        onError={(e) => {
-                            console.error('Video error:', e.target.error);
-                            const error = e.target.error;
-                            if (error) {
-                                console.error('Error code:', error.code);
-                                console.error('Error message:', error.message);
-                                
-                                // Se for erro de range request, tentar recarregar com URL direta
-                                if (error.code === 3) { // MEDIA_ERR_DECODE
-                                    console.log('Attempting to reload video with different strategy...');
-                                    // Força reload do componente ou tenta nova estratégia
-                                }
-                            }
-                        }}
-                    />
-                ) : mediaType === 0 && mediaUrl ? (
-                    <img
-                        src={mediaUrl}
-                        alt="Test media"
-                        style={{ 
-                            position: 'absolute',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover'
-                        }}
-                        onLoad={() => console.log('Image loaded successfully')}
-                        onError={() => console.error('Error loading image')}
-                    />
-                ) : null}
+        <div className="min-h-screen bg-gray-100 py-8 px-4">
+            <div className="max-w-4xl mx-auto">
+                {/* Caixa branca principal no meio da tela */}
+                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+                    <div className="text-center">
+                        <h1 className="text-3xl font-bold text-gray-800 mb-4">
+                            {fileName || 'Teste de Eye Tracking'}
+                        </h1>
+                        <div className="space-y-2 mb-6">
+                            <p className="text-lg text-gray-600">ID: {id}</p>
+                            <p className="text-lg text-gray-600">
+                                Tipo de arquivo: {mediaType === 1 ? 'Vídeo' : 'Imagem'}
+                            </p>
+                            <p className="text-lg text-gray-600">
+                                Coordenadas disponíveis: {totalCoordinates}
+                            </p>
+                            <p className="text-lg text-gray-600">
+                                Duração estimada: {videoDuration.toFixed(1)}s
+                            </p>
+                        </div>
 
-                {/* Container do heatmap sobreposto */}
-                <div
-                    ref={heatmapContainerRef}
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        pointerEvents: 'none',
-                        zIndex: 10
-                    }}
-                ></div>
+                        <div className="flex justify-center space-x-4">
+                            {!isRecording && !downloadLink && (
+                                <button 
+                                    className="bg-sky-500 hover:bg-sky-600 active:bg-sky-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg hover:shadow-xl transform active:translate-y-1 transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                    onClick={handlePlayClick}
+                                    disabled={!mediaUrl || totalCoordinates === 0 || !refsReady}
+                                >
+                                    {!refsReady ? 'Preparando...' :
+                                     !mediaUrl ? 'Carregando mídia...' : 
+                                     totalCoordinates === 0 ? 'Sem coordenadas disponíveis' : 
+                                     'Iniciar Gravação'}
+                                </button>
+                            )}
 
-                {/* Canvas para gravação (invisível ao usuário) */}
+                            {downloadLink && (
+                                <a 
+                                    href={downloadLink} 
+                                    download={`heatmap-${fileName}.webm`}
+                                    className="bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg hover:shadow-xl transform active:translate-y-1 transition-all duration-200"
+                                >
+                                    Baixar Vídeo
+                                </a>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Container da área de gravação - renderizado sempre mas visível apenas durante gravação */}
+                <div className={`bg-white rounded-2xl shadow-lg p-8 mb-8 ${!isRecording ? 'hidden' : ''}`}>
+                    <div className="text-center mb-6">
+                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Gravando...</h2>
+                        <div className="space-y-2">
+                            <p className="text-lg text-gray-600">
+                                Progresso: {currentCoordinateIndex}/{totalCoordinates} coordenadas
+                            </p>
+                            <div className="w-full bg-gray-200 rounded-full h-3">
+                                <div 
+                                    className="bg-sky-500 h-3 rounded-full transition-all duration-300"
+                                    style={{ width: `${(currentTime / videoDuration) * 100}%` }}
+                                ></div>
+                            </div>
+                            <p className="text-lg text-gray-600">
+                                Tempo: {currentTime.toFixed(1)}s / {videoDuration.toFixed(1)}s
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Container para a área de gravação */}
+                    <div 
+                        className="mx-auto border-2 border-gray-300 bg-black rounded-lg overflow-hidden"
+                        style={{
+                            width: `${canvasSize.width}px`,
+                            height: `${canvasSize.height}px`,
+                            position: 'relative'
+                        }}
+                    >
+                        {/* Mídia de fundo (vídeo ou imagem) */}
+                        {mediaType === 1 && mediaUrl ? (
+                            <video
+                                ref={videoRef}
+                                src={mediaUrl}
+                                muted
+                                playsInline
+                                preload="auto"
+                                className="absolute inset-0 w-full h-full object-cover"
+                                onLoadStart={() => console.log('Video load started')}
+                                onLoadedData={() => console.log('Video data loaded')}
+                                onCanPlay={() => console.log('Video can play')}
+                                onError={(e) => {
+                                    console.error('Video error:', e.target.error);
+                                    const error = e.target.error;
+                                    if (error) {
+                                        console.error('Error code:', error.code);
+                                        console.error('Error message:', error.message);
+                                        
+                                        // Se for erro de range request, tentar recarregar com URL direta
+                                        if (error.code === 3) { // MEDIA_ERR_DECODE
+                                            console.log('Attempting to reload video with different strategy...');
+                                            // Força reload do componente ou tenta nova estratégia
+                                        }
+                                    }
+                                }}
+                            />
+                        ) : mediaType === 0 && mediaUrl ? (
+                            <img
+                                src={mediaUrl}
+                                alt="Test media"
+                                className="absolute inset-0 w-full h-full object-cover"
+                                onLoad={() => console.log('Image loaded successfully')}
+                                onError={() => console.error('Error loading image')}
+                            />
+                        ) : null}
+
+                        {/* Container do heatmap sobreposto */}
+                        <div
+                            ref={heatmapContainerRef}
+                            className="absolute inset-0 pointer-events-none z-10"
+                        ></div>
+                    </div>
+                </div>
+
+                {/* Canvas para gravação (sempre renderizado mas invisível) */}
                 <canvas
                     ref={canvasRef}
                     width={canvasSize.width}
                     height={canvasSize.height}
+                    className="absolute pointer-events-none"
                     style={{ 
-                        position: 'absolute',
                         top: '-9999px',
-                        left: '-9999px',
-                        pointerEvents: 'none'
+                        left: '-9999px'
                     }}
                 ></canvas>
-            </div>
 
-            <div className='white-box'>
-                {!isRecording ? (
-                    <div className='button-box'>
-                        <div>
-                            <h3>Teste: {fileName}</h3>
-                            <p>ID: {id}</p>
-                            <p>Coordenadas disponíveis: {totalCoordinates}</p>
-                            <p>Tipo de mídia: {mediaType === 1 ? 'Vídeo' : 'Imagem'}</p>
-                            <p>Duração estimada: {videoDuration.toFixed(1)}s</p>
-                            <p>Status da mídia: {mediaUrl ? 'Carregada' : 'Não carregada'}</p>
-                            {mediaUrl && (
-                                <>
-                                    <p>Tipo URL: {mediaUrl.startsWith('blob:') ? 'Blob URL' : 'Direct URL'}</p>
-                                    <p>URL: {mediaUrl.substring(0, 50)}...</p>
-                                </>
-                            )}
-                            <button 
-                                className='submit' 
-                                onClick={handlePlayClick}
-                                disabled={!mediaUrl || totalCoordinates === 0}
-                            >
-                                {!mediaUrl ? 'Carregando mídia...' : 
-                                 totalCoordinates === 0 ? 'Sem coordenadas disponíveis' : 
-                                 'Start Recording'}
-                            </button>
-                        </div>
-                    </div>
-                ) : (
-                    <div className='Video-box'>
-                        <div className='button-box'>
-                            <button className='loading-btn' disabled>Recording</button>
-                        </div>
-                        <div>
-                            <p>Progresso: {currentCoordinateIndex}/{totalCoordinates} coordenadas</p>
-                            <progress id="file" max={videoDuration} value={currentTime}></progress>
-                            <p>Tempo: {currentTime.toFixed(1)}s / {videoDuration.toFixed(1)}s</p>
-                        </div>
-                    </div>
-                )}
-
+                {/* Player do vídeo renderizado - aparece quando a gravação termina */}
                 {downloadLink && (
-                    <div className='Video-box padding'>
-                        <h4>Gravação Concluída!</h4>
-                        <a href={downloadLink} download={`heatmap-${fileName}.webm`}>
-                            Download Recording
-                        </a>
-                        <video 
-                            src={downloadLink} 
-                            controls 
-                            style={{ maxWidth: '100%', marginTop: '10px' }}
-                            preload="auto"
-                            playsInline
-                            muted
-                            onError={(e) => {
-                                console.error('❌ Erro no vídeo de reprodução:', e.target.error);
-                                console.log('🔄 Tentando recriar blob URL...');
-                                // Não tenta recriar automaticamente para evitar loops
-                            }}
-                            onLoadStart={() => console.log('📺 Video playback load started')}
-                            onCanPlay={() => console.log('📺 Video playback can play')}
-                        ></video>
+                    <div className="bg-white rounded-2xl shadow-lg p-8">
+                        <div className="text-center">
+                            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                                Gravação Concluída!
+                            </h2>
+                            <div className="max-w-3xl mx-auto">
+                                <video 
+                                    src={downloadLink} 
+                                    controls 
+                                    className="w-full rounded-lg shadow-lg"
+                                    preload="auto"
+                                    playsInline
+                                    muted
+                                    onError={(e) => {
+                                        console.error('❌ Erro no vídeo de reprodução:', e.target.error);
+                                        console.log('🔄 Tentando recriar blob URL...');
+                                        // Não tenta recriar automaticamente para evitar loops
+                                    }}
+                                    onLoadStart={() => console.log('📺 Video playback load started')}
+                                    onCanPlay={() => console.log('📺 Video playback can play')}
+                                />
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>
