@@ -1,0 +1,71 @@
+.body-video {
+    padding: 10px;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.white-box {
+    background-color: white;
+    border-radius: 20px;
+    padding: 20px;
+    width: 100%;
+    max-width: 800px;
+    display: 'flex';
+    flex-direction: 'row';
+    justify-content: center;
+    align-items: center;
+    align-content: center;
+    overflow: hidden;
+}
+
+.button-box {
+    display: flex;
+    justify-content: center;
+}
+
+.Video-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
+    text-align: center;
+}
+
+.padding {
+    padding: 10px 20px;
+}
+
+.submit {
+    background-color: deepskyblue;
+    color: #FFf;
+    font-weight: 800;
+    border: 0px;
+    border-radius: 15px;
+    padding: 10px;
+    box-shadow: 7px 20px 20px rgb(210, 227, 244);
+    margin-left: 10px;
+}
+
+.submit:hover {
+    background-color: rgb(0, 145, 194);
+    /* Green */
+    color: white;
+}
+
+.submit:active {
+    background-color: rgb(0, 89, 118);
+    box-shadow: 3px 20px 20px rgb(210, 227, 244);
+    transform: translateY(2px);
+}
+
+.loading-btn {
+    background-color: rgba(0, 191, 255, 0.478);
+    color: #FFf;
+    font-weight: 800;
+    border: 0px;
+    border-radius: 15px;
+    padding: 10px;
+    box-shadow: 7px 20px 20px rgb(210, 227, 244);
+    margin-left: 10px;
+}

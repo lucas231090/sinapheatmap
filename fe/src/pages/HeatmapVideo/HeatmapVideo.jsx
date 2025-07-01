@@ -1,159 +1,269 @@
-import { useParams } from "react-router-dom";
-import { Player } from "@remotion/player";
-import { HeatmapComposition } from "@/components/Heatmap/HeatmapComposition";
-import VideoControls from "@/components/Heatmap/VideoControls";
-import useHeatmapVideoLogic from "@/hooks/useHeatmapVideoLogic";
+import React, { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import useHeatmapVideoLogic from '@/hooks/useHeatmapVideoLogic';
+import './HeatVideo.css';
 
-/**
- * Página de Vídeo Heatmap
- * Componente responsável apenas pela apresentação da interface de vídeo
- * Toda a lógica está separada no hook useHeatmapVideoLogic
- */
-const HeatmapVideo = () => {
-  const { id } = useParams();
+const VideoHeatmap = () => {
+    const { id } = useParams();
+    
+    // Hook centralizado para toda a lógica
+    const {
+        // Refs
+        videoRef,
+        canvasRef,
+        heatmapContainerRef,
+        
+        // Estados de dados
+        fileName,
+        dataFile,
+        mediaUrl,
+        mediaType,
+        canvasSize,
+        
+        // Estados de gravação
+        isRecording,
+        downloadLink,
+        
+        // Estados de progresso
+        videoDuration,
+        currentTime,
+        totalCoordinates,
+        currentCoordinateIndex,
+        
+        // Estados de controle
+        isLoading,
+        error,
+        
+        // Funções
+        handlePlayClick,
+        stopRecording,
+        updateHeatmapBasedOnTime,
+        drawFrame,
+    } = useHeatmapVideoLogic(id);
 
-  // Hook centralizado para toda a lógica do vídeo
-  const {
-    playerRef,
-    isPlaying,
-    setIsPlaying,
-    showPlayer,
-    playbackSpeed,
-    setPlaybackSpeed,
-    playerKey,
-    fileName,
-    dataFile,
-    img,
-    width,
-    height,
-    totalFrames,
-    hasValidData,
-    heatmapData,
-    isLoading,
-    error,
-    hasSingleTest,
-    shouldShowSelector,
-    currentTestIndex,
-    selectedTestIndex,
-    handleTestSelect,
-    handleVideoStart,
-  } = useHeatmapVideoLogic(id);
+    // Configurar event listeners para vídeo se for mídia de vídeo
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video || mediaType !== 1) return;
 
-  // Exibe loading se estiver carregando
-  if (isLoading) {
+        const handleTimeUpdate = () => updateHeatmapBasedOnTime();
+        const handleLoadedMetadata = () => {
+            if (video.duration) {
+                // Para vídeos, usar a duração real do vídeo
+                // mas limitar pela quantidade de coordenadas disponíveis
+                const coordDuration = totalCoordinates / 10; // 10 coordenadas por segundo
+                const actualDuration = Math.min(video.duration, coordDuration);
+                // Usar a duração já calculada no hook baseada nas coordenadas
+            }
+        };
+        const handleEnded = () => stopRecording();
+        const handleError = (e) => {
+            console.error('Video error:', e);
+            console.error('Video error details:', video.error);
+        };
+
+        video.addEventListener('timeupdate', handleTimeUpdate);
+        video.addEventListener('loadedmetadata', handleLoadedMetadata);
+        video.addEventListener('ended', handleEnded);
+        video.addEventListener('error', handleError);
+
+        if (isRecording && mediaType === 1) {
+            drawFrame();
+        }
+
+        return () => {
+            video.removeEventListener('timeupdate', handleTimeUpdate);
+            video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+            video.removeEventListener('ended', handleEnded);
+            video.removeEventListener('error', handleError);
+        };
+    }, [isRecording, mediaType, updateHeatmapBasedOnTime, stopRecording, drawFrame, totalCoordinates]);
+
+    // Exibe loading se estiver carregando
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="text-xl">Carregando dados do teste...</div>
+            </div>
+        );
+    }
+
+    // Exibe erro se houver
+    if (error) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="text-xl text-red-500">Erro: {error}</div>
+            </div>
+        );
+    }
+
+    // Se não há ID, exibe mensagem
+    if (!id) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="text-xl">Nenhum ID de teste fornecido</div>
+            </div>
+        );
+    }
+
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-xl">Carregando dados do vídeo...</div>
-      </div>
-    );
-  }
-
-  // Exibe erro se houver
-  if (error) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-xl text-red-500">Erro: {error}</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col items-start md:items-center p-4 overflow-x-auto">
-      <div className="flex flex-row">
-        <div className="bg-card dark:bg-darkcard p-4 rounded-lg flex flex-col items-center">
-          <p className="mb-2 text-3xl text-title dark:text-darktitle">
-            <strong>Eyetracking Heatmap:</strong> {fileName || "No ID provided"}
-          </p>
-
-          {/* Controles do vídeo */}
-          <VideoControls
-            playerRef={playerRef}
-            isPlaying={isPlaying}
-            setIsPlaying={setIsPlaying}
-            duration={totalFrames}
-            dataFile={dataFile}
-            selectedTestIndex={selectedTestIndex || ""}
-            setSelectedTestIndex={handleTestSelect}
-            onVideoStart={handleVideoStart}
-            playbackSpeed={playbackSpeed}
-            setPlaybackSpeed={setPlaybackSpeed}
-            hasSingleTest={hasSingleTest}
-            shouldShowSelector={shouldShowSelector}
-            currentTestIndex={currentTestIndex}
-          />
-
-          <div className="border border-gray-300 rounded shadow-lg">
-            {!showPlayer || !hasValidData ? (
-              <div
+        <div className='body-video'>
+            {/* Container para a área de gravação */}
+            <div 
                 style={{
-                  width: width / 2,
-                  height: height / 2,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "#f8f9fa",
+                    position: 'relative',
+                    width: `${canvasSize.width}px`,
+                    height: `${canvasSize.height}px`,
+                    margin: '20px auto',
+                    border: '2px solid #ccc',
+                    backgroundColor: '#000'
                 }}
-              >
-                <div className="text-center p-8">
-                  <h3 className="text-xl mb-4">
-                    {currentTestIndex
-                      ? "Carregando dados do heatmap..."
-                      : hasSingleTest
-                      ? "Preparando vídeo..."
-                      : "Selecione um teste para começar"}
-                  </h3>
-                  <p className="text-gray-600">
-                    {!hasValidData && currentTestIndex
-                      ? "Nenhum dado disponível para este teste."
-                      : hasSingleTest
-                      ? "O vídeo será iniciado automaticamente."
-                      : "O vídeo será iniciado automaticamente após a seleção."}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              // Renderizando o player de vídeo
-              // Ele funciona da seguinte maneira:
-              // 1. O componente Player é renderizado com a composição HeatmapComposition.
-              // 2. O componente HeatmapComposition é responsável por renderizar o heatmap.
-              // 3. O playerRef é passado para o componente Player para controle do vídeo.
-              // 4. O playerKey é usado para forçar o remount do componente Player quando necessário.
-              // 5. O componente Player é configurado para reproduzir o vídeo com as propriedades fornecidas.
-              // 6. O componente HeatmapComposition recebe os dados do heatmap e a imagem como props.
-              // 7. O vídeo pode ser controlado pelo usuário com os controles fornecidos.
-              // 8. O vídeo pode ser reproduzido automaticamente ou pausado com base no estado isPlaying.
-              // 9. O vídeo pode ser pausado ou reproduzido com um clique.
-              // 10. O vídeo pode ser reproduzido em uma velocidade diferente com base no estado playbackSpeed.
-              <Player
-                key={playerKey} // Important! This forces a complete remount
-                ref={playerRef}
-                component={HeatmapComposition}
-                durationInFrames={totalFrames}
-                fps={30}
-                compositionWidth={width}
-                compositionHeight={height}
-                style={{
-                  width,
-                  height,
-                }}
-                controls
-                inputProps={{
-                  heatmapData,
-                  img,
-                }}
-                autoPlay={false}
-                clickToPlay={true}
-                doubleClickToFullscreen={true}
-                playbackRate={playbackSpeed}
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
-              />
-            )}
-          </div>
+            >
+                {/* Mídia de fundo (vídeo ou imagem) */}
+                {mediaType === 1 && mediaUrl ? (
+                    <video
+                        ref={videoRef}
+                        src={mediaUrl}
+                        muted
+                        playsInline
+                        preload="auto"
+                        style={{ 
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                        }}
+                        onLoadStart={() => console.log('Video load started')}
+                        onLoadedData={() => console.log('Video data loaded')}
+                        onCanPlay={() => console.log('Video can play')}
+                        onError={(e) => {
+                            console.error('Video error:', e.target.error);
+                            const error = e.target.error;
+                            if (error) {
+                                console.error('Error code:', error.code);
+                                console.error('Error message:', error.message);
+                                
+                                // Se for erro de range request, tentar recarregar com URL direta
+                                if (error.code === 3) { // MEDIA_ERR_DECODE
+                                    console.log('Attempting to reload video with different strategy...');
+                                    // Força reload do componente ou tenta nova estratégia
+                                }
+                            }
+                        }}
+                    />
+                ) : mediaType === 0 && mediaUrl ? (
+                    <img
+                        src={mediaUrl}
+                        alt="Test media"
+                        style={{ 
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                        }}
+                        onLoad={() => console.log('Image loaded successfully')}
+                        onError={() => console.error('Error loading image')}
+                    />
+                ) : null}
+
+                {/* Container do heatmap sobreposto */}
+                <div
+                    ref={heatmapContainerRef}
+                    style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none',
+                        zIndex: 10
+                    }}
+                ></div>
+
+                {/* Canvas para gravação (invisível ao usuário) */}
+                <canvas
+                    ref={canvasRef}
+                    width={canvasSize.width}
+                    height={canvasSize.height}
+                    style={{ 
+                        position: 'absolute',
+                        top: '-9999px',
+                        left: '-9999px',
+                        pointerEvents: 'none'
+                    }}
+                ></canvas>
+            </div>
+
+            <div className='white-box'>
+                {!isRecording ? (
+                    <div className='button-box'>
+                        <div>
+                            <h3>Teste: {fileName}</h3>
+                            <p>ID: {id}</p>
+                            <p>Coordenadas disponíveis: {totalCoordinates}</p>
+                            <p>Tipo de mídia: {mediaType === 1 ? 'Vídeo' : 'Imagem'}</p>
+                            <p>Duração estimada: {videoDuration.toFixed(1)}s</p>
+                            <p>Status da mídia: {mediaUrl ? 'Carregada' : 'Não carregada'}</p>
+                            {mediaUrl && (
+                                <>
+                                    <p>Tipo URL: {mediaUrl.startsWith('blob:') ? 'Blob URL' : 'Direct URL'}</p>
+                                    <p>URL: {mediaUrl.substring(0, 50)}...</p>
+                                </>
+                            )}
+                            <button 
+                                className='submit' 
+                                onClick={handlePlayClick}
+                                disabled={!mediaUrl || totalCoordinates === 0}
+                            >
+                                {!mediaUrl ? 'Carregando mídia...' : 
+                                 totalCoordinates === 0 ? 'Sem coordenadas disponíveis' : 
+                                 'Start Recording'}
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className='Video-box'>
+                        <div className='button-box'>
+                            <button className='loading-btn' disabled>Recording</button>
+                        </div>
+                        <div>
+                            <p>Progresso: {currentCoordinateIndex}/{totalCoordinates} coordenadas</p>
+                            <progress id="file" max={videoDuration} value={currentTime}></progress>
+                            <p>Tempo: {currentTime.toFixed(1)}s / {videoDuration.toFixed(1)}s</p>
+                        </div>
+                    </div>
+                )}
+
+                {downloadLink && (
+                    <div className='Video-box padding'>
+                        <h4>Gravação Concluída!</h4>
+                        <a href={downloadLink} download={`heatmap-${fileName}.webm`}>
+                            Download Recording
+                        </a>
+                        <video 
+                            src={downloadLink} 
+                            controls 
+                            style={{ maxWidth: '100%', marginTop: '10px' }}
+                            preload="auto"
+                            playsInline
+                            muted
+                            onError={(e) => {
+                                console.error('❌ Erro no vídeo de reprodução:', e.target.error);
+                                console.log('🔄 Tentando recriar blob URL...');
+                                // Não tenta recriar automaticamente para evitar loops
+                            }}
+                            onLoadStart={() => console.log('📺 Video playback load started')}
+                            onCanPlay={() => console.log('📺 Video playback can play')}
+                        ></video>
+                    </div>
+                )}
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
-export default HeatmapVideo;
+export default VideoHeatmap;
