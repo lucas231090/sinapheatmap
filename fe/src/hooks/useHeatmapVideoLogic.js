@@ -68,8 +68,7 @@ const useHeatmapVideoLogic = (id) => {
     const currentCoordinateIndex = useRef(-1); // Começar com -1 para que o primeiro ponto (índice 0) seja adicionado
     const isInitialized = useRef(false); // Flag para evitar re-inicializações
 
-    // Configurações específicas do vídeo
-    const fps = 30;
+    // Configurações específicas do timing
     const coordinatesPerSecond = pointsSpeed; // Usar a velocidade selecionada pelo usuário
 
     // Calcula duração e total de coordenadas quando coords mudam
@@ -286,7 +285,7 @@ const useHeatmapVideoLogic = (id) => {
             console.warn('⚠️ Could not verify canvas content:', imageDataError);
         }
 
-        const stream = canvas.captureStream(fps);
+        const stream = canvas.captureStream(30); // 30 FPS para a gravação
         // Verificar se o browser suporta o formato
         let mimeType = '';
         const supportedTypes = [
@@ -427,32 +426,36 @@ const useHeatmapVideoLogic = (id) => {
                 
                 // Aguarda um momento para o heatmap ser criado e configura
                 setTimeout(() => {
-                    const heatmapCanvas = heatmapContainerRef.current.querySelector('.heatmap-canvas');
-                    if (heatmapCanvas) {
-                        // Forçar visibilidade do canvas
-                        heatmapCanvas.style.display = 'block';
-                        heatmapCanvas.style.opacity = '1';
-                        heatmapCanvas.style.pointerEvents = 'none';
-                        heatmapCanvas.style.position = 'absolute';
-                        heatmapCanvas.style.top = '0';
-                        heatmapCanvas.style.left = '0';
-                        heatmapCanvas.style.zIndex = '10';
-                        
-                        // Adicionar ponto de teste para verificar funcionamento
-                        heatmapInstance.current.setData({
-                            max: 100,
-                            data: [{ x: canvasSize.width / 2, y: canvasSize.height / 2, value: 100 }]
-                        });
-                        
-                        // Limpar teste após 2 segundos
-                        setTimeout(() => {
-                            if (heatmapInstance.current) {
-                                heatmapInstance.current.setData({ max: 100, data: [] });
-                            }
-                        }, 2000);
-                        
+                    if (heatmapContainerRef.current) {
+                        const heatmapCanvas = heatmapContainerRef.current.querySelector('.heatmap-canvas');
+                        if (heatmapCanvas) {
+                            // Forçar visibilidade do canvas
+                            heatmapCanvas.style.display = 'block';
+                            heatmapCanvas.style.opacity = '1';
+                            heatmapCanvas.style.pointerEvents = 'none';
+                            heatmapCanvas.style.position = 'absolute';
+                            heatmapCanvas.style.top = '0';
+                            heatmapCanvas.style.left = '0';
+                            heatmapCanvas.style.zIndex = '10';
+                            
+                            // Adicionar ponto de teste para verificar funcionamento
+                            heatmapInstance.current.setData({
+                                max: 100,
+                                data: [{ x: canvasSize.width / 2, y: canvasSize.height / 2, value: 100 }]
+                            });
+                            
+                            // Limpar teste após 2 segundos
+                            setTimeout(() => {
+                                if (heatmapInstance.current) {
+                                    heatmapInstance.current.setData({ max: 100, data: [] });
+                                }
+                            }, 2000);
+                            
+                        } else {
+                            console.warn('⚠️ Heatmap canvas not found after creation');
+                        }
                     } else {
-                        console.warn('⚠️ Heatmap canvas not found after creation');
+                        console.warn('⚠️ Heatmap container ref is null');
                     }
                 }, 100);
                 
@@ -504,7 +507,7 @@ const useHeatmapVideoLogic = (id) => {
     };
 
     /**
-     * Simula reprodução para imagens
+     * Simula reprodução para imagens com timing preciso
      */
     const simulateImagePlayback = () => {
         // Evitar múltiplas inicializações
@@ -521,12 +524,14 @@ const useHeatmapVideoLogic = (id) => {
         currentCoordinateIndex.current = -1; // Começar com -1 para que o índice 0 seja o primeiro
         setHeatmapData([]);
         
-        let elapsed = 0;
-        let frameCount = 0;
+        // Usar performance.now() para timing preciso
+        const startTime = performance.now();
+        let animationFrameId;
         
-        const interval = setInterval(() => {
-            elapsed += 1 / fps;
-            frameCount++;
+        const animate = () => {
+            const currentTimestamp = performance.now();
+            const elapsed = (currentTimestamp - startTime) / 1000; // Converter para segundos
+            
             setCurrentTime(elapsed);
             
             // Adiciona ponto do heatmap e verifica se ainda há pontos
@@ -535,20 +540,33 @@ const useHeatmapVideoLogic = (id) => {
             // Desenha frame
             drawFrame();
             
-            // Para quando os pontos do heatmap acabam (prioridade) ou quando atinge a duração máxima
+            // Para quando os pontos do heatmap acabam (prioridade)
             if (!hasMorePoints) {
-                clearInterval(interval);
                 isInitialized.current = false; // Reset flag
                 return; // stopRecording já foi chamado em addHeatmapPoint
             }
             
             // Fallback: para se exceder a duração estimada (para evitar loops infinitos)
             if (elapsed >= videoDuration) {
-                clearInterval(interval);
                 isInitialized.current = false; // Reset flag
                 stopRecording();
+                return;
             }
-        }, 1000 / fps);
+            
+            // Continua a animação
+            animationFrameId = requestAnimationFrame(animate);
+        };
+        
+        // Inicia a animação
+        animationFrameId = requestAnimationFrame(animate);
+        
+        // Cleanup function para parar a animação se necessário
+        return () => {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            isInitialized.current = false;
+        };
     };
 
     /**
@@ -561,7 +579,6 @@ const useHeatmapVideoLogic = (id) => {
             return;
         }
         
-        
         // Marcar como inicializado
         isInitialized.current = true;
         
@@ -570,21 +587,21 @@ const useHeatmapVideoLogic = (id) => {
         currentCoordinateIndex.current = -1; // Começar com -1 para que o índice 0 seja o primeiro
         setHeatmapData([]);
         
-        let elapsed = 0;
-        let frameCount = 0;
+        // Usar performance.now() para timing preciso
+        const startTime = performance.now();
+        let animationFrameId;
         
-        const interval = setInterval(() => {
+        const animate = () => {
             const video = videoRef.current;
             
             // Verificar se o vídeo ainda está disponível e tocando
             if (!video || video.paused || video.ended) {
-                clearInterval(interval);
                 isInitialized.current = false;
                 return;
             }
             
-            elapsed += 1 / fps;
-            frameCount++;
+            const currentTimestamp = performance.now();
+            let elapsed = (currentTimestamp - startTime) / 1000; // Converter para segundos
             
             // Sincronizar com o tempo do vídeo (permitir pequenas diferenças)
             const videoTime = video.currentTime;
@@ -605,7 +622,6 @@ const useHeatmapVideoLogic = (id) => {
             
             // Para quando os pontos do heatmap acabam (prioridade)
             if (!hasMorePoints) {
-                clearInterval(interval);
                 isInitialized.current = false;
                 
                 // Para o vídeo também
@@ -617,11 +633,25 @@ const useHeatmapVideoLogic = (id) => {
             
             // Fallback: para se exceder a duração estimada (para evitar loops infinitos)
             if (elapsed >= videoDuration) {
-                clearInterval(interval);
                 isInitialized.current = false;
                 stopRecording();
+                return;
             }
-        }, 1000 / fps);
+            
+            // Continua a animação
+            animationFrameId = requestAnimationFrame(animate);
+        };
+        
+        // Inicia a animação
+        animationFrameId = requestAnimationFrame(animate);
+        
+        // Cleanup function para parar a animação se necessário
+        return () => {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            isInitialized.current = false;
+        };
     };
 
     // Cleanup de URLs e timers quando componente desmonta
