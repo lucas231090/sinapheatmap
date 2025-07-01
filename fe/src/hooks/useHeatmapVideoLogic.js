@@ -527,12 +527,17 @@ const useHeatmapVideoLogic = (id) => {
         // Usar performance.now() para timing preciso
         const startTime = performance.now();
         let animationFrameId;
+        let lastTimeUpdate = 0; // Para throttle de atualizações de tempo
         
         const animate = () => {
             const currentTimestamp = performance.now();
             const elapsed = (currentTimestamp - startTime) / 1000; // Converter para segundos
             
-            setCurrentTime(elapsed);
+            // Só atualiza currentTime a cada 100ms para evitar renderizações excessivas
+            if (elapsed - lastTimeUpdate >= 0.1) {
+                setCurrentTime(elapsed);
+                lastTimeUpdate = elapsed;
+            }
             
             // Adiciona ponto do heatmap e verifica se ainda há pontos
             const hasMorePoints = addHeatmapPoint(elapsed);
@@ -590,6 +595,7 @@ const useHeatmapVideoLogic = (id) => {
         // Usar performance.now() para timing preciso
         const startTime = performance.now();
         let animationFrameId;
+        let lastTimeUpdate = 0; // Para throttle de atualizações de tempo
         
         const animate = () => {
             const video = videoRef.current;
@@ -612,7 +618,11 @@ const useHeatmapVideoLogic = (id) => {
                 elapsed = videoTime;
             }
             
-            setCurrentTime(elapsed);
+            // Só atualiza currentTime a cada 100ms para evitar renderizações excessivas
+            if (elapsed - lastTimeUpdate >= 0.1) {
+                setCurrentTime(elapsed);
+                lastTimeUpdate = elapsed;
+            }
             
             // Adiciona ponto do heatmap e verifica se ainda há pontos
             const hasMorePoints = addHeatmapPoint(elapsed);
