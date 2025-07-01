@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import useHeatmapVideoLogic from '@/hooks/useHeatmapVideoLogic';
 import TestSelector from '@/components/HeatmapStatic/TestSelector';
+import SpeedSelector from '@/components/HeatmapVideo/SpeedSelector';
 
 const VideoHeatmap = () => {
     const { id } = useParams();
@@ -38,6 +39,8 @@ const VideoHeatmap = () => {
         // Estados de seleção
         selectedTestIndex,
         setSelectedTestIndex,
+        pointsSpeed,
+        setPointsSpeed,
         
         // Funções
         handlePlayClick,
@@ -45,6 +48,7 @@ const VideoHeatmap = () => {
         updateHeatmapBasedOnTime,
         drawFrame,
         updateTestSelection,
+        updatePointsSpeed,
     } = useHeatmapVideoLogic(id);
 
     // Configurar event listeners para vídeo se for mídia de vídeo
@@ -52,7 +56,6 @@ const VideoHeatmap = () => {
         const video = videoRef.current;
         if (!video || mediaType !== 1) return;
 
-        const handleTimeUpdate = () => updateHeatmapBasedOnTime();
         const handleLoadedMetadata = () => {
             if (video.duration) {
                 // Para vídeos, usar a duração real do vídeo
@@ -68,20 +71,22 @@ const VideoHeatmap = () => {
             console.error('Video error details:', video.error);
         };
 
-        video.addEventListener('timeupdate', handleTimeUpdate);
         video.addEventListener('loadedmetadata', handleLoadedMetadata);
         video.addEventListener('ended', handleEnded);
         video.addEventListener('error', handleError);
+        
+        // Event listener para atualizar heatmap conforme vídeo toca
+        video.addEventListener('timeupdate', updateHeatmapBasedOnTime);
 
         if (isRecording && mediaType === 1) {
             drawFrame();
         }
 
         return () => {
-            video.removeEventListener('timeupdate', handleTimeUpdate);
             video.removeEventListener('loadedmetadata', handleLoadedMetadata);
             video.removeEventListener('ended', handleEnded);
             video.removeEventListener('error', handleError);
+            video.removeEventListener('timeupdate', updateHeatmapBasedOnTime);
         };
     }, [isRecording, mediaType, updateHeatmapBasedOnTime, stopRecording, drawFrame, totalCoordinates]);
 
@@ -165,6 +170,15 @@ const VideoHeatmap = () => {
                             </div>
                         )}
                         
+                        {/* Seletor de Velocidade dos Pontos */}
+                        <div className="mb-6">
+                            <SpeedSelector
+                                pointsSpeed={pointsSpeed}
+                                setPointsSpeed={updatePointsSpeed}
+                                disabled={isRecording}
+                            />
+                        </div>
+                        
                         <div className="space-y-2 mb-6">
                             <p className="text-lg text-gray-600">ID: {id}</p>
                             <p className="text-lg text-gray-600">
@@ -181,6 +195,9 @@ const VideoHeatmap = () => {
                             )}
                             <p className="text-lg text-gray-600">
                                 Coordenadas disponíveis: {totalCoordinates}
+                            </p>
+                            <p className="text-lg text-gray-600">
+                                Velocidade: {pointsSpeed} pontos/segundo
                             </p>
                             <p className="text-lg text-gray-600">
                                 Duração estimada: {videoDuration.toFixed(1)}s
@@ -265,9 +282,6 @@ const VideoHeatmap = () => {
                                 playsInline
                                 preload="auto"
                                 className="absolute inset-0 w-full h-full object-cover"
-                                onLoadStart={() => console.log('Video load started')}
-                                onLoadedData={() => console.log('Video data loaded')}
-                                onCanPlay={() => console.log('Video can play')}
                                 onError={(e) => {
                                     console.error('Video error:', e.target.error);
                                     const error = e.target.error;
@@ -277,7 +291,6 @@ const VideoHeatmap = () => {
                                         
                                         // Se for erro de range request, tentar recarregar com URL direta
                                         if (error.code === 3) { // MEDIA_ERR_DECODE
-                                            console.log('Attempting to reload video with different strategy...');
                                             // Força reload do componente ou tenta nova estratégia
                                         }
                                     }
@@ -288,7 +301,6 @@ const VideoHeatmap = () => {
                                 src={mediaUrl}
                                 alt="Test media"
                                 className="absolute inset-0 w-full h-full object-cover"
-                                onLoad={() => console.log('Image loaded successfully')}
                                 onError={() => console.error('Error loading image')}
                             />
                         ) : null}
@@ -330,11 +342,8 @@ const VideoHeatmap = () => {
                                     muted
                                     onError={(e) => {
                                         console.error('❌ Erro no vídeo de reprodução:', e.target.error);
-                                        console.log('🔄 Tentando recriar blob URL...');
                                         // Não tenta recriar automaticamente para evitar loops
                                     }}
-                                    onLoadStart={() => console.log('📺 Video playback load started')}
-                                    onCanPlay={() => console.log('📺 Video playback can play')}
                                 />
                             </div>
                         </div>

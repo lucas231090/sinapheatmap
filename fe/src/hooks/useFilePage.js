@@ -24,7 +24,6 @@ export const useFilePage = () => {
             try {
                 await deactivateFile(modalIsOpen.id);
 
-                console.log("Arquivo atualizado com sucesso");
                 fetchData();
                 showNotification("Arquivo atualizado com sucesso!", "success");
             } catch (err) {

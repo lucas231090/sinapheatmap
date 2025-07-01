@@ -75,7 +75,7 @@ export const getFileMedia = async (mediaName) => {
                 if (response.ok) {
                     return directUrl;
                 } else {
-                    console.log('❌ Direct URL not accessible, status:', response.status);
+                    // Direct URL not accessible, fallback to blob
                 }
             } catch (fetchError) {
                 console.warn('⚠️ Direct URL check failed:', fetchError.message);

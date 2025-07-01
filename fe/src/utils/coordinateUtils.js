@@ -34,8 +34,6 @@ export const transformToCoordinates = (xValues, yValues) => {
  * @returns {Array} Array de coordenadas combinadas
  */
 export const combineCoordinates = (dataFiles, selectedIndex) => {
-    console.log("Combinando coordenadas com selectedIndex:", selectedIndex);
-
     let combinedCoords = [];
 
     // Verificações de segurança para dados
@@ -54,11 +52,9 @@ export const combineCoordinates = (dataFiles, selectedIndex) => {
                 }
 
                 if (dataItem.coordinates && Array.isArray(dataItem.coordinates)) {
-                    console.log(`Adicionando ${dataItem.coordinates.length} coordenadas do teste ${index}`);
                     combinedCoords = combinedCoords.concat(dataItem.coordinates);
                 } else if (dataItem.x && dataItem.y) {
                     const coords = transformToCoordinates(dataItem.x, dataItem.y);
-                    console.log(`Transformando e adicionando ${coords.length} coordenadas do teste ${index}`);
                     combinedCoords = combinedCoords.concat(coords);
                 } else {
                     console.warn(`Teste ${index} não tem coordenadas válidas`);
@@ -87,7 +83,6 @@ export const combineCoordinates = (dataFiles, selectedIndex) => {
             }
 
             if (dataItem.coordinates && Array.isArray(dataItem.coordinates)) {
-                console.log(`Usando ${dataItem.coordinates.length} coordenadas do teste ${index}`);
                 combinedCoords = dataItem.coordinates;
             } else if (dataItem.x && dataItem.y) {
                 combinedCoords = transformToCoordinates(dataItem.x, dataItem.y);
@@ -99,7 +94,6 @@ export const combineCoordinates = (dataFiles, selectedIndex) => {
         console.error("Erro ao combinar coordenadas:", error);
     }
 
-    console.log(`Retornando ${combinedCoords.length} coordenadas combinadas`);
     return combinedCoords;
 };
 

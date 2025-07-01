@@ -51,7 +51,7 @@ export const FileProvider = ({ children }) => {
       setFiles(data); // Atualizar os arquivos no estado
       return data;
     } catch (err) {
-      console.log("Erro ao buscar arquivos:", err.message);
+      console.error("Erro ao buscar arquivos:", err.message);
       showNotification(err.message || "Erro ao buscar os arquivos", "error");
       return [];
     } finally {

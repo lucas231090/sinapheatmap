@@ -8,8 +8,11 @@ import { downloadHeatMapImage } from "@/utils";
  * Usa o hook base para funcionalidades compartilhadas e adiciona gravação de vídeo
  */
 const useHeatmapVideoLogic = (id) => {
+    console.log(`🎥 useHeatmapVideoLogic initialized with id: ${id}`);
+    
     // Estados específicos do vídeo
     const [selectedTestIndex, setSelectedTestIndex] = useState("all");
+    const [pointsSpeed, setPointsSpeed] = useState(10); // Pontos por segundo (padrão: 10)
 
     // Hook base para funcionalidades compartilhadas
     const {
@@ -21,6 +24,7 @@ const useHeatmapVideoLogic = (id) => {
         mediaType,
         coords,
         canvasSize,
+        radiusScale, // Escala do raio calculada dinamicamente
         isLoading,
         error,
         imageRef,
@@ -63,90 +67,120 @@ const useHeatmapVideoLogic = (id) => {
     const [videoDuration, setVideoDuration] = useState(0);
     const [currentTime, setCurrentTime] = useState(0);
     const [totalCoordinates, setTotalCoordinates] = useState(0);
-    const [currentCoordinateIndex, setCurrentCoordinateIndex] = useState(0);
+    
+    // Controle de timing mais preciso para vídeos - usar refs para persistir entre re-renders
+    const currentCoordinateIndex = useRef(-1); // Começar com -1 para que o primeiro ponto (índice 0) seja adicionado
+    const lastProcessedIndex = useRef(0);
+    const videoTimerRef = useRef(null);
+    const isInitialized = useRef(false); // Flag para evitar re-inicializações
     
     // Throttle para atualizações do heatmap
     const lastHeatmapUpdate = useRef(0);
-    const heatmapUpdateThrottle = 100; // ms
+    const heatmapUpdateThrottle = 100; // ms - permite máximo 10 atualizações por segundo
 
     // Configurações específicas do vídeo
     const fps = 30;
-    const coordinatesPerSecond = 10;
+    const coordinatesPerSecond = pointsSpeed; // Usar a velocidade selecionada pelo usuário
 
     // Calcula duração e total de coordenadas quando coords mudam
     useEffect(() => {
         if (coords.length > 0) {
+            console.log(`📊 Coordinates loaded: ${coords.length} points`);
+            console.log(`🎯 First 5 coordinates:`, coords.slice(0, 5));
+            console.log(`🎯 Last 5 coordinates:`, coords.slice(-5));
+            console.log(`⚡ Points per second: ${coordinatesPerSecond}`);
+            
             const duration = calculateDuration(coordinatesPerSecond);
+            console.log(`⏱️ Calculated duration: ${duration.toFixed(2)}s`);
+            
             setVideoDuration(duration);
             setTotalCoordinates(coords.length);
+        } else {
+            console.log(`⚠️ No coordinates available`);
         }
-    }, [coords, calculateDuration]);
+    }, [coords, calculateDuration, coordinatesPerSecond]);
 
     /**
      * Adiciona ponto do heatmap baseado nas coordenadas reais
      */
     const addHeatmapPoint = (timeElapsed) => {
+        console.log(`🔍 addHeatmapPoint called with timeElapsed: ${timeElapsed.toFixed(3)}s`);
+        
         if (coords.length === 0) {
-            console.log('🔍 No coordinates available');
+            console.log(`⚠️ No coordinates available`);
             return false; // Retorna false se não há coordenadas
         }
 
         // Calcula qual coordenada mostrar baseado no tempo
-        const coordinateIndex = Math.floor(timeElapsed * coordinatesPerSecond);
+        const targetIndex = Math.floor(timeElapsed * coordinatesPerSecond);
+        console.log(`📊 Calculated target index: ${targetIndex} (timeElapsed: ${timeElapsed.toFixed(3)} * coordinatesPerSecond: ${coordinatesPerSecond})`);
+        console.log(`📈 Current coordinate index: ${currentCoordinateIndex.current}, Total coords: ${coords.length}`);
         
-        if (coordinateIndex >= coords.length) {
-            console.log('🔍 Index out of bounds - all heatmap points processed:', coordinateIndex, '/', coords.length);
-            console.log('🎬 Stopping recording - heatmap data finished');
+        if (targetIndex >= coords.length) {
+            console.log(`🏁 Reached end of coordinates (${targetIndex} >= ${coords.length})`);
             stopRecording(); // Para a gravação quando os pontos acabam
             return false; // Retorna false se chegou ao fim
         }
 
-        const coordinate = coords[coordinateIndex];
-        
-        if (coordinate && coordinate.x !== undefined && coordinate.y !== undefined) {
-            // Garantir que as coordenadas estejam dentro dos limites
-            const x = Math.max(0, Math.min(canvasSize.width - 1, Math.round(coordinate.x)));
-            const y = Math.max(0, Math.min(canvasSize.height - 1, Math.round(coordinate.y)));
-            
-            const newPoint = {
-                x: x,
-                y: y,
-                value: 100
-            };
+        // 🔧 CORREÇÃO: Evita adicionar pontos duplicados - só adiciona se targetIndex é maior que o atual
+        if (targetIndex < currentCoordinateIndex.current) {
+            console.log(`⏭️ Skipping - target index ${targetIndex} < current index ${currentCoordinateIndex.current}`);
+            return true; // Ainda há pontos, mas não adiciona pontos já processados
+        }
 
-            console.log('🎯 Adding point:', newPoint, 'time:', timeElapsed.toFixed(2), 'index:', coordinateIndex);
-            
-            setHeatmapData((prevData) => {
-                const newData = [...prevData, newPoint];
-                
-                // Throttle das atualizações diretas do heatmap
-                const now = Date.now();
-                if (heatmapInstance.current && (now - lastHeatmapUpdate.current) > heatmapUpdateThrottle) {
-                    lastHeatmapUpdate.current = now;
-                    
-                    try {
-                        // Usar todos os pontos para atualizações
-                        const quickUpdateData = newData.map(point => ({
-                            x: Number(point.x),
-                            y: Number(point.y),
-                            value: Number(point.value)
-                        }));
-                        
-                        heatmapInstance.current.setData({
-                            max: 100,
-                            data: quickUpdateData,
-                        });
-                    } catch (error) {
-                        console.warn('⚠️ Throttled update error:', error);
-                    }
-                }
-                
-                return newData;
-            });
-            setCurrentCoordinateIndex(coordinateIndex);
+        // Se targetIndex == currentCoordinateIndex.current, já foi processado (exceto no caso inicial)
+        if (targetIndex === currentCoordinateIndex.current && currentCoordinateIndex.current >= 0) {
+            console.log(`⏭️ Skipping - target index ${targetIndex} == current index ${currentCoordinateIndex.current} (already processed)`);
+            return true;
+        }
+
+        // Adiciona apenas os pontos do currentCoordinateIndex.current+1 até targetIndex
+        let addedPoints = 0;
+        let nextIndex = Math.max(0, currentCoordinateIndex.current + 1); // Garantir que comece pelo menos no 0
+        
+        // Se currentCoordinateIndex.current é -1 (inicial), começar do 0
+        if (currentCoordinateIndex.current === -1) {
+            nextIndex = 0;
         }
         
-        return true; // Retorna true se ainda há pontos para processar
+        while (nextIndex <= targetIndex && nextIndex < coords.length) {
+            const coordinate = coords[nextIndex];
+            console.log(`📍 Processing coordinate at index ${nextIndex}:`, coordinate);
+            
+            if (coordinate && coordinate.x !== undefined && coordinate.y !== undefined) {
+                // Garantir que as coordenadas estejam dentro dos limites
+                const x = Math.max(0, Math.min(canvasSize.width - 1, Math.round(coordinate.x)));
+                const y = Math.max(0, Math.min(canvasSize.height - 1, Math.round(coordinate.y)));
+                
+                const newPoint = {
+                    x: x,
+                    y: y,
+                    value: 100
+                };
+                
+                console.log(`✅ Adding point ${nextIndex}: (${x}, ${y}) from raw (${coordinate.x}, ${coordinate.y})`);
+                
+                setHeatmapData((prevData) => {
+                    const newData = [...prevData, newPoint];
+                    console.log(`📋 Heatmap data updated. Previous length: ${prevData.length}, New length: ${newData.length}`);
+                    return newData;
+                });
+                
+                addedPoints++;
+            } else {
+                console.warn(`⚠️ Invalid coordinate at index ${nextIndex}:`, coordinate);
+            }
+            
+            nextIndex++;
+        }
+        
+        // Atualiza o índice atual para o último processado
+        if (addedPoints > 0) {
+            currentCoordinateIndex.current = targetIndex;
+            console.log(`🎯 Updated currentCoordinateIndex to: ${targetIndex} (added ${addedPoints} points)`);
+        }
+        
+        return targetIndex < coords.length; // Retorna true se ainda há pontos para processar (targetIndex vai de 0 a coords.length-1)
     };
 
     /**
@@ -234,28 +268,126 @@ const useHeatmapVideoLogic = (id) => {
     };
 
     /**
-     * Atualiza heatmap baseado no tempo
+     * Atualiza heatmap baseado no tempo com controle preciso
      */
     const updateHeatmapBasedOnTime = () => {
+        const now = performance.now();
+        const timeSinceLastUpdate = now - lastHeatmapUpdate.current;
+        
+        console.log(`🔄 updateHeatmapBasedOnTime called - Time since last: ${timeSinceLastUpdate.toFixed(1)}ms`);
+        
         if (mediaType === 1) {
             // Para vídeos, usa o currentTime do vídeo
             const video = videoRef.current;
-            if (video) {
+            if (video && !video.paused && !video.ended) {
                 const videoCurrentTime = video.currentTime;
+                console.log(`🎬 Video time update: ${videoCurrentTime.toFixed(3)}s (called ${timeSinceLastUpdate.toFixed(1)}ms after last)`);
+                
+                // Throttle para evitar chamadas excessivas
+                if (timeSinceLastUpdate < heatmapUpdateThrottle) {
+                    console.log(`⏭️ Throttling update (${timeSinceLastUpdate}ms < ${heatmapUpdateThrottle}ms)`);
+                    return;
+                }
+                
+                lastHeatmapUpdate.current = now;
                 setCurrentTime(videoCurrentTime);
                 
-                // Adiciona ponto do heatmap e verifica se ainda há pontos
-                const hasMorePoints = addHeatmapPoint(videoCurrentTime);
+                // 🔧 CORREÇÃO: Adiciona TODOS os pontos intermediários que foram perdidos
+                const targetIndex = Math.floor(videoCurrentTime * coordinatesPerSecond);
+                console.log(`🎯 Target index: ${targetIndex}, Current index: ${currentCoordinateIndex.current}`);
+                
+                // Adiciona todos os pontos do currentCoordinateIndex+1 até targetIndex
+                let hasMorePoints = true;
+                let nextIndex = currentCoordinateIndex.current + 1;
+                
+                while (nextIndex <= targetIndex && hasMorePoints) {
+                    const timeForThisPoint = nextIndex / coordinatesPerSecond;
+                    console.log(`➕ Adding missed point ${nextIndex} at time ${timeForThisPoint.toFixed(3)}s`);
+                    hasMorePoints = addHeatmapPoint(timeForThisPoint);
+                    
+                    if (!hasMorePoints) {
+                        console.log(`🏁 No more points available at index ${nextIndex}`);
+                        break;
+                    }
+                    
+                    nextIndex++;
+                }
+                
+                console.log(`🔄 Has more points: ${hasMorePoints}`);
                 
                 // Se não há mais pontos, para o vídeo e a gravação
                 if (!hasMorePoints && video) {
-                    console.log('🎬 Video paused - heatmap points finished at', videoCurrentTime.toFixed(2), 's');
-                    video.pause(); // Para o vídeo quando os pontos acabam
+                    console.log(`🛑 Stopping video playback - no more points`);
+                    video.pause();
                     // stopRecording já foi chamado em addHeatmapPoint
                 }
             }
         }
         // Para imagens, o tempo é controlado pelo simulateImagePlayback
+    };
+
+    /**
+     * Inicia o loop de atualização precisa do heatmap para vídeos
+     */
+    const startPreciseHeatmapUpdates = () => {
+        console.log(`🚀 Starting precise heatmap updates with coordinatesPerSecond: ${coordinatesPerSecond}`);
+        lastProcessedIndex.current = 0;
+        
+        // Para qualquer timer anterior
+        if (videoTimerRef.current) {
+            console.log(`🛑 Clearing previous timer`);
+            clearInterval(videoTimerRef.current);
+        }
+        
+        // Cria um timer que roda na frequência desejada dos pontos
+        const timerInterval = 1000 / coordinatesPerSecond; // ms entre pontos
+        console.log(`⏱️ Timer interval: ${timerInterval}ms (${coordinatesPerSecond} points per second)`);
+        
+        videoTimerRef.current = setInterval(() => {
+            const video = videoRef.current;
+            if (!video || video.paused || video.ended) {
+                console.log(`⏸️ Video stopped or ended, stopping timer`);
+                stopPreciseHeatmapUpdates();
+                return;
+            }
+            
+            const videoCurrentTime = video.currentTime;
+            console.log(`⏰ Timer tick - Video time: ${videoCurrentTime.toFixed(3)}s`);
+            setCurrentTime(videoCurrentTime);
+            
+            // Calcula qual ponto deveria ser mostrado baseado no tempo do vídeo
+            const targetIndex = Math.floor(videoCurrentTime * coordinatesPerSecond);
+            console.log(`🎯 Target index: ${targetIndex}, Last processed: ${lastProcessedIndex.current}`);
+            
+            // Adiciona pontos se necessário (para catch up se o timer atrasou)
+            while (lastProcessedIndex.current <= targetIndex) {
+                const timeForThisPoint = lastProcessedIndex.current / coordinatesPerSecond;
+                console.log(`➕ Processing point ${lastProcessedIndex.current} at time ${timeForThisPoint.toFixed(3)}s`);
+                const hasMorePoints = addHeatmapPoint(timeForThisPoint);
+                
+                if (!hasMorePoints) {
+                    console.log(`🏁 No more points available, stopping`);
+                    video.pause();
+                    stopPreciseHeatmapUpdates();
+                    return;
+                }
+                
+                lastProcessedIndex.current++;
+                console.log(`📈 Incremented lastProcessedIndex to: ${lastProcessedIndex.current}`);
+            }
+        }, timerInterval);
+        
+        console.log(`✅ Precise timer started with interval ${timerInterval}ms`);
+    };
+
+    /**
+     * Para o loop de atualização precisa do heatmap
+     */
+    const stopPreciseHeatmapUpdates = () => {
+        if (videoTimerRef.current) {
+            clearInterval(videoTimerRef.current);
+            videoTimerRef.current = null;
+        }
     };
 
     /**
@@ -371,6 +503,9 @@ const useHeatmapVideoLogic = (id) => {
             mediaRecorderRef.current.stop();
             setIsRecording(false);
         }
+        
+        // Para o loop de atualização precisa
+        stopPreciseHeatmapUpdates();
     };
 
     /**
@@ -398,8 +533,11 @@ const useHeatmapVideoLogic = (id) => {
         }
 
         try {
-            // Limpa dados anteriores do heatmap
+            // Limpa dados anteriores do heatmap e reset states
             setHeatmapData([]);
+            setCurrentTime(0);
+            currentCoordinateIndex.current = -1; // Começar com -1 para incluir o primeiro ponto
+            isInitialized.current = false; // Reset flag
             
             // Configura canvas para gravação
             canvas.width = canvasSize.width;
@@ -416,21 +554,18 @@ const useHeatmapVideoLogic = (id) => {
             
             // Inicializa heatmap com verificação
             try {
-                console.log('🎯 Creating heatmap instance...');
-                
                 // Garantir que o container tenha dimensões
                 if (heatmapContainerRef.current.offsetWidth === 0 || heatmapContainerRef.current.offsetHeight === 0) {
-                    console.log('🔧 Setting explicit container dimensions');
                     heatmapContainerRef.current.style.width = `${canvasSize.width}px`;
                     heatmapContainerRef.current.style.height = `${canvasSize.height}px`;
                 }
                 
                 heatmapInstance.current = h337.create({
                     container: heatmapContainerRef.current,
-                    radius: 30, // Raio menor para ser mais visível
-                    maxOpacity: 0.8, // Maior opacidade
-                    minOpacity: 0.3,
-                    blur: 0.8,
+                    radius: Math.max(10, 50 * radiusScale), // Usa radiusScale calculado dinamicamente
+                    maxOpacity: 1, // Mesma opacidade máxima do heatmap estático
+                    minOpacity: 0.2, // Mesma opacidade mínima do heatmap estático
+                    blur: 0.9, // Mesmo blur do heatmap estático
                     backgroundColor: 'rgba(0,0,0,0)', // Fundo transparente explícito
                     gradient: { // Gradient customizado mais visível
                         '0.0': 'rgba(0,0,0,0)',
@@ -442,14 +577,10 @@ const useHeatmapVideoLogic = (id) => {
                     }
                 });
                 
-                console.log('✅ Heatmap instance created:', heatmapInstance.current);
-                
                 // Aguarda um momento para o heatmap ser criado e configura
                 setTimeout(() => {
                     const heatmapCanvas = heatmapContainerRef.current.querySelector('.heatmap-canvas');
                     if (heatmapCanvas) {
-                        console.log('✅ Heatmap canvas found:', heatmapCanvas.width, 'x', heatmapCanvas.height);
-                        
                         // Forçar visibilidade do canvas
                         heatmapCanvas.style.display = 'block';
                         heatmapCanvas.style.opacity = '1';
@@ -460,7 +591,6 @@ const useHeatmapVideoLogic = (id) => {
                         heatmapCanvas.style.zIndex = '10';
                         
                         // Adicionar ponto de teste para verificar funcionamento
-                        console.log('🧪 Adding test point...');
                         heatmapInstance.current.setData({
                             max: 100,
                             data: [{ x: canvasSize.width / 2, y: canvasSize.height / 2, value: 100 }]
@@ -470,7 +600,6 @@ const useHeatmapVideoLogic = (id) => {
                         setTimeout(() => {
                             if (heatmapInstance.current) {
                                 heatmapInstance.current.setData({ max: 100, data: [] });
-                                console.log('🧪 Test cleared, ready for real data');
                             }
                         }, 2000);
                         
@@ -502,9 +631,12 @@ const useHeatmapVideoLogic = (id) => {
             if (mediaType === 1) {
                 // É vídeo - reproduz normalmente
                 if (video) {
+                    console.log(`🎬 Starting video playback`);
                     video.play().then(() => {
+                        console.log(`▶️ Video started playing`);
                         startRecording();
                         drawFrame();
+                        // Para vídeos, o heatmap é atualizado via event listener timeupdate
                     }).catch(err => {
                         console.error('❌ Erro ao reproduzir vídeo:', err);
                         setError(`Erro ao reproduzir vídeo: ${err.message}`);
@@ -513,6 +645,7 @@ const useHeatmapVideoLogic = (id) => {
                 }
             } else {
                 // É imagem - inicia gravação imediatamente
+                console.log(`🖼️ Starting image mode`);
                 drawFrame(); // Desenha frame inicial
                 startRecording();
                 simulateImagePlayback();
@@ -528,35 +661,57 @@ const useHeatmapVideoLogic = (id) => {
      * Simula reprodução para imagens
      */
     const simulateImagePlayback = () => {
+        // Evitar múltiplas inicializações
+        if (isInitialized.current) {
+            console.log(`⚠️ simulateImagePlayback already running, ignoring duplicate call`);
+            return;
+        }
+        
+        console.log(`🖼️ Starting image simulation with ${coords.length} points at ${coordinatesPerSecond} points/second`);
+        
+        // Marcar como inicializado
+        isInitialized.current = true;
+        
+        // Reset states para garantir que comece do zero
+        setCurrentTime(0);
+        currentCoordinateIndex.current = -1; // Começar com -1 para que o índice 0 seja o primeiro
+        setHeatmapData([]);
+        
         let elapsed = 0;
+        let frameCount = 0;
         
         const interval = setInterval(() => {
             elapsed += 1 / fps;
+            frameCount++;
+            console.log(`⏰ Image simulation frame ${frameCount}, time: ${elapsed.toFixed(3)}s`);
             setCurrentTime(elapsed);
             
             // Adiciona ponto do heatmap e verifica se ainda há pontos
             const hasMorePoints = addHeatmapPoint(elapsed);
+            console.log(`🔄 Image simulation - Has more points: ${hasMorePoints}`);
             
             // Desenha frame
             drawFrame();
             
             // Para quando os pontos do heatmap acabam (prioridade) ou quando atinge a duração máxima
             if (!hasMorePoints) {
-                console.log('🎬 Simulation ended - heatmap points finished at', elapsed.toFixed(2), 's');
+                console.log(`🏁 Image simulation finished - no more points`);
                 clearInterval(interval);
+                isInitialized.current = false; // Reset flag
                 return; // stopRecording já foi chamado em addHeatmapPoint
             }
             
             // Fallback: para se exceder a duração estimada (para evitar loops infinitos)
             if (elapsed >= videoDuration) {
-                console.log('🎬 Simulation ended - duration limit reached at', elapsed.toFixed(2), 's');
+                console.log(`⏱️ Image simulation finished - reached duration limit (${videoDuration}s)`);
                 clearInterval(interval);
+                isInitialized.current = false; // Reset flag
                 stopRecording();
             }
         }, 1000 / fps);
     };
 
-    // Cleanup de URLs quando componente desmonta
+    // Cleanup de URLs e timers quando componente desmonta
     useEffect(() => {
         return () => {
             // Só limpar blob URLs, não URLs diretas
@@ -566,6 +721,9 @@ const useHeatmapVideoLogic = (id) => {
             if (downloadLink && downloadLink.startsWith('blob:')) {
                 URL.revokeObjectURL(downloadLink);
             }
+            
+            // Para timers
+            stopPreciseHeatmapUpdates();
         };
     }, [mediaUrl, downloadLink]);
 
@@ -574,9 +732,6 @@ const useHeatmapVideoLogic = (id) => {
      */
     useEffect(() => {
         if (heatmapInstance.current && heatmapData.length > 0) {
-            console.log('🎯 Updating heatmap with', heatmapData.length, 'points');
-            console.log('🎯 Sample data:', heatmapData.slice(-3));
-            
             try {
                 // Usar um timeout para evitar atualizações muito frequentes
                 const timeoutId = setTimeout(() => {
@@ -593,14 +748,11 @@ const useHeatmapVideoLogic = (id) => {
                                 max: 100,
                                 data: safeData,
                             });
-                            
-                            console.log('✅ Heatmap updated successfully with', safeData.length, 'points');
                         } catch (innerError) {
                             console.warn('⚠️ Inner heatmap update error:', innerError);
                             
                             // Se continuar falhando, tentar recriar a instância do heatmap
                             if (innerError.message.includes('read only property')) {
-                                console.log('🔄 Attempting to recreate heatmap instance due to read-only error...');
                                 try {
                                     // Limpar container
                                     if (heatmapContainerRef.current) {
@@ -609,10 +761,10 @@ const useHeatmapVideoLogic = (id) => {
                                         // Recriar instância
                                         heatmapInstance.current = h337.create({
                                             container: heatmapContainerRef.current,
-                                            radius: 30,
-                                            maxOpacity: 0.8,
-                                            minOpacity: 0.3,
-                                            blur: 0.8,
+                                            radius: Math.max(10, 50 * radiusScale), // Usa radiusScale calculado dinamicamente
+                                            maxOpacity: 1, // Mesma opacidade máxima do heatmap estático
+                                            minOpacity: 0.2, // Mesma opacidade mínima do heatmap estático
+                                            blur: 0.9, // Mesmo blur do heatmap estático
                                             backgroundColor: 'rgba(0,0,0,0)',
                                             gradient: {
                                                 '0.0': 'rgba(0,0,0,0)',
@@ -623,8 +775,6 @@ const useHeatmapVideoLogic = (id) => {
                                                 '1.0': 'rgba(255,0,0,1.0)'
                                             }
                                         });
-                                        
-                                        console.log('✅ Heatmap instance recreated');
                                     }
                                 } catch (recreateError) {
                                     console.error('❌ Failed to recreate heatmap:', recreateError);
@@ -644,19 +794,53 @@ const useHeatmapVideoLogic = (id) => {
 
     // Função para atualizar seleção de teste
     const updateTestSelection = (newSelectedIndex) => {
+        console.log(`🔄 Updating test selection from ${selectedTestIndex} to ${newSelectedIndex}`);
         // Só permite mudança quando não está gravando
         if (!isRecording) {
             setSelectedTestIndex(newSelectedIndex);
             // Reset estados de progresso quando muda seleção
             setCurrentTime(0);
-            setCurrentCoordinateIndex(0);
+            currentCoordinateIndex.current = -1; // Reset para -1 para incluir o primeiro ponto
             setHeatmapData([]);
+            isInitialized.current = false; // Reset flag
+            
+            // Para timers
+            stopPreciseHeatmapUpdates();
             
             // Limpa download link anterior
             if (downloadLink && downloadLink.startsWith('blob:')) {
                 URL.revokeObjectURL(downloadLink);
                 setDownloadLink(null);
             }
+            console.log(`✅ Test selection updated and states reset`);
+        } else {
+            console.log(`⚠️ Cannot change test selection while recording`);
+        }
+    };
+
+    // Função para atualizar velocidade dos pontos
+    const updatePointsSpeed = (newSpeed) => {
+        console.log(`🔄 Updating points speed from ${pointsSpeed} to ${newSpeed}`);
+        // Só permite mudança quando não está gravando
+        if (!isRecording) {
+            setPointsSpeed(newSpeed);
+            // Reset estados de progresso quando muda velocidade
+            setCurrentTime(0);
+            currentCoordinateIndex.current = -1; // Reset para -1 para incluir o primeiro ponto
+            setHeatmapData([]);
+            isInitialized.current = false; // Reset flag
+            
+            // Para timers
+            stopPreciseHeatmapUpdates();
+            
+            // Limpa download link anterior
+            if (downloadLink && downloadLink.startsWith('blob:')) {
+                URL.revokeObjectURL(downloadLink);
+                setDownloadLink(null);
+            }
+            console.log(`✅ Points speed updated and states reset`);
+        } else {
+            console.log(`⚠️ Cannot change points speed while recording`);
         }
     };
 
@@ -682,7 +866,7 @@ const useHeatmapVideoLogic = (id) => {
         videoDuration,
         currentTime,
         totalCoordinates,
-        currentCoordinateIndex,
+        currentCoordinateIndex: Math.max(0, currentCoordinateIndex.current), // Mostrar pelo menos 0 na UI
         
         // Estados de controle
         isLoading,
@@ -691,6 +875,8 @@ const useHeatmapVideoLogic = (id) => {
         // Estados de seleção
         selectedTestIndex,
         setSelectedTestIndex,
+        pointsSpeed,
+        setPointsSpeed,
         
         // Funções
         handlePlayClick,
@@ -698,6 +884,7 @@ const useHeatmapVideoLogic = (id) => {
         updateHeatmapBasedOnTime,
         drawFrame,
         updateTestSelection,
+        updatePointsSpeed,
     };
 };
 

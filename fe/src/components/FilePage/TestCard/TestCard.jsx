@@ -32,9 +32,6 @@ function TestCard({ file, callFunction, index }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedImageName, setSelectedImageName] = useState("");
 
-  console.log("File data:", file);
-  
-
   // Manipula o clique no botão de exclusão
   function handleClick() {
     callFunction(file._id);

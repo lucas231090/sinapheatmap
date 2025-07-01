@@ -64,8 +64,6 @@ export const downloadHeatMapImage = ({
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-
-        console.log("Download do heatmap iniciado");
     } catch (error) {
         console.error("Erro ao gerar download do heatmap:", error);
     }
