@@ -70,7 +70,7 @@ export const getFileMedia = async (mediaName) => {
             
             // Verificar se o arquivo é acessível
             try {
-                const response = await fetch(directUrl, { method: 'HEAD' });
+                const response = await api.get(directUrl, { method: 'HEAD' });
                 
                 if (response.ok) {
                     return directUrl;

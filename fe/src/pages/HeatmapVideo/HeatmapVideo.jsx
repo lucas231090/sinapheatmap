@@ -42,12 +42,18 @@ const VideoHeatmap = () => {
         pointsSpeed,
         setPointsSpeed,
         
+        // Estados da bola de tracking
+        showTrackingBall,
+        setShowTrackingBall,
+        currentTrackingPosition,
+        
         // Funções
         handlePlayClick,
         stopRecording,
         drawFrame,
         updateTestSelection,
         updatePointsSpeed,
+        updateTrackingBall,
     } = useHeatmapVideoLogic(id);
 
     // Configurar event listeners para vídeo se for mídia de vídeo
@@ -172,6 +178,29 @@ const VideoHeatmap = () => {
                                 setPointsSpeed={updatePointsSpeed}
                                 disabled={isRecording}
                             />
+                        </div>
+                        
+                        {/* Controle da Bola de Rastreamento */}
+                        <div className="mb-6">
+                            <label className="flex items-center justify-center space-x-3">
+                                <input
+                                    type="checkbox"
+                                    checked={showTrackingBall}
+                                    onChange={(e) => {
+                                        console.log(`🔴 Checkbox clicked:`, e.target.checked);
+                                        updateTrackingBall(e.target.checked);
+                                    }}
+                                    disabled={isRecording}
+                                    className="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 focus:ring-2 disabled:opacity-50"
+                                />
+                                <span className="text-sm font-medium text-gray-700">
+                                    Mostrar bola de rastreamento
+                                </span>
+                                <div className="flex items-center space-x-1">
+                                    <div className="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-sm"></div>
+                                    <span className="text-xs text-gray-500">(bola vermelha que segue as coordenadas)</span>
+                                </div>
+                            </label>
                         </div>
                         
                         <div className="flex flex-row gap-4 justify-center items-center space-y-2 mb-6">

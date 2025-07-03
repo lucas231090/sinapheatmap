@@ -11,6 +11,7 @@ const useHeatmapVideoLogic = (id) => {
     // Estados específicos do vídeo
     const [selectedTestIndex, setSelectedTestIndex] = useState("all");
     const [pointsSpeed, setPointsSpeed] = useState(10); // Pontos por segundo (padrão: 10)
+    const [showTrackingBall, setShowTrackingBall] = useState(false); // Nova funcionalidade: bola de rastreamento
 
     // Hook base para funcionalidades compartilhadas
     const {
@@ -59,6 +60,14 @@ const useHeatmapVideoLogic = (id) => {
     // Estados do heatmap em tempo real
     const [heatmapData, setHeatmapData] = useState([]);
     
+    // Ref para posição da bola de rastreamento (somente ref para evitar re-renders)
+    const currentTrackingPositionRef = useRef(null); // Ref para atualização imediata durante o desenho
+    
+    // Refs para interpolação suave da bola de rastreamento
+    const trackingCurrentPosition = useRef(null); // Posição atual da coordenada (pontual)
+    const trackingNextPosition = useRef(null); // Próxima posição da coordenada
+    const trackingInterpolatedPosition = useRef(null); // Posição interpolada atual
+    
     // Estados de tempo/progresso
     const [videoDuration, setVideoDuration] = useState(0);
     const [currentTime, setCurrentTime] = useState(0);
@@ -67,9 +76,74 @@ const useHeatmapVideoLogic = (id) => {
     // Controle de timing mais preciso para vídeos - usar refs para persistir entre re-renders
     const currentCoordinateIndex = useRef(-1); // Começar com -1 para que o primeiro ponto (índice 0) seja adicionado
     const isInitialized = useRef(false); // Flag para evitar re-inicializações
+    const animationFrameId = useRef(null); // Ref para o ID do requestAnimationFrame
 
     // Configurações específicas do timing
     const coordinatesPerSecond = pointsSpeed; // Usar a velocidade selecionada pelo usuário
+
+    /**
+     * Reseta todos os estados relacionados à reprodução e gravação.
+     */
+    const resetPlaybackState = () => {
+        setCurrentTime(0);
+        setHeatmapData([]);
+        currentCoordinateIndex.current = -1;
+        currentTrackingPositionRef.current = null;
+        trackingCurrentPosition.current = null;
+        trackingNextPosition.current = null;
+        trackingInterpolatedPosition.current = null;
+        isInitialized.current = false;
+
+        if (downloadLink && downloadLink.startsWith('blob:')) {
+            URL.revokeObjectURL(downloadLink);
+            setDownloadLink(null);
+        }
+
+        if (animationFrameId.current) {
+            cancelAnimationFrame(animationFrameId.current);
+            animationFrameId.current = null;
+        }
+    };
+
+    /**
+     * Atualiza a posição interpolada da bola de rastreamento para movimento suave
+     */
+    const updateTrackingBallPosition = (timeElapsed) => {
+        if (!showTrackingBall || coords.length === 0) {
+            return;
+        }
+
+        // Calcula índice atual e próximo baseado no tempo
+        const exactIndex = timeElapsed * coordinatesPerSecond;
+        const currentIndex = Math.floor(exactIndex);
+        const nextIndex = Math.min(currentIndex + 1, coords.length - 1);
+        
+        // Fator de interpolação (0 a 1) baseado na parte fracionária
+        const t = exactIndex - currentIndex;
+        
+        if (currentIndex >= coords.length) {
+            return;
+        }
+        
+        const currentCoord = coords[currentIndex];
+        const nextCoord = coords[nextIndex];
+        
+        if (!currentCoord || !nextCoord) {
+            return;
+        }
+        
+        // Interpolação linear entre posição atual e próxima
+        const interpolatedX = currentCoord.x + (nextCoord.x - currentCoord.x) * t;
+        const interpolatedY = currentCoord.y + (nextCoord.y - currentCoord.y) * t;
+        
+        // Garantir que as coordenadas estejam dentro dos limites
+        const x = Math.max(0, Math.min(canvasSize.width - 1, Math.round(interpolatedX)));
+        const y = Math.max(0, Math.min(canvasSize.height - 1, Math.round(interpolatedY)));
+        
+        const position = { x, y };
+        // Só atualizar o ref - não o estado para evitar re-renders excessivos
+        currentTrackingPositionRef.current = position;
+    };
 
     // Calcula duração e total de coordenadas quando coords mudam
     useEffect(() => {
@@ -78,8 +152,6 @@ const useHeatmapVideoLogic = (id) => {
             
             setVideoDuration(duration);
             setTotalCoordinates(coords.length);
-        } else {
-            console.log(`⚠️ No coordinates available`);
         }
     }, [coords, calculateDuration, coordinatesPerSecond]);
 
@@ -87,11 +159,12 @@ const useHeatmapVideoLogic = (id) => {
      * Adiciona ponto do heatmap baseado nas coordenadas reais
      */
     const addHeatmapPoint = (timeElapsed) => {
-        
         if (coords.length === 0) {
-            console.log(`⚠️ No coordinates available`);
             return false; // Retorna false se não há coordenadas
         }
+
+        // Atualiza posição interpolada da bola de rastreamento
+        updateTrackingBallPosition(timeElapsed);
 
         // Calcula qual coordenada mostrar baseado no tempo
         const targetIndex = Math.floor(timeElapsed * coordinatesPerSecond);
@@ -134,7 +207,6 @@ const useHeatmapVideoLogic = (id) => {
                     value: 100
                 };
                 
-                
                 setHeatmapData((prevData) => {
                     const newData = [...prevData, newPoint];
                     return newData;
@@ -160,23 +232,21 @@ const useHeatmapVideoLogic = (id) => {
      * Função de desenho do frame
      */
     const drawFrame = () => {
-        const video = videoRef.current;
-        const canvas = canvasRef.current;
-        
-        if (!canvas) {
-            console.warn('⚠️ Canvas not found');
-            return;
+        // Verificação robusta do canvas
+        if (!canvasRef.current) {
+            return; // Retorna silenciosamente se canvas não existe
         }
 
+        const canvas = canvasRef.current;
+        const video = videoRef.current;
+        
         if (canvas.width === 0 || canvas.height === 0) {
-            console.warn('⚠️ Canvas has zero dimensions');
-            return;
+            return; // Retorna silenciosamente se canvas tem dimensões inválidas
         }
 
         const ctx = canvas.getContext('2d');
         if (!ctx) {
-            console.warn('⚠️ Canvas context not available');
-            return;
+            return; // Retorna silenciosamente se contexto não está disponível
         }
         
         // Limpa canvas
@@ -234,8 +304,39 @@ const useHeatmapVideoLogic = (id) => {
             }
         }
 
+        // Desenha bola de rastreamento se ativada e há posição atual
+        // IMPORTANTE: Desenhar por último para aparecer em cima de tudo
+        if (showTrackingBall && currentTrackingPositionRef.current) {
+            const { x, y } = currentTrackingPositionRef.current;
+            const ballRadius = 8; // Raio da bola
+
+            // Salvar contexto atual
+            ctx.save();
+
+            // Sombra/borda preta externa
+            ctx.beginPath();
+            ctx.arc(x, y, ballRadius + 2, 0, 2 * Math.PI);
+            ctx.fillStyle = 'black';
+            ctx.fill();
+
+            // Borda branca
+            ctx.beginPath();
+            ctx.arc(x, y, ballRadius + 1, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+
+            // Bola vermelha principal
+            ctx.beginPath();
+            ctx.arc(x, y, ballRadius, 0, 2 * Math.PI);
+            ctx.fillStyle = 'red';
+            ctx.fill();
+
+            // Restaurar contexto
+            ctx.restore();
+        }
+
         // Continua o loop de desenho se estiver gravando
-        if (isRecording) {
+        if (isRecording && canvasRef.current) {
             requestAnimationFrame(drawFrame);
         }
     };
@@ -266,7 +367,9 @@ const useHeatmapVideoLogic = (id) => {
 
         // Desenha frame inicial garantindo que não há erros
         try {
-            drawFrame();
+            if (canvasRef.current) {
+                drawFrame();
+            }
         } catch (drawError) {
             console.error('❌ Error drawing initial frame:', drawError);
             setError(`Erro ao desenhar frame inicial: ${drawError.message}`);
@@ -361,6 +464,12 @@ const useHeatmapVideoLogic = (id) => {
     const handlePlayClick = () => {
         const video = videoRef.current;
         const canvas = canvasRef.current;
+
+        // Reinicia o vídeo para o início, se for um vídeo
+        if (mediaType === 1 && video) {
+            video.currentTime = 0;
+        }
+        
         
         if (!canvas || !heatmapContainerRef.current) {
             setError("Elementos do canvas não encontrados");
@@ -383,6 +492,10 @@ const useHeatmapVideoLogic = (id) => {
             // Limpa dados anteriores do heatmap e reset states
             setHeatmapData([]);
             setCurrentTime(0);
+            currentTrackingPositionRef.current = null; // Reset ref da bola de tracking
+            trackingCurrentPosition.current = null; // Reset refs de interpolação
+            trackingNextPosition.current = null;
+            trackingInterpolatedPosition.current = null;
             currentCoordinateIndex.current = -1; // Começar com -1 para incluir o primeiro ponto
             isInitialized.current = false; // Reset flag
             
@@ -484,9 +597,11 @@ const useHeatmapVideoLogic = (id) => {
                 if (video) {
                     video.play().then(() => {
                         startRecording();
-                        drawFrame();
+                        if (canvasRef.current) {
+                            drawFrame();
+                        }
                         // Para vídeos, usar timer controlado como nas imagens
-                        simulateVideoPlayback();
+                        simulatePlayback();
                     }).catch(err => {
                         console.error('❌ Erro ao reproduzir vídeo:', err);
                         setError(`Erro ao reproduzir vídeo: ${err.message}`);
@@ -495,9 +610,11 @@ const useHeatmapVideoLogic = (id) => {
                 }
             } else {
                 // É imagem - inicia gravação imediatamente
-                drawFrame(); // Desenha frame inicial
+                if (canvasRef.current) {
+                    drawFrame(); // Desenha frame inicial
+                }
                 startRecording();
-                simulateImagePlayback();
+                simulatePlayback();
             }
             
         } catch (err) {
@@ -507,161 +624,64 @@ const useHeatmapVideoLogic = (id) => {
     };
 
     /**
-     * Simula reprodução para imagens com timing preciso
+     * Simula a reprodução para imagens e vídeos com timing preciso,
+     * atualizando o heatmap e a bola de rastreamento.
      */
-    const simulateImagePlayback = () => {
-        // Evitar múltiplas inicializações
-        if (isInitialized.current) {
-            console.log(`⚠️ simulateImagePlayback already running, ignoring duplicate call`);
-            return;
-        }
-        
-        // Marcar como inicializado
+    const simulatePlayback = () => {
+        if (isInitialized.current) return;
         isInitialized.current = true;
-        
-        // Reset states para garantir que comece do zero
-        setCurrentTime(0);
-        currentCoordinateIndex.current = -1; // Começar com -1 para que o índice 0 seja o primeiro
-        setHeatmapData([]);
-        
-        // Usar performance.now() para timing preciso
-        const startTime = performance.now();
-        let animationFrameId;
-        let lastTimeUpdate = 0; // Para throttle de atualizações de tempo
-        
-        const animate = () => {
-            const currentTimestamp = performance.now();
-            const elapsed = (currentTimestamp - startTime) / 1000; // Converter para segundos
-            
-            // Só atualiza currentTime a cada 100ms para evitar renderizações excessivas
-            if (elapsed - lastTimeUpdate >= 0.1) {
-                setCurrentTime(elapsed);
-                lastTimeUpdate = elapsed;
-            }
-            
-            // Adiciona ponto do heatmap e verifica se ainda há pontos
-            const hasMorePoints = addHeatmapPoint(elapsed);
-            
-            // Desenha frame
-            drawFrame();
-            
-            // Para quando os pontos do heatmap acabam (prioridade)
-            if (!hasMorePoints) {
-                isInitialized.current = false; // Reset flag
-                return; // stopRecording já foi chamado em addHeatmapPoint
-            }
-            
-            // Fallback: para se exceder a duração estimada (para evitar loops infinitos)
-            if (elapsed >= videoDuration) {
-                isInitialized.current = false; // Reset flag
-                stopRecording();
-                return;
-            }
-            
-            // Continua a animação
-            animationFrameId = requestAnimationFrame(animate);
-        };
-        
-        // Inicia a animação
-        animationFrameId = requestAnimationFrame(animate);
-        
-        // Cleanup function para parar a animação se necessário
-        return () => {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-            }
-            isInitialized.current = false;
-        };
-    };
 
-    /**
-     * Simula reprodução para vídeos com controle preciso de timing
-     */
-    const simulateVideoPlayback = () => {
-        // Evitar múltiplas inicializações
-        if (isInitialized.current) {
-            console.log(`⚠️ simulateVideoPlayback already running, ignoring duplicate call`);
-            return;
-        }
-        
-        // Marcar como inicializado
-        isInitialized.current = true;
-        
-        // Reset states para garantir que comece do zero
-        setCurrentTime(0);
-        currentCoordinateIndex.current = -1; // Começar com -1 para que o índice 0 seja o primeiro
-        setHeatmapData([]);
-        
-        // Usar performance.now() para timing preciso
+        resetPlaybackState();
+
         const startTime = performance.now();
-        let animationFrameId;
-        let lastTimeUpdate = 0; // Para throttle de atualizações de tempo
-        
+        let lastTimeUpdate = 0;
+
         const animate = () => {
             const video = videoRef.current;
-            
-            // Verificar se o vídeo ainda está disponível e tocando
-            if (!video || video.paused || video.ended) {
+            if (!canvasRef.current) {
+                stopRecording();
                 isInitialized.current = false;
                 return;
             }
-            
-            const currentTimestamp = performance.now();
-            let elapsed = (currentTimestamp - startTime) / 1000; // Converter para segundos
-            
-            // Sincronizar com o tempo do vídeo (permitir pequenas diferenças)
-            const videoTime = video.currentTime;
-            const timeDiff = Math.abs(elapsed - videoTime);
-            
-            // Se a diferença for muito grande (>0.5s), resincronizar
-            if (timeDiff > 0.5) {
-                elapsed = videoTime;
+
+            // Para a animação se o vídeo for pausado ou terminar (apenas para mídia de vídeo)
+            if (mediaType === 1 && (!video || video.paused || video.ended)) {
+                isInitialized.current = false;
+                return;
             }
-            
-            // Só atualiza currentTime a cada 100ms para evitar renderizações excessivas
+
+            const currentTimestamp = performance.now();
+            let elapsed = (currentTimestamp - startTime) / 1000;
+
+            // Sincroniza com o tempo do vídeo se a diferença for grande
+            if (mediaType === 1 && video) {
+                const videoTime = video.currentTime;
+                if (Math.abs(elapsed - videoTime) > 0.5) {
+                    elapsed = videoTime;
+                }
+            }
+
             if (elapsed - lastTimeUpdate >= 0.1) {
                 setCurrentTime(elapsed);
                 lastTimeUpdate = elapsed;
             }
-            
-            // Adiciona ponto do heatmap e verifica se ainda há pontos
+
             const hasMorePoints = addHeatmapPoint(elapsed);
-            
-            // Desenha frame
             drawFrame();
-            
-            // Para quando os pontos do heatmap acabam (prioridade)
-            if (!hasMorePoints) {
+
+            if (!hasMorePoints || elapsed >= videoDuration) {
+                stopRecording();
                 isInitialized.current = false;
-                
-                // Para o vídeo também
-                if (video && !video.paused) {
+                if (mediaType === 1 && video && !video.paused) {
                     video.pause();
                 }
-                return; // stopRecording já foi chamado em addHeatmapPoint
-            }
-            
-            // Fallback: para se exceder a duração estimada (para evitar loops infinitos)
-            if (elapsed >= videoDuration) {
-                isInitialized.current = false;
-                stopRecording();
                 return;
             }
-            
-            // Continua a animação
-            animationFrameId = requestAnimationFrame(animate);
+
+            animationFrameId.current = requestAnimationFrame(animate);
         };
-        
-        // Inicia a animação
-        animationFrameId = requestAnimationFrame(animate);
-        
-        // Cleanup function para parar a animação se necessário
-        return () => {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-            }
-            isInitialized.current = false;
-        };
+
+        animationFrameId.current = requestAnimationFrame(animate);
     };
 
     // Cleanup de URLs e timers quando componente desmonta
@@ -748,16 +768,7 @@ const useHeatmapVideoLogic = (id) => {
         if (!isRecording) {
             setSelectedTestIndex(newSelectedIndex);
             // Reset estados de progresso quando muda seleção
-            setCurrentTime(0);
-            currentCoordinateIndex.current = -1; // Reset para -1 para incluir o primeiro ponto
-            setHeatmapData([]);
-            isInitialized.current = false; // Reset flag
-            
-            // Limpa download link anterior
-            if (downloadLink && downloadLink.startsWith('blob:')) {
-                URL.revokeObjectURL(downloadLink);
-                setDownloadLink(null);
-            }
+            resetPlaybackState();
         } else {
             console.log(`⚠️ Cannot change test selection while recording`);
         }
@@ -769,18 +780,28 @@ const useHeatmapVideoLogic = (id) => {
         if (!isRecording) {
             setPointsSpeed(newSpeed);
             // Reset estados de progresso quando muda velocidade
-            setCurrentTime(0);
-            currentCoordinateIndex.current = -1; // Reset para -1 para incluir o primeiro ponto
-            setHeatmapData([]);
-            isInitialized.current = false; // Reset flag
-            
-            // Limpa download link anterior
-            if (downloadLink && downloadLink.startsWith('blob:')) {
-                URL.revokeObjectURL(downloadLink);
-                setDownloadLink(null);
-            }
+            resetPlaybackState();
         } else {
             console.log(`⚠️ Cannot change points speed while recording`);
+        }
+    };
+
+    // Função para atualizar estado da bola de tracking
+    const updateTrackingBall = (enabled) => {
+        console.log(`🔴 updateTrackingBall called with:`, { enabled, isRecording });
+        // Só permite mudança quando não está gravando
+        if (!isRecording) {
+            setShowTrackingBall(enabled);
+            console.log(`🔴 Tracking ball set to:`, enabled);
+            // Reset posição se desabilitado
+            if (!enabled) {
+                currentTrackingPositionRef.current = null; // Reset ref da bola de tracking
+                trackingCurrentPosition.current = null; // Reset refs de interpolação
+                trackingNextPosition.current = null;
+                trackingInterpolatedPosition.current = null;
+            }
+        } else {
+            console.log(`⚠️ Cannot change tracking ball while recording`);
         }
     };
 
@@ -818,12 +839,17 @@ const useHeatmapVideoLogic = (id) => {
         pointsSpeed,
         setPointsSpeed,
         
+        // Estados da bola de tracking
+        showTrackingBall,
+        setShowTrackingBall,
+        
         // Funções
         handlePlayClick,
         stopRecording,
         drawFrame,
         updateTestSelection,
         updatePointsSpeed,
+        updateTrackingBall,
     };
 };
 
