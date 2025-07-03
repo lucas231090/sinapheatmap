@@ -25,6 +25,7 @@ function App() {
             <Route path="/eyeheatmap/:id" element={<HeatmapStatic />} />
             <Route path="/heatmap-video/:id" element={<HeatmapVideo />} />
 
+
             {/* Rotas protegidas (requerem autenticação) */}
             <Route
               path="/"

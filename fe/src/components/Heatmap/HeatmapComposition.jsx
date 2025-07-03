@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useCurrentFrame, useVideoConfig, AbsoluteFill } from "remotion";
+import { useCurrentFrame, useVideoConfig, AbsoluteFill, Video } from "remotion";
 import h337 from "@mars3d/heatmap.js";
 
 /**
  * Componente de composição de heatmap para Remotion
  * Responsável por renderizar o heatmap em formato de vídeo
  */
-export const HeatmapComposition = ({ heatmapData, img }) => {
+export const HeatmapComposition = ({ heatmapData, img, type }) => {
   // Obtém o frame atual e as configurações do vídeo
   // frame: Frame atual do vídeo
   // fps: Frames por segundo
@@ -32,6 +32,7 @@ export const HeatmapComposition = ({ heatmapData, img }) => {
     width: window.innerWidth,
     height: window.innerHeight,
   });
+  const gazeCanvasRef = useRef(null);
 
   // Calculate how many points to show based on current frame
   const FRAMES_PER_POINT = 10;
@@ -139,6 +140,39 @@ export const HeatmapComposition = ({ heatmapData, img }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Draw current gaze point with interpolation on the gaze canvas for smooth movement
+  useEffect(() => {
+    const canvas = gazeCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    // clear previous drawing
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // smooth gaze between points
+    if (!isComplete && heatmapData.coords.length > 0) {
+      const idx = Math.min(Math.floor(frame / FRAMES_PER_POINT), heatmapData.coords.length - 1);
+      const prev = idx === 0 ? heatmapData.coords[0] : heatmapData.coords[idx - 1];
+      const next = heatmapData.coords[idx];
+      const frac = (frame % FRAMES_PER_POINT) / FRAMES_PER_POINT;
+      // ease-out transition (duration 0.1s equivalent)
+      const easeOutQuad = t => t * (2 - t);
+      const easedFrac = easeOutQuad(frac);
+      const x = prev.x + (next.x - prev.x) * easedFrac;
+      const y = prev.y + (next.y - prev.y) * easedFrac;
+      const radius = 10;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#fff';
+      ctx.stroke();
+      ctx.shadowColor = 'rgba(255, 0, 0, 0.8)';
+      ctx.shadowBlur = 10;
+      ctx.restore();
+    }
+  }, [frame, canvasSize, heatmapData.coords, isComplete]);
+
   // Força uma atualização do heatmap quando o container muda de tamanho
   useEffect(() => {
     if (heatmapInstanceRef.current && heatmapInitialized) {
@@ -226,7 +260,7 @@ export const HeatmapComposition = ({ heatmapData, img }) => {
   }
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#fff" }}>
+    <AbsoluteFill style={{ backgroundColor: "#fff", }}>
       <div
         ref={containerRef}
         style={{
@@ -236,38 +270,46 @@ export const HeatmapComposition = ({ heatmapData, img }) => {
           margin: "0 auto",
         }}
       >
-        {img && (
-          <img
-            src={img}
-            style={{
-              width: `${canvasSize.width}px`,
-              height: `${canvasSize.height}px`,
-              visibility: "visible",
-            }}
-            alt="Heatmap background"
-          />
-        )}
-
-        {/* Apontador do ponto atual */}
-        {currentGazePoint && !isComplete && (
-          <div
-            style={{
-              position: "absolute",
-              top: currentGazePoint.y,
-              left: currentGazePoint.x,
-              width: "20px",
-              height: "20px",
-              borderRadius: "50%",
-              border: "2px solid #fff",
-              backgroundColor: "rgba(255, 0, 0, 0.5)",
-              transform: "translate(-50%, -50%)",
-              boxShadow: "0 0 10px rgba(255, 0, 0, 0.8)",
-              zIndex: 10,
-              pointerEvents: "none",
-              transition: "all 0.1s ease-out",
-            }}
-          />
-        )}
+        {img && (() => {
+          if (type === 1) {
+            return (
+              <Video
+                src={img}
+                startFrom={0}
+                endAt={durationInFrames}
+                style={{
+                  width: `${canvasSize.width}px`,
+                  height: `${canvasSize.height}px`,
+                }}
+              />
+            );
+          }
+          return (
+            <img
+              src={img}
+              style={{
+                width: `${canvasSize.width}px`,
+                height: `${canvasSize.height}px`,
+                visibility: "visible",
+              }}
+              alt="Heatmap background"
+            />
+          );
+        })()}
+        {/* Gaze point canvas layer */}
+        <canvas
+          ref={gazeCanvasRef}
+          className="gaze-canvas"
+          width={canvasSize.width}
+          height={canvasSize.height}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            pointerEvents: "none",
+            zIndex: 10,
+          }}
+        />
 
         {/* Indicador de carregamento durante inicialização */}
         {!heatmapInitialized && (

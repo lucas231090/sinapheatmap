@@ -27,7 +27,6 @@ const TestSelector = ({
         onChange={(e) => setSelectedTestIndex(e.target.value)}
         disabled={disabled}
       >
-        <option value="">-- Selecione um teste --</option>
         <option value="all">Combine All Tests</option>
         {dataFile.jsonData.map((_, index) => (
           <option key={index} value={index}>

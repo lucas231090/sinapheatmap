@@ -1,384 +1,265 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import useHeatmapVideoLogic from '@/hooks/useHeatmapVideoLogic';
-import TestSelector from '@/components/HeatmapStatic/TestSelector';
-import SpeedSelector from '@/components/HeatmapVideo/SpeedSelector';
+import { useParams } from "react-router-dom";
+import { Player } from "@remotion/player";
+import React, { useState, useRef } from 'react';
+import { HeatmapComposition } from "@/components/Heatmap/HeatmapComposition";
+import VideoControls from "@/components/Heatmap/VideoControls";
+import useHeatmapVideoLogic from "@/hooks/useHeatmapVideoLogic";
 
-const VideoHeatmap = () => {
-    const { id } = useParams();
-    const [refsReady, setRefsReady] = useState(false);
-    
-    // Hook centralizado para toda a lógica
-    const {
-        // Refs
-        videoRef,
-        canvasRef,
-        heatmapContainerRef,
-        
-        // Estados de dados
-        fileName,
-        dataFile,
-        mediaUrl,
-        mediaType,
-        canvasSize,
-        
-        // Estados de gravação
-        isRecording,
-        downloadLink,
-        
-        // Estados de progresso
-        videoDuration,
-        currentTime,
-        totalCoordinates,
-        currentCoordinateIndex,
-        
-        // Estados de controle
-        isLoading,
-        error,
-        
-        // Estados de seleção
-        selectedTestIndex,
-        setSelectedTestIndex,
-        pointsSpeed,
-        setPointsSpeed,
-        
-        // Estados da bola de tracking
-        showTrackingBall,
-        setShowTrackingBall,
-        currentTrackingPosition,
-        
-        // Funções
-        handlePlayClick,
-        stopRecording,
-        drawFrame,
-        updateTestSelection,
-        updatePointsSpeed,
-        updateTrackingBall,
-    } = useHeatmapVideoLogic(id);
+/**
+ * Página de Vídeo Heatmap
+ * Componente responsável apenas pela apresentação da interface de vídeo
+ * Toda a lógica está separada no hook useHeatmapVideoLogic
+ */
+const HeatmapVideo = () => {
+  // Setup MediaRecorder refs and state
+  const mediaRecorderRef = useRef(null);
+  const [recordedChunks, setRecordedChunks] = useState([]);
 
-    // Configurar event listeners para vídeo se for mídia de vídeo
-    useEffect(() => {
-        const video = videoRef.current;
-        if (!video || mediaType !== 1) return;
+  const { id } = useParams();
 
-        const handleLoadedMetadata = () => {
-            if (video.duration) {
-                // Para vídeos, usar a duração real do vídeo
-                // mas limitar pela quantidade de coordenadas disponíveis
-                const coordDuration = totalCoordinates / 10; // 10 coordenadas por segundo
-                const actualDuration = Math.min(video.duration, coordDuration);
-                // Usar a duração já calculada no hook baseada nas coordenadas
-            }
-        };
-        const handleEnded = () => stopRecording();
-        const handleError = (e) => {
-            console.error('Video error:', e);
-            console.error('Video error details:', video.error);
-        };
-
-        video.addEventListener('loadedmetadata', handleLoadedMetadata);
-        video.addEventListener('ended', handleEnded);
-        video.addEventListener('error', handleError);
-
-        if (isRecording && mediaType === 1) {
-            drawFrame();
+  // Hook centralizado para toda a lógica do vídeo
+  const {
+    playerRef,
+    isPlaying,
+    setIsPlaying,
+    showPlayer,
+    playbackSpeed,
+    setPlaybackSpeed,
+    playerKey,
+    fileName,
+    dataFile,
+    mediaType,
+    img,
+    width,
+    height,
+    totalFrames,
+    hasValidData,
+    heatmapData,
+    isLoading,
+    error,
+    hasSingleTest,
+    shouldShowSelector,
+    currentTestIndex,
+    selectedTestIndex,
+    handleTestSelect,
+    handleVideoStart,
+  } = useHeatmapVideoLogic(id);
+  
+  // Handler to record and download video
+  const handleDownloadVideo = () => {
+    if (!playerRef.current) return;
+    // get internal player or component instance
+    let videoElem =
+      playerRef.current.getInternalPlayer?.() || playerRef.current;
+    // prepare media stream and cleanup
+    let stream;
+    let cleanup;
+    // If player video stream available, use it
+    if (typeof videoElem.captureStream === 'function') {
+      stream = videoElem.captureStream();
+    } else {
+      const canvasElem = document.querySelector('canvas.heatmap-canvas');
+      const gazeElem = document.querySelector('canvas.gaze-canvas');
+      
+      if (mediaType === 1) {
+        const videoTag = document.querySelector('video');
+        if (!videoTag || typeof videoTag.captureStream !== 'function') {
+          console.error('Cannot record: video element not found or captureStream unsupported');
+          return;
         }
-
-        return () => {
-            video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-            video.removeEventListener('ended', handleEnded);
-            video.removeEventListener('error', handleError);
-        };
-    }, [isRecording, mediaType, stopRecording, drawFrame, totalCoordinates]);
-
-    // Verificar se os refs estão prontos
-    useEffect(() => {
-        const checkRefs = () => {
-            if (canvasRef.current && heatmapContainerRef.current) {
-                setRefsReady(true);
-            }
-        };
-        
-        checkRefs();
-        
-        // Se ainda não estão prontos, verificar novamente após um tempo
-        if (!refsReady) {
-            const timeout = setTimeout(checkRefs, 100);
-            return () => clearTimeout(timeout);
-        }
-    }, [canvasRef, heatmapContainerRef, refsReady]);
-
-    // Exibe loading se estiver carregando
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-gray-100 flex justify-center items-center">
-                <div className="bg-white rounded-2xl shadow-lg p-8">
-                    <div className="text-xl text-gray-700">Carregando dados do teste...</div>
-                </div>
-            </div>
-        );
+        const combined = document.createElement('canvas');
+        combined.width = canvasElem.width;
+        combined.height = canvasElem.height;
+        const ctx = combined.getContext('2d');
+        stream = combined.captureStream(30);
+        // draw loop combining background, heatmap, and gaze layers
+        const interval = setInterval(() => {
+          ctx.clearRect(0, 0, combined.width, combined.height);
+          ctx.drawImage(videoTag, 0, 0, combined.width, combined.height);
+          ctx.drawImage(canvasElem, 0, 0, combined.width, combined.height);
+          if (gazeElem) {
+            ctx.drawImage(gazeElem, 0, 0, combined.width, combined.height);
+          }
+        }, 1000 / 30);
+        cleanup = () => clearInterval(interval);
+      } else {
+        const imgElem = document.querySelector('img[alt="Heatmap background"]');
+        const combined = document.createElement('canvas');
+        combined.width = canvasElem.width;
+        combined.height = canvasElem.height;
+        const ctx = combined.getContext('2d');
+        stream = combined.captureStream(30);
+        // draw loop combining background, heatmap, and gaze layers
+        const interval = setInterval(() => {
+          ctx.clearRect(0, 0, combined.width, combined.height);
+          ctx.drawImage(imgElem, 0, 0, combined.width, combined.height);
+          ctx.drawImage(canvasElem, 0, 0, combined.width, combined.height);
+          if (gazeElem) {
+            ctx.drawImage(gazeElem, 0, 0, combined.width, combined.height);
+          }
+        }, 1000 / 30);
+        cleanup = () => clearInterval(interval);
+      }
     }
-
-    // Exibe erro se houver
-    if (error) {
-        return (
-            <div className="min-h-screen bg-gray-100 flex justify-center items-center">
-                <div className="bg-white rounded-2xl shadow-lg p-8">
-                    <div className="text-xl text-red-500">Erro: {error}</div>
-                </div>
-            </div>
-        );
+    const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+    const chunks = [];
+    recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    recorder.onstop = () => {
+      if (cleanup) cleanup();
+      const blob = new Blob(chunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${fileName}-heatmap.webm`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setRecordedChunks([]);
+    };
+    recorder.start();
+    // start playback and stop recording on video end
+    videoElem.play();
+    const stopRecording = () => {
+      if (recorder.state === 'recording') recorder.stop();
+    };
+    // attach ended event if available
+    if (videoElem.addEventListener) {
+      videoElem.addEventListener('ended', stopRecording);
+      // cleanup listener when recorder stops
+      recorder.onstop = () => {
+        if (cleanup) cleanup();
+        videoElem.removeEventListener('ended', stopRecording);
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${fileName}-heatmap.webm`;
+        a.click();
+        URL.revokeObjectURL(url);
+        setRecordedChunks([]);
+      };
     }
+    mediaRecorderRef.current = recorder;
+  };
+  
 
-    // Se não há ID, exibe mensagem
-    if (!id) {
-        return (
-            <div className="min-h-screen bg-gray-100 flex justify-center items-center">
-                <div className="bg-white rounded-2xl shadow-lg p-8">
-                    <div className="text-xl text-gray-700">Nenhum ID de teste fornecido</div>
-                </div>
-            </div>
-        );
-    }
-
+  // Exibe loading se estiver carregando
+  if (isLoading) {
     return (
-        <div className="min-h-screen py-8 px-4">
-            <div className="max-w-4xl mx-auto">
-                {/* Caixa branca principal no meio da tela */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
-                    <div className="text-center">
-                        <h1 className="text-3xl font-bold text-gray-800 mb-4">
-                            {fileName || 'Teste de Eye Tracking'}
-                        </h1>
-                        
-                        {/* Seletor de Teste */}
-                        {dataFile?.jsonData?.length > 1 && (
-                            <div className="mb-6">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Selecionar Teste:
-                                </label>
-                                <TestSelector
-                                    dataFile={dataFile}
-                                    selectedTestIndex={selectedTestIndex}
-                                    setSelectedTestIndex={updateTestSelection}
-                                    disabled={isRecording}
-                                />
-                                {selectedTestIndex === "" && (
-                                    <p className="text-sm text-orange-600 mt-1">
-                                        Este arquivo contém múltiplos testes. Selecione um teste para continuar.
-                                    </p>
-                                )}
-                            </div>
-                        )}
-                        
-                        {/* Seletor de Velocidade dos Pontos */}
-                        <div className="mb-6">
-                            <SpeedSelector
-                                pointsSpeed={pointsSpeed}
-                                setPointsSpeed={updatePointsSpeed}
-                                disabled={isRecording}
-                            />
-                        </div>
-                        
-                        {/* Controle da Bola de Rastreamento */}
-                        <div className="mb-6">
-                            <label className="flex items-center justify-center space-x-3">
-                                <input
-                                    type="checkbox"
-                                    checked={showTrackingBall}
-                                    onChange={(e) => {
-                                        console.log(`🔴 Checkbox clicked:`, e.target.checked);
-                                        updateTrackingBall(e.target.checked);
-                                    }}
-                                    disabled={isRecording}
-                                    className="w-5 h-5 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 focus:ring-2 disabled:opacity-50"
-                                />
-                                <span className="text-sm font-medium text-gray-700">
-                                    Mostrar bola de rastreamento
-                                </span>
-                                <div className="flex items-center space-x-1">
-                                    <div className="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-sm"></div>
-                                    <span className="text-xs text-gray-500">(bola vermelha que segue as coordenadas)</span>
-                                </div>
-                            </label>
-                        </div>
-                        
-                        <div className="flex flex-row gap-4 justify-center items-center space-y-2 mb-6">
-                            <div>
-                                <p className="text-lg text-gray-600">
-                                Tipo de arquivo: {mediaType === 1 ? 'Vídeo' : 'Imagem'}
-                                </p>
-                                {dataFile?.jsonData?.length > 1 && (
-                                    <p className="text-lg text-gray-600">
-                                        Teste selecionado: {
-                                            selectedTestIndex === "all" ? "Todos os testes combinados" :
-                                            selectedTestIndex === "" ? "Nenhum teste selecionado" :
-                                            `Teste ${parseInt(selectedTestIndex) + 1}`
-                                        }
-                                    </p>
-                                )}
-                                <p className="text-lg text-gray-600">
-                                    Coordenadas disponíveis: {totalCoordinates}
-                                </p>
-                            </div>
-                            <div>
-                                <p className="text-lg text-gray-600">
-                                    Velocidade: {pointsSpeed} pontos/segundo
-                                </p>
-                                <p className="text-lg text-gray-600">
-                                    Duração estimada: {videoDuration.toFixed(1)}s
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-center space-x-4">
-                            {!isRecording && !downloadLink && (
-                                <button 
-                                    className="bg-sky-500 hover:bg-sky-600 active:bg-sky-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg hover:shadow-xl transform active:translate-y-1 transition-all duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                                    onClick={handlePlayClick}
-                                    disabled={
-                                        !mediaUrl || 
-                                        totalCoordinates === 0 || 
-                                        !refsReady || 
-                                        (dataFile?.jsonData?.length > 1 && selectedTestIndex === "")
-                                    }
-                                >
-                                    {!refsReady ? 'Preparando...' :
-                                     !mediaUrl ? 'Carregando mídia...' : 
-                                     (dataFile?.jsonData?.length > 1 && selectedTestIndex === "") ? 'Selecione um teste' :
-                                     totalCoordinates === 0 ? 'Sem coordenadas disponíveis' : 
-                                     'Iniciar Gravação'}
-                                </button>
-                            )}
-
-                            {downloadLink && (
-                                <a 
-                                    href={downloadLink} 
-                                    download={`heatmap-${fileName}.webm`}
-                                    className="bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold py-3 px-8 rounded-2xl shadow-lg hover:shadow-xl transform active:translate-y-1 transition-all duration-200"
-                                >
-                                    Baixar Vídeo
-                                </a>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Container da área de gravação - renderizado sempre mas visível apenas durante gravação */}
-                <div className={`bg-white rounded-2xl shadow-lg p-8 mb-8 ${!isRecording ? 'hidden' : ''}`}>
-                    <div className="text-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Gravando...</h2>
-                        <div className="space-y-2">
-                            <p className="text-lg text-gray-600">
-                                Progresso: {currentCoordinateIndex}/{totalCoordinates} coordenadas
-                            </p>
-                            <div className="w-full bg-gray-200 rounded-full h-3">
-                                <div 
-                                    className="bg-sky-500 h-3 rounded-full transition-all duration-300"
-                                    style={{ 
-                                        width: `${totalCoordinates > 0 ? (currentCoordinateIndex / totalCoordinates) * 100 : 0}%` 
-                                    }}
-                                ></div>
-                            </div>
-                            <p className="text-lg text-gray-600">
-                                Tempo: {currentTime.toFixed(1)}s
-                                {totalCoordinates > 0 && (
-                                    <span className="ml-2 text-sm text-gray-500">
-                                        (Ponto {currentCoordinateIndex + 1} de {totalCoordinates})
-                                    </span>
-                                )}
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Container para a área de gravação */}
-                    <div 
-                        className="mx-auto border-2 border-gray-300 bg-black rounded-lg overflow-hidden"
-                        style={{
-                            width: `${canvasSize.width}px`,
-                            height: `${canvasSize.height}px`,
-                            position: 'relative'
-                        }}
-                    >
-                        {/* Mídia de fundo (vídeo ou imagem) */}
-                        {mediaType === 1 && mediaUrl ? (
-                            <video
-                                ref={videoRef}
-                                src={mediaUrl}
-                                muted
-                                playsInline
-                                preload="auto"
-                                className="absolute inset-0 w-full h-full object-cover"
-                                onError={(e) => {
-                                    console.error('Video error:', e.target.error);
-                                    const error = e.target.error;
-                                    if (error) {
-                                        console.error('Error code:', error.code);
-                                        console.error('Error message:', error.message);
-                                        
-                                        // Se for erro de range request, tentar recarregar com URL direta
-                                        if (error.code === 3) { // MEDIA_ERR_DECODE
-                                            // Força reload do componente ou tenta nova estratégia
-                                        }
-                                    }
-                                }}
-                            />
-                        ) : mediaType === 0 && mediaUrl ? (
-                            <img
-                                src={mediaUrl}
-                                alt="Test media"
-                                className="absolute inset-0 w-full h-full object-cover"
-                                onError={() => console.error('Error loading image')}
-                            />
-                        ) : null}
-
-                        {/* Container do heatmap sobreposto */}
-                        <div
-                            ref={heatmapContainerRef}
-                            className="absolute inset-0 pointer-events-none z-10"
-                        ></div>
-                    </div>
-                </div>
-
-                {/* Canvas para gravação (sempre renderizado mas invisível) */}
-                <canvas
-                    ref={canvasRef}
-                    width={canvasSize.width}
-                    height={canvasSize.height}
-                    className="absolute pointer-events-none"
-                    style={{ 
-                        top: '-9999px',
-                        left: '-9999px'
-                    }}
-                ></canvas>
-
-                {/* Player do vídeo renderizado - aparece quando a gravação termina */}
-                {downloadLink && (
-                    <div className="bg-white rounded-2xl shadow-lg p-8">
-                        <div className="text-center">
-                            <h2 className="text-2xl font-bold text-gray-800 mb-6">
-                                Gravação Concluída!
-                            </h2>
-                            <div className="max-w-3xl mx-auto">
-                                <video 
-                                    src={downloadLink} 
-                                    controls 
-                                    className="w-full rounded-lg shadow-lg"
-                                    preload="auto"
-                                    playsInline
-                                    muted
-                                    onError={(e) => {
-                                        console.error('❌ Erro no vídeo de reprodução:', e.target.error);
-                                        // Não tenta recriar automaticamente para evitar loops
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-xl">Carregando dados do vídeo...</div>
+      </div>
     );
+  }
+
+  // Exibe erro se houver
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-xl text-red-500">Erro: {error}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-start md:items-center p-4 overflow-x-auto">
+      <div className="flex flex-row">
+        <div className="bg-card dark:bg-darkcard p-6 rounded-lg flex flex-col items-center">
+          <p className="mb-2 text-3xl text-title dark:text-darktitle">
+            <strong>Eyetracking Heatmap:</strong> {fileName || "No ID provided"}
+          </p>
+
+          {/* Controles do vídeo */}
+          <VideoControls
+            playerRef={playerRef}
+            isPlaying={isPlaying}
+            setIsPlaying={setIsPlaying}
+            duration={totalFrames}
+            dataFile={dataFile}
+            selectedTestIndex={selectedTestIndex || ""}
+            setSelectedTestIndex={handleTestSelect}
+            onVideoStart={handleVideoStart}
+            playbackSpeed={playbackSpeed}
+            setPlaybackSpeed={setPlaybackSpeed}
+            hasSingleTest={hasSingleTest}
+            shouldShowSelector={shouldShowSelector}
+            currentTestIndex={currentTestIndex}
+            onDownloadVideo={handleDownloadVideo}
+          />
+
+          <div className="border border-gray-300 rounded shadow-lg pa">
+            {!showPlayer || !hasValidData ? (
+              <div
+                style={{
+                  width: width / 2,
+                  height: height / 2,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "#f8f9fa",
+                }}
+              >
+                <div className="text-center p-8">
+                  <h3 className="text-xl mb-4">
+                    {currentTestIndex
+                      ? "Carregando dados do heatmap..."
+                      : hasSingleTest
+                      ? "Preparando vídeo..."
+                      : "Selecione um teste para começar"}
+                  </h3>
+                  <p className="text-gray-600">
+                    {!hasValidData && currentTestIndex
+                      ? "Nenhum dado disponível para este teste."
+                      : hasSingleTest
+                      ? "O vídeo será iniciado automaticamente."
+                      : "O vídeo será iniciado automaticamente após a seleção."}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              // Renderizando o player de vídeo
+              // Ele funciona da seguinte maneira:
+              // 1. O componente Player é renderizado com a composição HeatmapComposition.
+              // 2. O componente HeatmapComposition é responsável por renderizar o heatmap.
+              // 3. O playerRef é passado para o componente Player para controle do vídeo.
+              // 4. O playerKey é usado para forçar o remount do componente Player quando necessário.
+              // 5. O componente Player é configurado para reproduzir o vídeo com as propriedades fornecidas.
+              // 6. O componente HeatmapComposition recebe os dados do heatmap e a imagem como props.
+              // 7. O vídeo pode ser controlado pelo usuário com os controles fornecidos.
+              // 8. O vídeo pode ser reproduzido automaticamente ou pausado com base no estado isPlaying.
+              // 9. O vídeo pode ser pausado ou reproduzido com um clique.
+              // 10. O vídeo pode ser reproduzido em uma velocidade diferente com base no estado playbackSpeed.
+              <Player
+                key={playerKey} // Important! This forces a complete remount
+                ref={playerRef}
+                component={HeatmapComposition}
+                durationInFrames={totalFrames}
+                fps={30}
+                compositionWidth={width}
+                compositionHeight={height}
+                style={{
+                  width: width/1.9,
+                  height: height/1.9,
+                }}
+                controls
+                inputProps={{
+                  heatmapData,
+                  img,
+                  type: mediaType,
+                }}
+                autoPlay={false}
+                clickToPlay={true}
+                doubleClickToFullscreen={true}
+                playbackRate={playbackSpeed}
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+                acknowledgeRemotionLicense
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
-export default VideoHeatmap;
+export default HeatmapVideo;

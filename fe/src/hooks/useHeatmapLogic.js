@@ -1,36 +1,42 @@
 import { useState, useEffect } from "react";
-import useHeatmapBase from './useHeatmapBase';
-import { downloadHeatMapImage } from "@/utils";
+import { getFileById, getFileMedia } from "@/services/fileService";
+import {
+    combineCoordinates,
+    validateCoordinates,
+    scaleCoordinates,
+    calculateResponsiveScale,
+    calculateCanvasSize,
+    downloadHeatMapImage
+} from "@/utils";
 
 /**
- * Hook para lógica estática de heatmap
- * Usa o hook base e adiciona funcionalidades específicas da visualização estática
+ * Hook centralizado para gerenciar dados de heatmap
+ * Foca apenas na lógica de programação, sem manipulação de DOM
  */
-const useHeatmapLogic = (id, selectedTestIndex = "all") => {
-    // Hook base para funcionalidades compartilhadas
-    const {
-        // Estados de dados do hook base
-        fileName,
-        dataFile,
-        jsonFile,
-        mediaUrl: img, // Renomeando para compatibilidade
-        coords,
-        canvasSize,
-        isLoading,
-        error,
-        radiusScale,
-        windowSize: baseWindowSize,
-        // Funções do hook base
-        processCoordinates,
-        reprocessData,
-        setError,
-    } = useHeatmapBase(id, selectedTestIndex);
-
-    // Estados específicos da lógica estática
+const useHeatmapLogic = (id, selectedTestIndex) => {
+    // Estados principais
+    const [fileName, setFileName] = useState();
+    const [dataFile, setDataFile] = useState();
+    const [jsonFile, setJsonFile] = useState();
+    const [img, setImg] = useState(null);
+    const [coords, setCoords] = useState([]);
+    const [radiusScale, setRadiusScale] = useState(1);
+    const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
     const [windowSize, setWindowSize] = useState({
         width: window.innerWidth,
         height: window.innerHeight,
     });
+    const [mediaType, setMediaType] = useState(0); // 0 = imagem, 1 = video
+
+
+    // Carrega dados iniciais quando ID muda
+    useEffect(() => {
+        if (id) {
+            fetchData();
+        }
+    }, [id]);
 
     // Escuta mudanças de tamanho da janela
     useEffect(() => {
@@ -45,12 +51,94 @@ const useHeatmapLogic = (id, selectedTestIndex = "all") => {
         return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    // Quando o tamanho da janela muda, força reprocessamento
+    // Processa dados quando mudarem
     useEffect(() => {
-        if (jsonFile && dataFile && windowSize !== baseWindowSize) {
-            reprocessData();
+        if (jsonFile && dataFile) {
+            processHeatmapData();
         }
-    }, [windowSize, jsonFile, dataFile, baseWindowSize, reprocessData]);
+    }, [jsonFile, selectedTestIndex, windowSize, dataFile]);
+
+    // Função para buscar dados do backend
+    const fetchData = async () => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const data = await getFileById(id);
+            setFileName(data.filename);
+
+            if (!data) {
+                throw new Error("Dados não encontrados");
+            }
+
+            
+            setDataFile(data);
+            setMediaType(data.mediaType || 0);
+            
+            
+
+            // Define o arquivo JSON
+            if (data.jsonData?.length > 0) {
+                setJsonFile(data.jsonData[0]);
+            } else if (data.length > 0) {
+                setJsonFile(data);
+            }
+
+            // Carrega mídia se disponível
+            if (data.mediaPath) {
+                const mediaPath = data.mediaPath;
+                const imgName = mediaPath.split("/").pop();
+                try {
+                    const imageUrl = await getFileMedia(imgName);
+                    setImg(imageUrl);
+                } catch (mediaError) {
+                    console.warn("Erro ao carregar mídia:", mediaError);
+                }
+            }
+        } catch (err) {
+            setError(err.message);
+            console.error("Erro ao buscar dados:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Processa dados do heatmap
+    const processHeatmapData = () => {
+        if (!jsonFile || !dataFile) return;
+
+        try {
+            // Calcula escala responsiva
+            const scale = calculateResponsiveScale(jsonFile, windowSize);
+
+            // Calcula tamanho do canvas
+            const canvasSize = calculateCanvasSize(jsonFile, scale);
+
+            // Combina coordenadas baseado na seleção
+            const allCoords = combineCoordinates(dataFile, selectedTestIndex);
+
+            // Valida coordenadas
+            const validCoords = validateCoordinates(allCoords);
+
+            if (validCoords.length === 0) {
+                setCoords([]);
+                return;
+            }
+
+            // Escala coordenadas
+            const scaledCoords = scaleCoordinates(validCoords, scale);
+
+            // Atualiza estados
+            setCanvasSize(canvasSize);
+            setRadiusScale(scale);
+            setCoords(scaledCoords);
+
+        } catch (error) {
+            console.error("Erro ao processar dados do heatmap:", error);
+            setCoords([]);
+            setError("Erro ao processar dados do heatmap");
+        }
+    };
 
     // Função para download (delegada para utils)
     const downloadHeatMap = (canvasRefs) => {
@@ -63,9 +151,9 @@ const useHeatmapLogic = (id, selectedTestIndex = "all") => {
 
     // Função para atualizar seleção de teste
     const updateTestSelection = (newSelectedIndex) => {
-        // O hook base já vai reprocessar automaticamente quando selectedTestIndex mudar
+        // Força reprocessamento dos dados
         if (jsonFile && dataFile) {
-            reprocessData();
+            processHeatmapData();
         }
     };
 
@@ -73,6 +161,7 @@ const useHeatmapLogic = (id, selectedTestIndex = "all") => {
         // Estados de dados
         fileName,
         dataFile,
+        mediaType,
         jsonFile,
         img,
         coords,
@@ -87,9 +176,7 @@ const useHeatmapLogic = (id, selectedTestIndex = "all") => {
         // Funções
         downloadHeatMap,
         updateTestSelection,
-        
-        // Função para refetch - delegada do hook base
-        refetchData: reprocessData,
+        refetchData: fetchData,
     };
 };
 

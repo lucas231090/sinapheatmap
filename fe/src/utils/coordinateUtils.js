@@ -65,7 +65,6 @@ export const combineCoordinates = (dataFiles, selectedIndex) => {
             const index = parseInt(selectedIndex, 10);
 
             if (isNaN(index)) {
-                console.warn("selectedIndex não é um número válido:", selectedIndex);
                 return [];
             }
 

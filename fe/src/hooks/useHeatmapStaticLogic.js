@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import useHeatmapBase from "@/hooks/useHeatmapBase";
+import useHeatmapLogic from "@/hooks/useHeatmapLogic";
 import { downloadHeatMapImage } from "@/utils";
 
 /**
@@ -23,7 +23,7 @@ const useHeatmapStaticLogic = (id) => {
         fileName,
         dataFile,
         jsonFile,
-        mediaUrl: img,
+        img,
         coords,
         canvasSize,
         radiusScale,
@@ -35,7 +35,7 @@ const useHeatmapStaticLogic = (id) => {
         
         // Funções
         reprocessData,
-    } = useHeatmapBase(id, selectedTestIndex);
+    } = useHeatmapLogic(id, selectedTestIndex);
 
     // Função para download que inclui as referências necessárias
     const downloadHeatMap = () => {
