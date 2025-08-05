@@ -10,11 +10,9 @@ export default {
   testEnvironment: "jsdom",
 
   /**
-   * NOTA: Há uma duplicação aqui - esta linha deve ser removida pois
-   * o mesmo arquivo é referenciado na configuração mais abaixo
-   * (era a configuração antiga antes da separação dos arquivos de setup)
+   * Configuração de setup para matchers customizados do testing-library
+   * Arquivo separado para garantir ordem correta de inicialização
    */
-  setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
 
   /**
    * Mapeamento de módulos para mock

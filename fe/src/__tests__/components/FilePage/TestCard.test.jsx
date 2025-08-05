@@ -78,8 +78,10 @@ describe("TestCard Component", () => {
     ).toBeInTheDocument();
   });
 
-  test("navigates to heatmap page when view button is clicked", () => {
-    renderComponent();
+  test("navigates to heatmap page when view button is clicked for mediaType 0", () => {
+    // Use a file with mediaType 0 to show the "Ver Heatmap" button
+    const fileWithImageType = { ...mockFile, mediaType: 0 };
+    renderComponent(fileWithImageType);
 
     // Find and click view button
     const viewButton = screen.getByRole("button", { name: /Ver Heatmap/i });
@@ -87,6 +89,17 @@ describe("TestCard Component", () => {
 
     // Should navigate to heatmap page with correct ID
     expect(mockNavigate).toHaveBeenCalledWith(`eyeheatmap/${mockFile._id}`);
+  });
+
+  test("navigates to video page when video button is clicked", () => {
+    renderComponent();
+
+    // Find and click video button - this button is always present
+    const videoButton = screen.getByRole("button", { name: /Video/i });
+    fireEvent.click(videoButton);
+
+    // Should navigate to video page with correct ID
+    expect(mockNavigate).toHaveBeenCalledWith(`heatmap-video/${mockFile._id}`);
   });
 
   test("shows edit form when edit button is clicked", () => {

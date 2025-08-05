@@ -18,6 +18,7 @@ const SpeedSelector = ({
     ];
 
     const handleSpeedChange = (event) => {
+        if (disabled) return;
         const newSpeed = parseInt(event.target.value, 10);
         setPointsSpeed(newSpeed);
     };

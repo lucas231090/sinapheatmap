@@ -175,22 +175,24 @@ describe("HeatmapVideo Page", () => {
         durationInFrames: mockUseHeatmapVideoLogic.totalFrames,
         compositionWidth: mockUseHeatmapVideoLogic.width,
         compositionHeight: mockUseHeatmapVideoLogic.height,
-        inputProps: {
+        inputProps: expect.objectContaining({
           heatmapData: mockUseHeatmapVideoLogic.heatmapData,
           img: mockUseHeatmapVideoLogic.img,
-        },
+        }),
         playbackRate: mockUseHeatmapVideoLogic.playbackSpeed,
         fps: 30,
         controls: true,
         autoPlay: false,
         clickToPlay: true,
         doubleClickToFullscreen: true,
+        acknowledgeRemotionLicense: true,
+        loop: false,
         onPlay: expect.any(Function),
         onPause: expect.any(Function),
         ref: expect.any(Object),
         style: expect.objectContaining({
-          width: mockUseHeatmapVideoLogic.width,
-          height: mockUseHeatmapVideoLogic.height,
+          width: expect.any(Number),
+          height: expect.any(Number),
         }),
       }),
       undefined

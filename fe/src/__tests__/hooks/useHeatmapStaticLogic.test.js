@@ -1,9 +1,15 @@
 import { renderHook, act } from '@testing-library/react';
 import useHeatmapStaticLogic from '@/hooks/useHeatmapStaticLogic';
 import useHeatmapLogic from '@/hooks/useHeatmapLogic';
+import { downloadHeatMapImage } from '@/utils';
 
 // Mock do hook useHeatmapLogic
 jest.mock('@/hooks/useHeatmapLogic');
+
+// Mock da função de download
+jest.mock('@/utils', () => ({
+    downloadHeatMapImage: jest.fn(),
+}));
 
 jest.mock('@/../config', () => ({
     default: {
@@ -23,9 +29,7 @@ describe('useHeatmapStaticLogic', () => {
         windowSize: { width: 1024, height: 768 },
         isLoading: false,
         error: null,
-        downloadHeatMap: jest.fn(),
-        updateTestSelection: jest.fn(),
-        refetchData: jest.fn(),
+        reprocessData: jest.fn(),
     };
 
     beforeEach(() => {
@@ -95,11 +99,10 @@ describe('useHeatmapStaticLogic', () => {
         expect(result.current.windowSize).toBe(mockHeatmapLogic.windowSize);
         expect(result.current.isLoading).toBe(mockHeatmapLogic.isLoading);
         expect(result.current.error).toBe(mockHeatmapLogic.error);
-        expect(result.current.updateTestSelection).toBe(mockHeatmapLogic.updateTestSelection);
-        expect(result.current.refetchData).toBe(mockHeatmapLogic.refetchData);
+        expect(result.current.refetchData).toBe(mockHeatmapLogic.reprocessData);
     });
 
-    test('should call downloadHeatMap with canvas references and visibility states', () => {
+    test('should call downloadHeatMapImage with canvas references and visibility states', () => {
         const { result } = renderHook(() => useHeatmapStaticLogic('test-id'));
 
         // Set some visibility states
@@ -112,12 +115,14 @@ describe('useHeatmapStaticLogic', () => {
             result.current.downloadHeatMap();
         });
 
-        expect(mockHeatmapLogic.downloadHeatMap).toHaveBeenCalledWith({
+        expect(downloadHeatMapImage).toHaveBeenCalledWith({
             heatmapCanvasRef: result.current.heatmapCanvasRef,
             canvasRef: result.current.canvasRef,
             imgRef: result.current.imgRef,
             heatmapVisible: false,
             canvasVisible: true,
+            canvasSize: mockHeatmapLogic.canvasSize,
+            fileName: mockHeatmapLogic.fileName
         });
     });
 

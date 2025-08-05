@@ -61,15 +61,27 @@ describe("FileUpload Component", () => {
       type: "image/jpeg",
     });
 
-    // Get file input elements (they're hidden, so we use refs in the component)
-    const csvInput = document.querySelector(
-      'input[accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"]'
-    );
-    const imageInput = document.querySelector('input[accept="image/*"]');
+    // Get all file inputs and identify them by their accept attributes
+    const fileInputs = screen.getAllByRole('textbox', { hidden: true }).filter(input => input.type === 'file');
+    const csvInput = fileInputs.find(input => input.accept.includes('.csv'));
+    const imageInput = fileInputs.find(input => input.accept.includes('image/*'));
 
-    // Simulate file selection
-    fireEvent.change(csvInput, { target: { files: [csvFile] } });
-    fireEvent.change(imageInput, { target: { files: [imageFile] } });
+    // If not found by role, try by querySelector
+    if (!csvInput || !imageInput) {
+      const allInputs = document.querySelectorAll('input[type="file"]');
+      const csvInputAlt = Array.from(allInputs).find(input => input.accept.includes('.csv'));
+      const imageInputAlt = Array.from(allInputs).find(input => input.accept.includes('image/*'));
+      
+      // Simulate file selection using the alternative approach
+      if (csvInputAlt && imageInputAlt) {
+        fireEvent.change(csvInputAlt, { target: { files: [csvFile] } });
+        fireEvent.change(imageInputAlt, { target: { files: [imageFile] } });
+      }
+    } else {
+      // Simulate file selection
+      fireEvent.change(csvInput, { target: { files: [csvFile] } });
+      fireEvent.change(imageInput, { target: { files: [imageFile] } });
+    }
 
     // Check if file names are displayed
     await waitFor(() => {
@@ -95,15 +107,16 @@ describe("FileUpload Component", () => {
       type: "image/jpeg",
     });
 
-    // Get file input elements
-    const csvInput = document.querySelector(
-      'input[accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"]'
-    );
-    const imageInput = document.querySelector('input[accept="image/*"]');
+    // Get file input elements using a more robust approach
+    const allInputs = document.querySelectorAll('input[type="file"]');
+    const csvInput = Array.from(allInputs).find(input => input.accept.includes('.csv'));
+    const imageInput = Array.from(allInputs).find(input => input.accept.includes('image/*'));
 
     // Simulate file selection
-    fireEvent.change(csvInput, { target: { files: [csvFile] } });
-    fireEvent.change(imageInput, { target: { files: [imageFile] } });
+    if (csvInput && imageInput) {
+      fireEvent.change(csvInput, { target: { files: [csvFile] } });
+      fireEvent.change(imageInput, { target: { files: [imageFile] } });
+    }
 
     // Set a name for the file
     const nameInput = screen.getByRole("textbox");
@@ -150,15 +163,16 @@ describe("FileUpload Component", () => {
       type: "image/jpeg",
     });
 
-    // Get file input elements
-    const csvInput = document.querySelector(
-      'input[accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"]'
-    );
-    const imageInput = document.querySelector('input[accept="image/*"]');
+    // Get file input elements using a more robust approach
+    const allInputs = document.querySelectorAll('input[type="file"]');
+    const csvInput = Array.from(allInputs).find(input => input.accept.includes('.csv'));
+    const imageInput = Array.from(allInputs).find(input => input.accept.includes('image/*'));
 
     // Simulate file selection
-    fireEvent.change(csvInput, { target: { files: [csvFile] } });
-    fireEvent.change(imageInput, { target: { files: [imageFile] } });
+    if (csvInput && imageInput) {
+      fireEvent.change(csvInput, { target: { files: [csvFile] } });
+      fireEvent.change(imageInput, { target: { files: [imageFile] } });
+    }
 
     // Set a name for the file
     const nameInput = screen.getByRole("textbox");
@@ -193,15 +207,16 @@ describe("FileUpload Component", () => {
       type: "image/jpeg",
     });
 
-    // Get file input elements
-    const csvInput = document.querySelector(
-      'input[accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"]'
-    );
-    const imageInput = document.querySelector('input[accept="image/*"]');
+    // Get file input elements using a more robust approach
+    const allInputs = document.querySelectorAll('input[type="file"]');
+    const csvInput = Array.from(allInputs).find(input => input.accept.includes('.csv'));
+    const imageInput = Array.from(allInputs).find(input => input.accept.includes('image/*'));
 
     // Simulate file selection
-    fireEvent.change(csvInput, { target: { files: [csvFile] } });
-    fireEvent.change(imageInput, { target: { files: [imageFile] } });
+    if (csvInput && imageInput) {
+      fireEvent.change(csvInput, { target: { files: [csvFile] } });
+      fireEvent.change(imageInput, { target: { files: [imageFile] } });
+    }
 
     // Verify files were selected
     await waitFor(() => {

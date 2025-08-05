@@ -224,30 +224,47 @@ describe('fileService', () => {
             const mockObjectUrl = 'blob:http://localhost/test';
 
             // Configura os mocks para simular o processo completo
-            api.get.mockResolvedValueOnce({ data: mockBlob });
+            api.get.mockResolvedValueOnce({ 
+                data: new ArrayBuffer(8),
+                headers: { 'content-type': 'image/jpeg' }
+            });
             URL.createObjectURL.mockReturnValueOnce(mockObjectUrl);
 
             // Executa a função para obter o arquivo de mídia
             const result = await getFileMedia(mediaName);
 
             // Verifica se a requisição GET foi feita com o caminho correto
-            // e com o tipo de resposta blob
+            // e com o tipo de resposta arraybuffer e timeout
             expect(api.get).toHaveBeenCalledWith(`/uploads/media/${mediaName}`, {
-                responseType: 'blob'
+                responseType: 'arraybuffer',
+                timeout: 15000
             });
-            // Verifica se URL.createObjectURL foi chamado com o blob
-            expect(URL.createObjectURL).toHaveBeenCalledWith(mockBlob);
+            // Verifica se URL.createObjectURL foi chamado
+            expect(URL.createObjectURL).toHaveBeenCalled();
             // Verifica se a função retorna a URL de objeto criada
             expect(result).toBe(mockObjectUrl);
         });
 
-        test('handles error when fetching media fails', async () => {
-            // Simula falha ao buscar mídia
+        test('returns fallback URL when fetching media fails', async () => {
+            // Simula falha ao buscar mídia (para arquivos não-vídeo)
             const error = new Error('Media not found');
-            api.get.mockRejectedValueOnce(error);
+            
+            // Mock para falhar tanto na verificação de vídeo quanto no fetch principal
+            api.get.mockRejectedValue(error);
 
-            // Verifica se o erro é propagado corretamente
-            await expect(getFileMedia('invalid.jpg')).rejects.toThrow(error);
+            // Verifica se retorna URL de fallback quando há erro (comportamento real da função)
+            const result = await getFileMedia('invalid.png');
+            expect(result).toBe('/uploads/media/invalid.png');
+        });
+
+        test('returns direct URL for video files when accessible', async () => {
+            // Simula resposta bem-sucedida para verificação HEAD
+            api.get.mockResolvedValueOnce({ ok: true });
+
+            const result = await getFileMedia('test-video.mp4');
+
+            // Verifica se retorna URL direta para vídeos
+            expect(result).toBe('/uploads/media/test-video.mp4');
         });
     });
 });
