@@ -19,6 +19,7 @@ const VideoControls = ({
   hasSingleTest = false,
   shouldShowSelector = true,
   currentTestIndex = "",
+  downloading,
 }) => {
   const [hasStarted, setHasStarted] = useState(false);
 
@@ -56,12 +57,6 @@ const VideoControls = ({
               setSelectedTestIndex={setSelectedTestIndex}
             />
           </div>
-        ) : hasSingleTest ? (
-          <div className="m-2 p-2 border rounded-md bg-green-100 dark:bg-green-800">
-            <p className="text-sm text-green-700 dark:text-green-300 text-center">
-              📹 Teste único detectado - Vídeo pronto para reprodução
-            </p>
-          </div>
         ) : null}
       </div>
       <div className="m-2 p-2 border rounded-md bg-white dark:bg-gray-800">
@@ -72,7 +67,12 @@ const VideoControls = ({
         <select
           value={playbackSpeed}
           onChange={handleSpeedChange}
-          className="p-2 border rounded bg-inputtext dark:bg-darkinputtext text-title dark:text-darktitle"
+          disabled={downloading}
+          className={`p-2 border rounded  ${
+            downloading
+              ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
+              : "bg-inputtext dark:bg-darkinputtext text-title dark:text-darktitle"
+          }`}
         >
           <option value="0.25">0.25x</option>
           <option value="0.5">0.5x</option>
@@ -85,7 +85,7 @@ const VideoControls = ({
       <div className="m-2">
         <button
           onClick={onDownloadVideo}
-          disabled={!currentTestIndex || !hasStarted}
+          disabled={!currentTestIndex || !hasStarted || downloading}
           className="flex items-center p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
           title="Download heatmap video"
         >

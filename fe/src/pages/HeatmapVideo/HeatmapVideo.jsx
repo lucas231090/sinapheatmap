@@ -14,6 +14,7 @@ const HeatmapVideo = () => {
   // Setup MediaRecorder refs and state
   const mediaRecorderRef = useRef(null);
   const [recordedChunks, setRecordedChunks] = useState([]);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const { id } = useParams();
 
@@ -48,9 +49,12 @@ const HeatmapVideo = () => {
   // Handler to record and download video
   const handleDownloadVideo = () => {
     if (!playerRef.current) return;
+    setIsDownloading(true);
     // get internal player or component instance
     let videoElem =
       playerRef.current.getInternalPlayer?.() || playerRef.current;
+    videoElem.seekTo(0); // Reset video to start
+
     // prepare media stream and cleanup
     let stream;
     let cleanup;
@@ -136,6 +140,7 @@ const HeatmapVideo = () => {
         a.click();
         URL.revokeObjectURL(url);
         setRecordedChunks([]);
+        setIsDownloading(false);
       };
     }
     mediaRecorderRef.current = recorder;
@@ -184,6 +189,7 @@ const HeatmapVideo = () => {
             shouldShowSelector={shouldShowSelector}
             currentTestIndex={currentTestIndex}
             onDownloadVideo={handleDownloadVideo}
+            downloading={isDownloading}
           />
 
           <div className="border border-gray-300 rounded shadow-lg pa">
@@ -240,14 +246,15 @@ const HeatmapVideo = () => {
                   width: width/1.9,
                   height: height/1.9,
                 }}
-                controls
+                controls={!isDownloading}
                 inputProps={{
                   heatmapData,
                   img,
                   type: mediaType,
                 }}
                 autoPlay={false}
-                clickToPlay={true}
+                clickToPlay={!isDownloading}
+                loop={false}
                 doubleClickToFullscreen={true}
                 playbackRate={playbackSpeed}
                 onPlay={() => setIsPlaying(true)}
