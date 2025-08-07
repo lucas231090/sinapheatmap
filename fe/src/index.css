@@ -7,7 +7,7 @@
   --color-bluegray: #bbcada;
   --color-black50opacity: rgba(0, 0, 0, 0.5);
   --color-black75opacity: rgba(0, 0, 0, 0.75);
-  --color-sinapgreen-500: #3EBDD5;
+  --color-sinapgreen-500: #3ebdd4;
   --color-sinapgreen-800: #2B8DA3;
 
   --color-sinapgray: #505253;
@@ -40,7 +40,7 @@
 @theme inline {
   /* White Mode */
   --color-bg: var(--color-white);
-  --color-bgoffcolor: var(--color-green-300);
+  --color-bgoffcolor: var(--color-sinapgreen-500);
   --color-card: var(--color-white);
   --color-card2: var(--color-gray-50);
   --color-card3: var(--color-gray-100);

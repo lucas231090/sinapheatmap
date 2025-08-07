@@ -16,11 +16,45 @@ function FileUpload() {
   const [selectedFileName, setSelectedFileName] = useState("");
   const [selectedImageName, setSelectedImageName] = useState("");
   const [selectedName, setSelectedName] = useState("");
+  const [mediaThumbnail, setMediaThumbnail] = useState(null);
 
   const handleFileChange = (event, setFile, setName) => {
     const file = event.target.files[0];
     setFile(file);
     setName(file.name);
+    
+    // Se for um vídeo, gerar thumbnail
+    if (file && file.type.startsWith('video/')) {
+      generateVideoThumbnail(file);
+    }
+  };
+
+  const generateVideoThumbnail = (videoFile) => {
+    const video = document.createElement('video');
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    video.addEventListener('loadedmetadata', () => {
+      // Definir tamanho do canvas
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      // Capturar frame no segundo 1 do vídeo
+      video.currentTime = 1;
+    });
+    
+    video.addEventListener('seeked', () => {
+      // Desenhar o frame atual no canvas
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Converter para blob e criar URL
+      canvas.toBlob((blob) => {
+        const thumbnailUrl = URL.createObjectURL(blob);
+        setMediaThumbnail(thumbnailUrl);
+      }, 'image/jpeg', 0.8);
+    });
+    
+    video.src = URL.createObjectURL(videoFile);
   };
 
   const handleFileRemove = () => {
@@ -35,6 +69,12 @@ function FileUpload() {
       imageFile.current.value = "";
       setSelectedImage(null);
       setSelectedImageName("");
+    }
+    
+    // Limpar thumbnail e liberar memória
+    if (mediaThumbnail) {
+      URL.revokeObjectURL(mediaThumbnail);
+      setMediaThumbnail(null);
     }
   };
 
@@ -71,9 +111,11 @@ function FileUpload() {
 
   useEffect(() => {
     imageIMGRef.current.src = selectedImage
-      ? URL.createObjectURL(selectedImage)
+      ? selectedImage.type.startsWith('video/') 
+        ? (mediaThumbnail || "Upload.png")  // Se for vídeo, usar thumbnail ou upload padrão
+        : URL.createObjectURL(selectedImage)  // Se for imagem, usar a imagem direta
       : "Upload.png";
-  }, [selectedImage]);
+  }, [selectedImage, mediaThumbnail]);
 
   return (
     // White Box
@@ -109,13 +151,21 @@ function FileUpload() {
         onClick={() => imageFile.current.click()}
       >
         <div className="border-4 border-dashed border-gray-300 dark:border-gray-100 rounded-lg p-4 flex flex-col items-center">
-          <img
-            ref={imageIMGRef}
-            alt="upload"
-            className="h-12 w-12 object-contain pb-2"
-          />
+          <div className="relative">
+            <img
+              ref={imageIMGRef}
+              alt="upload"
+              className="h-12 w-12 object-contain pb-2"
+            />
+            {/* Indicador de vídeo */}
+            {selectedImage && selectedImage.type.startsWith('video/') && (
+              <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-1 rounded">
+                📹
+              </div>
+            )}
+          </div>
           <h3 className="text-smallertext dark:text-darksmalltext">
-            {selectedImageName || "Upload Arquivo de Imagem"}
+            {selectedImageName || "Upload Arquivo de Imagem/Vídeo"}
           </h3>
           <input
             type="file"

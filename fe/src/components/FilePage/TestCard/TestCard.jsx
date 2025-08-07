@@ -142,7 +142,7 @@ function TestCard({ file, callFunction, index }) {
             </div>
             <div className="w-full">
               <label className="text-smalltext dark:text-darksmalltext">
-                Nova imagem (opcional):
+                Nova imagem ou video (opcional):
               </label>
               <div
                 onClick={() => fileInputRef.current.click()}
@@ -150,7 +150,7 @@ function TestCard({ file, callFunction, index }) {
               >
                 <ImageIcon color="white" />
                 <span>
-                  {selectedImageName || "Clique para selecionar uma imagem"}
+                  {selectedImageName || "Clique para selecionar uma imagem ou video"}
                 </span>
                 <input
                   type="file"
