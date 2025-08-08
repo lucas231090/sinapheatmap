@@ -1,7 +1,5 @@
-import React from "react";
-
 function CustomDialog({ isOpen, onClose, onConfirm, title, message }) {
-  if (!isOpen) return null; // Não renderiza o diálogo se não estiver aberto
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black75opacity z-50">

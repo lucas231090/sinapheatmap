@@ -1,4 +1,4 @@
-import api from "./api";
+import api from "@/services/api";
 
 // Obter todos os arquivos de eyetracking
 export const getAllFiles = async () => {
@@ -62,12 +62,51 @@ export const deactivateFile = async (id) => {
 // Obter dados da mídia para um arquivo específico
 export const getFileMedia = async (mediaName) => {
     try {
+        // Estratégia 1: Verificar se é vídeo e usar URL direta
+        const isVideo = mediaName.toLowerCase().match(/\.(mp4|webm|avi|mov|wmv)$/);
+        
+        if (isVideo) {
+            const directUrl = `/uploads/media/${mediaName}`;
+            
+            // Verificar se o arquivo é acessível
+            try {
+                const response = await api.get(directUrl, { method: 'HEAD' });
+                
+                if (response.ok) {
+                    return directUrl;
+                } else {
+                    // Direct URL not accessible, fallback to blob
+                }
+            } catch (fetchError) {
+                console.warn('⚠️ Direct URL check failed:', fetchError.message);
+            }
+        }
+        
         const response = await api.get(`/uploads/media/${mediaName}`, {
-            responseType: 'blob'
+            responseType: 'arraybuffer', // Usar arraybuffer em vez de blob
+            timeout: 15000,
         });
-        return URL.createObjectURL(response.data);
+        
+        const contentType = response.headers['content-type'] || 'application/octet-stream';
+        
+        // Criar blob a partir do ArrayBuffer
+        const blob = new Blob([response.data], { type: contentType });
+        const blobUrl = URL.createObjectURL(blob);
+        
+        return blobUrl;
+        
     } catch (error) {
-        console.error(`Error fetching media file ${mediaName}:`, error);
-        throw error;
+        console.error('❌ Error fetching media file:', mediaName, error);
+        console.error('❌ Error details:', {
+            message: error.message,
+            code: error.code,
+            status: error.response?.status,
+            statusText: error.response?.statusText
+        });
+        
+        // Estratégia 3: Fallback final - URL direta
+        const fallbackUrl = `/uploads/media/${mediaName}`;
+        return fallbackUrl;
     }
 };
+

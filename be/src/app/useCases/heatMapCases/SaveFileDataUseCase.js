@@ -33,6 +33,7 @@ class SaveFileDataUseCase {
       path: jsonPath,
       mediaPath: mediaPath,
       jsonData: processedData,
+      mediaType: fileData.mediaType ?? 0,
     });
 
     return savedFile;

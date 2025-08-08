@@ -249,6 +249,11 @@
                   "description": {
                     "type": "string",
                     "description": "Descrição do experimento"
+                  },
+                  "mediaType": {
+                    "type": "integer",
+                    "enum": [0, 1],
+                    "description": "Tipo da mídia: 0 = imagem, 1 = vídeo"
                   }
                 },
                 "required": ["file", "filename"]

@@ -43,6 +43,7 @@ class HeatMapController {
           description,
           path: csvFile.path,
           mediaPath: mediaFile?.path || null,
+          mediaType: mediaFile?.detectedMediaType || 0,
         },
         processedData
       );

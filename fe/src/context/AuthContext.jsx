@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from "react";
-import { loginUser, logout, isAuthenticated } from "../services/authService";
+import { loginUser, logout, isAuthenticated } from "@/services/authService";
 
 export const AuthContext = createContext();
 
@@ -12,7 +12,6 @@ export const AuthProvider = ({ children }) => {
     const checkLoggedIn = async () => {
       const authenticated = isAuthenticated();
       if (authenticated) {
-        // Caso no futuro queira buscar informações do usuário, coloque aqui
         setUser({ isLoggedIn: true });
       } else {
         setUser({ isLoggedIn: false });

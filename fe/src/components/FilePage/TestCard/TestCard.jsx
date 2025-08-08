@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import "./TestCard.css";
 // Importação de ícones necessários para as ações do card
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -8,10 +8,10 @@ import CloseIcon from "@mui/icons-material/Close";
 import ImageIcon from "@mui/icons-material/Image";
 // Hook para navegação entre rotas e hook customizado para o contexto de arquivos
 import { useNavigate } from "react-router-dom";
-import { useFileContext } from "../../../context/FileContext";
+import { useFileContext } from "@/context/FileContext";
 
 // Serviço para operações de arquivos
-import { updateFile } from "../../../services/fileService";
+import { updateFile } from "@/services/fileService";
 
 function TestCard({ file, callFunction, index }) {
   // navigate: Hook para navegação entre rotas
@@ -142,7 +142,7 @@ function TestCard({ file, callFunction, index }) {
             </div>
             <div className="w-full">
               <label className="text-smalltext dark:text-darksmalltext">
-                Nova imagem (opcional):
+                Nova imagem ou video (opcional):
               </label>
               <div
                 onClick={() => fileInputRef.current.click()}
@@ -150,13 +150,13 @@ function TestCard({ file, callFunction, index }) {
               >
                 <ImageIcon color="white" />
                 <span>
-                  {selectedImageName || "Clique para selecionar uma imagem"}
+                  {selectedImageName || "Clique para selecionar uma imagem ou video"}
                 </span>
                 <input
                   type="file"
                   ref={fileInputRef}
                   onChange={handleImageChange}
-                  accept="image/*"
+                  accept="image/*,video/*"
                   className="hidden"
                 />
               </div>
@@ -179,7 +179,7 @@ function TestCard({ file, callFunction, index }) {
       </div>
 
       {/* Área de botões de ação */}
-      <div className="flex flex-col md:flex-row gap-2 justify-center md:justify-start w-full">
+      <div className="flex flex-col lg:flex-row gap-2  justify-center md:justify-start w-full">
         {isEditing ? (
           // Botões para o modo de edição
           <>
@@ -199,11 +199,20 @@ function TestCard({ file, callFunction, index }) {
         ) : (
           // Botões para o modo de visualização
           <>
+            {file.mediaType === 0 && (
+              <button
+                className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                onClick={() => navigate(`eyeheatmap/${file._id}`)}
+              >
+                Ver Heatmap
+              </button>
+            )}
+            
             <button
-              className="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-              onClick={() => navigate(`eyeheatmap/${file._id}`)}
+              className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+              onClick={() => navigate(`heatmap-video/${file._id}`)}
             >
-              Ver Heatmap
+              Video
             </button>
             <button
               className="bg-yellow-500 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg"
