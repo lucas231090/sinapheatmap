@@ -19,3 +19,57 @@ O sistema é composto por duas partes principais: **back-end** e **front-end**. 
 - **`fe/`**: Contém o front-end, desenvolvido com **React**, que fornece uma interface web interativa para os usuários.
 
 Cada diretório possui seu próprio arquivo `README.md`, onde você encontrará instruções para configuração e execução de suas respectivas partes.
+
+## 🐳 Executando com Docker
+
+O SINAPHEATMAP está totalmente configurado para execução com **Docker**, facilitando o deployment e garantindo consistência entre diferentes ambientes.
+
+### Pré-requisitos
+
+- [Docker](https://www.docker.com/get-started)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+
+### Configuração Rápida
+
+1. **Clone o repositório:**
+   ```bash
+   git clone https://github.com/lucas231090/sinapheatmap.git
+   cd sinapheatmap
+   ```
+
+2. **Configure as variáveis de ambiente:**
+   ```bash
+   # Windows
+   copy be\.env.docker.example be\.env.docker
+   
+   # Linux/Mac
+   cp be/.env.docker.example be/.env.docker
+   ```
+
+3. **Edite o arquivo `be/.env.docker`** com suas configurações:
+   ```env
+   PORT=3333
+   MONGO_URL=mongodb://root:SUA_SENHA_MONGO@mongodb:27017/sinapheatmap?authSource=admin
+   JWT_SECRET=SEU_JWT_SECRET_SUPER_SEGURO
+   NODE_ENV=production
+   ```
+
+4. **Execute o sistema:**
+   ```bash
+   # Build e execução
+   docker-compose up --build
+   
+   # Ou use o script automatizado (Windows)
+   .\deploy.ps1
+   
+   # Ou use o script automatizado (Linux/Mac)
+   ./deploy.sh
+   ```
+
+### Acessos
+
+Após a execução, o sistema estará disponível em:
+
+- **🌐 Frontend (Interface Web)**: http://localhost
+- **🔧 Backend (API)**: http://localhost:3333
+- **🗄️ MongoDB**: localhost:27017
