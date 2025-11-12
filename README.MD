@@ -2,6 +2,15 @@
 
 O **SINAPHEATMAP** é uma plataforma desenvolvida para auxiliar pesquisadores no monitoramento e visualização de dados provenientes de experimentos com o sistema de **eyetracking**.
 
+## 🚀 Começando
+
+**Novo no projeto?** Comece aqui: 👉 **[WELCOME.md](WELCOME.md)**
+
+### Guias de Configuração:
+
+- 📥 **[INSTALLATION_GUIDE.md](INSTALLATION_GUIDE.md)** - Como instalar Node.js, npm, Git, Docker e outras ferramentas
+- 📖 **[SETUP_GUIDE.md](SETUP_GUIDE.md)** - Guia completo de configuração do projeto
+
 ## Funcionalidades
 
 Com o SINAPHEATMAP é possível:
@@ -32,36 +41,40 @@ O SINAPHEATMAP está totalmente configurado para execução com **Docker**, faci
 ### Configuração Rápida
 
 1. **Clone o repositório:**
+
    ```bash
    git clone https://github.com/lucas231090/sinapheatmap.git
    cd sinapheatmap
    ```
 
 2. **Configure as variáveis de ambiente:**
-   ```bash
-   # Windows
-   copy be\.env.docker.example be\.env.docker
-   
-   # Linux/Mac
-   cp be/.env.docker.example be/.env.docker
-   ```
 
-3. **Edite o arquivo `be/.env.docker`** com suas configurações:
+   Crie um arquivo `.env` **na raiz do projeto** (pasta `sinapheatmap/`):
+
    ```env
+   # Backend Environment Variables
    PORT=3333
-   MONGO_URL=mongodb://root:SUA_SENHA_MONGO@mongodb:27017/sinapheatmap?authSource=admin
+   MONGO_URL=mongodb://root:sinapsense123@mongodb:27017/sinapheatmap?authSource=admin
    JWT_SECRET=SEU_JWT_SECRET_SUPER_SEGURO
    NODE_ENV=production
+
+   # MongoDB Environment Variables
+   MONGO_INITDB_ROOT_USERNAME=root
+   MONGO_INITDB_ROOT_PASSWORD=sinapsense123
+   MONGO_INITDB_DATABASE=sinapheatmap
    ```
 
-4. **Execute o sistema:**
+   > 💡 **Dica**: Para mudar portas ou credenciais, basta editar as variáveis neste arquivo!
+
+3. **Execute o sistema:**
+
    ```bash
    # Build e execução
    docker-compose up --build
-   
+
    # Ou use o script automatizado (Windows)
    .\deploy.ps1
-   
+
    # Ou use o script automatizado (Linux/Mac)
    ./deploy.sh
    ```

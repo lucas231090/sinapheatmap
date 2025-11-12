@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   mongodb:
     image: mongo:6
@@ -10,9 +8,9 @@ services:
     volumes:
       - mongo_data:/data/db
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: sinapsense123
-      MONGO_INITDB_DATABASE: sinapheatmap
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
     networks:
       - sinapheatmap-network
 
@@ -24,8 +22,11 @@ services:
     restart: unless-stopped
     ports:
       - "3333:3333"
-    env_file:
-      - ./be/.env.docker
+    environment:
+      PORT: ${PORT}
+      MONGO_URL: ${MONGO_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: ${NODE_ENV}
     volumes:
       - ./be/uploads:/usr/src/app/uploads
       - ./be/logs:/usr/src/app/logs
@@ -34,7 +35,13 @@ services:
     networks:
       - sinapheatmap-network
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3333/server', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3333/server', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
+        ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -47,7 +54,7 @@ services:
     container_name: sinapheatmap-frontend
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "3000:3000"
     depends_on:
       - backend
     networks:
