@@ -11,7 +11,7 @@ const Logo = React.memo(({ logoSrc }) => {
       <img
         src={logoSrc || "/SinapsenseLogo.png"}
         alt="Sinapsense Logo"
-        className="h-30 w-auto"
+        className="h-24 sm:h-28 w-auto max-w-full object-contain"
         loading="lazy"
       />
     </div>

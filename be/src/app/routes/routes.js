@@ -6,6 +6,7 @@ const SignInController = require("../controllers/SignInController");
 const SignUpController = require("../controllers/SignUpController");
 const EyeTrackingController = require("../controllers/EyeTrackingController");
 const HeatMapController = require("../controllers/HeatMapController");
+const { uploadsMediaDir } = require("../configs/uploadsPaths");
 
 const routes = Router();
 
@@ -19,11 +20,7 @@ routes.get("/eyetracking/:_id", EyeTrackingController.show);
 
 // Servir arquivos de mídia: público para que a visualização do heatmap carregue a imagem/vídeo
 routes.get("/uploads/media/:filename", (req, res) => {
-  const filePath = path.join(
-    __dirname,
-    "../uploads/media",
-    req.params.filename,
-  );
+  const filePath = path.join(uploadsMediaDir, req.params.filename);
   res.sendFile(filePath);
 });
 

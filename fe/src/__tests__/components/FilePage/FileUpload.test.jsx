@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import FileUpload from "@/components/FilePage/FileUpload";
 import { uploadHeatmap } from "@/services/fileService";
+import userEvent from "@testing-library/user-event";
 
 // Define mock functions at the top level
 const mockFetchData = jest.fn();
@@ -50,6 +51,7 @@ describe("FileUpload Component", () => {
   test("enables form interaction when files are selected", async () => {
     // Add this line to mock URL.createObjectURL
     URL.createObjectURL = jest.fn(() => "blob:mock-url");
+    const user = userEvent.setup();
 
     renderComponent();
 
@@ -61,27 +63,20 @@ describe("FileUpload Component", () => {
       type: "image/jpeg",
     });
 
-    // Get all file inputs and identify them by their accept attributes
-    const fileInputs = screen.getAllByRole('textbox', { hidden: true }).filter(input => input.type === 'file');
-    const csvInput = fileInputs.find(input => input.accept.includes('.csv'));
-    const imageInput = fileInputs.find(input => input.accept.includes('image/*'));
+    // Get file input elements using querySelector (hidden inputs are fine)
+    const allInputs = document.querySelectorAll('input[type="file"]');
+    const csvInput = Array.from(allInputs).find((input) =>
+      input.accept.includes(".csv"),
+    );
+    const imageInput = Array.from(allInputs).find((input) =>
+      input.accept.includes("image/*"),
+    );
 
-    // If not found by role, try by querySelector
-    if (!csvInput || !imageInput) {
-      const allInputs = document.querySelectorAll('input[type="file"]');
-      const csvInputAlt = Array.from(allInputs).find(input => input.accept.includes('.csv'));
-      const imageInputAlt = Array.from(allInputs).find(input => input.accept.includes('image/*'));
-      
-      // Simulate file selection using the alternative approach
-      if (csvInputAlt && imageInputAlt) {
-        fireEvent.change(csvInputAlt, { target: { files: [csvFile] } });
-        fireEvent.change(imageInputAlt, { target: { files: [imageFile] } });
-      }
-    } else {
-      // Simulate file selection
-      fireEvent.change(csvInput, { target: { files: [csvFile] } });
-      fireEvent.change(imageInput, { target: { files: [imageFile] } });
-    }
+    expect(csvInput).toBeTruthy();
+    expect(imageInput).toBeTruthy();
+
+    await user.upload(csvInput, csvFile);
+    await user.upload(imageInput, imageFile);
 
     // Check if file names are displayed
     await waitFor(() => {
@@ -96,6 +91,7 @@ describe("FileUpload Component", () => {
 
     // Set up URL.createObjectURL mock
     URL.createObjectURL = jest.fn(() => "blob:mock-url");
+    const user = userEvent.setup();
 
     renderComponent();
 
@@ -109,14 +105,18 @@ describe("FileUpload Component", () => {
 
     // Get file input elements using a more robust approach
     const allInputs = document.querySelectorAll('input[type="file"]');
-    const csvInput = Array.from(allInputs).find(input => input.accept.includes('.csv'));
-    const imageInput = Array.from(allInputs).find(input => input.accept.includes('image/*'));
+    const csvInput = Array.from(allInputs).find((input) =>
+      input.accept.includes(".csv"),
+    );
+    const imageInput = Array.from(allInputs).find((input) =>
+      input.accept.includes("image/*"),
+    );
 
-    // Simulate file selection
-    if (csvInput && imageInput) {
-      fireEvent.change(csvInput, { target: { files: [csvFile] } });
-      fireEvent.change(imageInput, { target: { files: [imageFile] } });
-    }
+    expect(csvInput).toBeTruthy();
+    expect(imageInput).toBeTruthy();
+
+    await user.upload(csvInput, csvFile);
+    await user.upload(imageInput, imageFile);
 
     // Set a name for the file
     const nameInput = screen.getByRole("textbox");
@@ -141,7 +141,7 @@ describe("FileUpload Component", () => {
     // Verify success notification was shown
     expect(mockShowNotification).toHaveBeenCalledWith(
       "Arquivo enviado com sucesso!",
-      "success"
+      "success",
     );
 
     // Verify data was refreshed
@@ -152,6 +152,9 @@ describe("FileUpload Component", () => {
     // Mock upload failure
     const error = new Error("Upload failed");
     uploadHeatmap.mockRejectedValueOnce(error);
+
+    URL.createObjectURL = jest.fn(() => "blob:mock-url");
+    const user = userEvent.setup();
 
     renderComponent();
 
@@ -165,14 +168,18 @@ describe("FileUpload Component", () => {
 
     // Get file input elements using a more robust approach
     const allInputs = document.querySelectorAll('input[type="file"]');
-    const csvInput = Array.from(allInputs).find(input => input.accept.includes('.csv'));
-    const imageInput = Array.from(allInputs).find(input => input.accept.includes('image/*'));
+    const csvInput = Array.from(allInputs).find((input) =>
+      input.accept.includes(".csv"),
+    );
+    const imageInput = Array.from(allInputs).find((input) =>
+      input.accept.includes("image/*"),
+    );
 
-    // Simulate file selection
-    if (csvInput && imageInput) {
-      fireEvent.change(csvInput, { target: { files: [csvFile] } });
-      fireEvent.change(imageInput, { target: { files: [imageFile] } });
-    }
+    expect(csvInput).toBeTruthy();
+    expect(imageInput).toBeTruthy();
+
+    await user.upload(csvInput, csvFile);
+    await user.upload(imageInput, imageFile);
 
     // Set a name for the file
     const nameInput = screen.getByRole("textbox");
@@ -186,7 +193,7 @@ describe("FileUpload Component", () => {
     await waitFor(() => {
       expect(mockShowNotification).toHaveBeenCalledWith(
         "Upload failed",
-        "error"
+        "error",
       );
     });
 
@@ -196,6 +203,7 @@ describe("FileUpload Component", () => {
 
   test("removes files when delete button is clicked", async () => {
     URL.createObjectURL = jest.fn(() => "blob:mock-url");
+    const user = userEvent.setup();
 
     renderComponent();
 
@@ -209,14 +217,18 @@ describe("FileUpload Component", () => {
 
     // Get file input elements using a more robust approach
     const allInputs = document.querySelectorAll('input[type="file"]');
-    const csvInput = Array.from(allInputs).find(input => input.accept.includes('.csv'));
-    const imageInput = Array.from(allInputs).find(input => input.accept.includes('image/*'));
+    const csvInput = Array.from(allInputs).find((input) =>
+      input.accept.includes(".csv"),
+    );
+    const imageInput = Array.from(allInputs).find((input) =>
+      input.accept.includes("image/*"),
+    );
 
-    // Simulate file selection
-    if (csvInput && imageInput) {
-      fireEvent.change(csvInput, { target: { files: [csvFile] } });
-      fireEvent.change(imageInput, { target: { files: [imageFile] } });
-    }
+    expect(csvInput).toBeTruthy();
+    expect(imageInput).toBeTruthy();
+
+    await user.upload(csvInput, csvFile);
+    await user.upload(imageInput, imageFile);
 
     // Verify files were selected
     await waitFor(() => {

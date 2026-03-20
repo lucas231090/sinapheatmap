@@ -1,51 +1,91 @@
 import axios from "axios";
 import config from "@/../config";
 
+export const getApiErrorMessage = (
+  error,
+  fallbackMessage = "Ocorreu um erro. Tente novamente.",
+) => {
+  // axios network error: no response object
+  if (!error?.response) {
+    const isNetworkError =
+      error?.code === "ERR_NETWORK" ||
+      error?.message === "Network Error" ||
+      String(error?.message || "")
+        .toLowerCase()
+        .includes("network");
+
+    if (isNetworkError) {
+      return "Servidor indisponível. Verifique se o backend está no ar.";
+    }
+
+    return fallbackMessage;
+  }
+
+  const status = error.response.status;
+  const data = error.response.data;
+
+  const serverMessage =
+    (typeof data === "string" && data) ||
+    data?.error ||
+    data?.message ||
+    fallbackMessage;
+
+  if (status === 409) {
+    return "Este email já está em uso.";
+  }
+
+  if (status === 401) {
+    return "Email ou senha inválidos.";
+  }
+
+  return serverMessage;
+};
+
 // Função para obter o cabeçalho de autorização
 const getAuthHeader = () => {
-    const token = localStorage.getItem("accessToken");
-    return token ? { Authorization: `Bearer ${token}` } : {};
+  const token = localStorage.getItem("accessToken");
+  return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
 // Cria uma instância do axios com configurações base
 const api = axios.create({
-    baseURL: config.API_BASE_URL,
-    headers: {
-        "Content-Type": "application/json",
-    },
+  baseURL: config.API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 // Adiciona um interceptor para incluir o token de autenticação em todas as requisições
 api.interceptors.request.use(
-    (config) => {
-        const authHeader = getAuthHeader();
-        if (authHeader.Authorization) {
-            config.headers.Authorization = authHeader.Authorization;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
+  (config) => {
+    const authHeader = getAuthHeader();
+    if (authHeader.Authorization) {
+      config.headers.Authorization = authHeader.Authorization;
     }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
 );
 
 // Adiciona um interceptor para tratar respostas e erros comuns
 api.interceptors.response.use(
-    (response) => {
-        return response;
-    },
-    (error) => {
-        // Tratamento centralizado de erros
-        if (error.response) {
-            // O servidor respondeu com um status de erro
-            if (error.response.status === 401) {
-                // Token expirado ou inválido - faça logout
-                localStorage.removeItem("accessToken");
-                window.location.href = "/login";
-            }
-        }
-        return Promise.reject(error);
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // Tratamento centralizado de erros
+    if (error.response) {
+      // O servidor respondeu com um status de erro
+      if (error.response.status === 401) {
+        // Token expirado ou inválido - faça logout
+        localStorage.removeItem("accessToken");
+        window.location.href = "/login";
+      }
     }
+    return Promise.reject(error);
+  },
 );
 
 export default api;

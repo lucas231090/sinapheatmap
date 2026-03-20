@@ -4,7 +4,7 @@
  */
 
 // Importa as implementações de TextEncoder e TextDecoder do Node.js
-const { TextEncoder, TextDecoder } = require('util');
+const { TextEncoder, TextDecoder } = require("util");
 
 /**
  * Adiciona TextEncoder/TextDecoder ao objeto global
@@ -20,7 +20,7 @@ global.TextDecoder = TextDecoder;
  * Como import.meta é exclusivo de ESM e Jest usa CommonJS, precisamos simulá-lo
  */
 global.importMetaEnv = {
-    VITE_API_BASE_URL: "http://api.example.com",
+  VITE_API_BASE_URL: "http://api.example.com",
 };
 
 /**
@@ -29,11 +29,11 @@ global.importMetaEnv = {
  * Isso simula a estrutura exata usada pelo Vite em runtime
  */
 Object.defineProperty(global, "import", {
-    value: {
-        meta: {
-            env: global.importMetaEnv,
-        },
+  value: {
+    meta: {
+      env: global.importMetaEnv,
     },
+  },
 });
 
 /**
@@ -43,9 +43,25 @@ Object.defineProperty(global, "import", {
  * Componentes React modernos frequentemente usam esta API para detectar mudanças no DOM
  */
 global.MutationObserver = class {
-    constructor(callback) {
-        this.callback = callback;
-    }
-    disconnect() { }
-    observe() { }
+  constructor(callback) {
+    this.callback = callback;
+  }
+  disconnect() {}
+  observe() {}
 };
+
+/**
+ * Mock para URL.createObjectURL / URL.revokeObjectURL
+ * jsdom não implementa essas APIs por padrão, mas componentes de upload/preview usam.
+ */
+if (!global.URL) {
+  global.URL = {};
+}
+
+if (!global.URL.createObjectURL) {
+  global.URL.createObjectURL = () => "blob:mock";
+}
+
+if (!global.URL.revokeObjectURL) {
+  global.URL.revokeObjectURL = () => {};
+}

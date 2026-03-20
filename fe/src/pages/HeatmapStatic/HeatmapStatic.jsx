@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
@@ -18,6 +18,8 @@ import useHeatmapStaticLogic from "@/hooks/useHeatmapStaticLogic";
 const HeatmapStatic = () => {
   const { id } = useParams();
   const transformComponentRef = useRef(null);
+  const fitContainerRef = useRef(null);
+  const [fitScale, setFitScale] = useState(1);
 
   // Hook centralizado para toda a lógica do heatmap estático
   const {
@@ -50,6 +52,30 @@ const HeatmapStatic = () => {
     downloadHeatMap,
   } = useHeatmapStaticLogic(id);
 
+  useEffect(() => {
+    if (!fitContainerRef.current) return;
+
+    const element = fitContainerRef.current;
+
+    const updateScale = () => {
+      if (!canvasSize.width || !element.clientWidth) return;
+      // Keep it simple: fit by width (zoom controls still work)
+      const scale = Math.min(1, element.clientWidth / canvasSize.width);
+      setFitScale(scale);
+    };
+
+    updateScale();
+
+    if (typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const resizeObserver = new ResizeObserver(() => updateScale());
+    resizeObserver.observe(element);
+
+    return () => resizeObserver.disconnect();
+  }, [canvasSize.width]);
+
   // Exibe loading se estiver carregando
   if (isLoading) {
     return (
@@ -69,10 +95,15 @@ const HeatmapStatic = () => {
   }
 
   return (
-    <div className="flex flex-col items-start md:items-center p-4 overflow-x-auto">
-      <div className="flex flex-row">
-        <div className="bg-card dark:bg-darkcard p-4 rounded-lg flex flex-col items-center">
-          <TransformWrapper ref={transformComponentRef}>
+    <div className="flex flex-col items-start md:items-center p-4 overflow-x-hidden w-full">
+      <div className="flex flex-row w-full min-w-0" ref={fitContainerRef}>
+        <div className="bg-card dark:bg-darkcard p-4 rounded-lg flex flex-col items-center w-full max-w-full min-w-0">
+          <TransformWrapper
+            key={`${id}-${canvasSize.width}-${canvasSize.height}-${fitScale}`}
+            ref={transformComponentRef}
+            initialScale={fitScale}
+            minScale={Math.max(0.1, fitScale * 0.5)}
+          >
             <p className="mb-2 text-3xl text-title dark:text-darktitle">
               <strong>Heatmap:</strong> {fileName || "Nenhum ID fornecido"}
             </p>

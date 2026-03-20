@@ -1,4 +1,7 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
 const SignupForm = ({
   formData,
@@ -7,6 +10,9 @@ const SignupForm = ({
   onFieldChange,
   onSubmit,
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   return (
     <div className="md:w-1/2 md:pl-6 mt-6 md:mt-0">
       <h2 className="text-2xl font-bold mb-4 text-tittle dark:text-darktitle">
@@ -58,15 +64,30 @@ const SignupForm = ({
           >
             Senha
           </label>
-          <input
-            type="password"
-            id="password"
-            value={formData.password}
-            onChange={(e) => onFieldChange("password", e.target.value)}
-            required
-            disabled={isLoading}
-            className="mt-1 block w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-inputtextfocus focus:border-inputtextfocusborder border bg-inputtext border-inputtextborder dark:bg-darkinputtext dark:border-darkinputtextborder dark:text-darkinputtextdarktext disabled:opacity-50"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              id="password"
+              value={formData.password}
+              onChange={(e) => onFieldChange("password", e.target.value)}
+              required
+              disabled={isLoading}
+              className="mt-1 block w-full px-3 py-2 pr-10 rounded-md shadow-sm focus:outline-none focus:ring-inputtextfocus focus:border-inputtextfocusborder border bg-inputtext border-inputtextborder dark:bg-darkinputtext dark:border-darkinputtextborder dark:text-darkinputtextdarktext disabled:opacity-50"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-smalltext dark:text-darksmalltext"
+              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              disabled={isLoading}
+            >
+              {showPassword ? (
+                <VisibilityOffIcon fontSize="small" />
+              ) : (
+                <VisibilityIcon fontSize="small" />
+              )}
+            </button>
+          </div>
         </div>
 
         <div>
@@ -76,15 +97,32 @@ const SignupForm = ({
           >
             Confirmar Senha
           </label>
-          <input
-            type="password"
-            id="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={(e) => onFieldChange("confirmPassword", e.target.value)}
-            required
-            disabled={isLoading}
-            className="mt-1 block w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-inputtextfocus focus:border-inputtextfocusborder border bg-inputtext border-inputtextborder dark:bg-darkinputtext dark:border-darkinputtextborder dark:text-darkinputtextdarktext disabled:opacity-50"
-          />
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              id="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={(e) => onFieldChange("confirmPassword", e.target.value)}
+              required
+              disabled={isLoading}
+              className="mt-1 block w-full px-3 py-2 pr-10 rounded-md shadow-sm focus:outline-none focus:ring-inputtextfocus focus:border-inputtextfocusborder border bg-inputtext border-inputtextborder dark:bg-darkinputtext dark:border-darkinputtextborder dark:text-darkinputtextdarktext disabled:opacity-50"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((v) => !v)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-smalltext dark:text-darksmalltext"
+              aria-label={
+                showConfirmPassword ? "Ocultar senha" : "Mostrar senha"
+              }
+              disabled={isLoading}
+            >
+              {showConfirmPassword ? (
+                <VisibilityOffIcon fontSize="small" />
+              ) : (
+                <VisibilityIcon fontSize="small" />
+              )}
+            </button>
+          </div>
         </div>
 
         <button

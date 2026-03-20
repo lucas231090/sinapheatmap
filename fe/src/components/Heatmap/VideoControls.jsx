@@ -7,8 +7,6 @@ import TestSelector from "@/components/HeatmapStatic/TestSelector";
 const VideoControls = ({
   playerRef,
   isPlaying,
-  setIsPlaying,
-  duration,
   dataFile,
   selectedTestIndex,
   setSelectedTestIndex,
@@ -16,7 +14,6 @@ const VideoControls = ({
   playbackSpeed,
   setPlaybackSpeed,
   onDownloadVideo,
-  hasSingleTest = false,
   shouldShowSelector = true,
   currentTestIndex = "",
   downloading,

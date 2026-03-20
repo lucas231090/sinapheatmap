@@ -1,12 +1,16 @@
 const fs = require("fs");
 const path = require("path");
 const FileRepository = require("../../repositories/FileRepository");
+const {
+  uploadsJsonDir,
+  uploadsMediaDir,
+} = require("../../configs/uploadsPaths");
 
 class SaveFileDataUseCase {
   async execute(fileData, processedData) {
     const jsonFilename = `${fileData.filename}.json`;
-    const jsonDir = path.join(__dirname, "../../uploads/json");
-    const mediaDir = path.join(__dirname, "../../uploads/media");
+    const jsonDir = uploadsJsonDir;
+    const mediaDir = uploadsMediaDir;
 
     if (!fs.existsSync(jsonDir)) {
       fs.mkdirSync(jsonDir, { recursive: true });

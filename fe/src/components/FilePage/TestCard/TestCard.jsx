@@ -13,7 +13,7 @@ import { useFileContext } from "@/context/FileContext";
 // Serviço para operações de arquivos
 import { updateFile } from "@/services/fileService";
 
-function TestCard({ file, callFunction, index }) {
+function TestCard({ file, callFunction }) {
   // navigate: Hook para navegação entre rotas
   // [fetchData, showNotification]: Funções e variáveis do contexto de arquivos
   // fileInputRef: Referência para o input de arquivo
@@ -29,7 +29,7 @@ function TestCard({ file, callFunction, index }) {
     filename: file.filename,
     description: file.description,
   });
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [, setSelectedImage] = useState(null);
   const [selectedImageName, setSelectedImageName] = useState("");
 
   // Manipula o clique no botão de exclusão
@@ -150,7 +150,8 @@ function TestCard({ file, callFunction, index }) {
               >
                 <ImageIcon color="white" />
                 <span>
-                  {selectedImageName || "Clique para selecionar uma imagem ou video"}
+                  {selectedImageName ||
+                    "Clique para selecionar uma imagem ou video"}
                 </span>
                 <input
                   type="file"
@@ -207,7 +208,7 @@ function TestCard({ file, callFunction, index }) {
                 Ver Heatmap
               </button>
             )}
-            
+
             <button
               className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
               onClick={() => navigate(`heatmap-video/${file._id}`)}
