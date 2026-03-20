@@ -33,7 +33,8 @@ services:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
     volumes:
       # Volume para persistir uploads fora do container
-      - ./be/src/app/uploads:/app/src/app/uploads
+      # O backend grava em /app/uploads (ver src/app/configs/uploadsPaths.js)
+      - ./be/uploads:/app/uploads
       # Volume para persistir logs fora do container
       - ./be/logs:/app/logs
     depends_on:
