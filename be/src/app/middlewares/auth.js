@@ -1,10 +1,9 @@
 const jwt = require("jsonwebtoken");
 const authConfig = require("../configs/env");
+const logger = require("../configs/logger");
 
 module.exports = async (request, response, next) => {
   const authHeader = request.headers.authorization;
-
-  // console.log(authHeader);
 
   if (!authHeader) {
     return response.status(401).json({ error: "Token does not exist." });
@@ -15,13 +14,12 @@ module.exports = async (request, response, next) => {
   try {
     const decoded = jwt.verify(token, authConfig.jwtSecret);
 
-    request.userId = decoded.id;
-
-    // console.log(decoded);
+    // O token é gerado com o campo "sub" (ver SignInUseCase)
+    request.userId = decoded.sub;
 
     return next();
   } catch (error) {
-    console.log(error);
+    logger.error("Token JWT inválido: %s", error.message);
     return response.status(401).json({ error: "Invalid Token." });
   }
 };

@@ -16,12 +16,24 @@ const storage = multer.diskStorage({
   },
 });
 
+// Tipos de arquivo aceitos pelo sistema
+const ALLOWED_EXTENSIONS = [
+  ".csv",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".mp4",
+  ".webm",
+  ".avi",
+  ".mov",
+];
+
 const fileFilter = (request, file, cb) => {
   const ext = path.extname(file.originalname).toLowerCase();
-  if (ext === ".csv" || ext != ".csv") {
+  if (ALLOWED_EXTENSIONS.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new Error("Apenas arquivos .csv são permitidos"), false);
+    cb(new Error(`Tipo de arquivo não permitido: ${ext}`), false);
   }
 };
 
