@@ -4,6 +4,7 @@ const path = require("path");
 const csv = require("csv-parser");
 const FileRepository = require("../../repositories/FileRepository");
 const logger = require("../../configs/logger");
+const { uploadsJsonDir } = require("../../configs/uploadsPaths");
 
 class UploadCsvUseCase {
   async execute(file, filename, description) {
@@ -15,9 +16,13 @@ class UploadCsvUseCase {
     }
 
     const results = [];
-    const uploadDir = path.join(__dirname, "../../uploads");
+    const uploadDir = uploadsJsonDir;
     const jsonFilename = `${file.filename}.json`;
     const relativeJsonPath = path.join(uploadDir, jsonFilename);
+
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
 
     const fileData = await new Promise((resolve, reject) => {
       fs.createReadStream(file.path)
@@ -32,7 +37,7 @@ class UploadCsvUseCase {
 
             fs.writeFileSync(
               relativeJsonPath,
-              JSON.stringify(mappedResults, null, 2)
+              JSON.stringify(mappedResults, null, 2),
             );
 
             const fileData = {
@@ -49,7 +54,7 @@ class UploadCsvUseCase {
           } catch (error) {
             logger.error(
               "Erro ao processar o arquivo CSV ou salvar no MongoDB: %s",
-              error.message
+              error.message,
             );
             fs.unlinkSync(file.path);
             reject(new Error("Erro ao processar o arquivo CSV"));

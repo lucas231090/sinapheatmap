@@ -43,6 +43,7 @@ class HeatMapController {
           description,
           path: csvFile.path,
           mediaPath: mediaFile?.path || null,
+          mediaType: mediaFile?.detectedMediaType || 0,
         },
         processedData
       );
@@ -75,6 +76,47 @@ class HeatMapController {
       });
     }
   }
+
+  // atualiza heatmap
+  async update(request, response) {
+    try {
+      const { id } = request.params;
+      const { filename, description } = request.body;
+      const mediaFile = request.files?.mediaFile || null;
+  
+      const existingFile = await FileRepository.getFileById(id);
+      if (!existingFile) {
+        return response.status(404).json({ error: "Arquivo não encontrado" });
+      }
+  
+      const updateData = {};
+  
+      if (filename) updateData.filename = filename;
+      if (description) updateData.description = description;
+  
+      if (mediaFile) {
+        if (existingFile.mediaPath && fs.existsSync(existingFile.mediaPath)) {
+          fs.unlinkSync(existingFile.mediaPath);
+        }
+  
+        updateData.mediaPath = mediaFile.path;
+      }
+  
+      const updatedFile = await FileRepository.updateFile(id, updateData);
+  
+      response.status(200).json({
+        message: "Arquivo atualizado com sucesso!",
+        data: updatedFile,
+      });
+    } catch (error) {
+      logger.error("Erro ao atualizar o arquivo: %s", error.message);
+      response.status(500).json({
+        error: "Erro ao atualizar o arquivo",
+        details: error.message,
+      });
+    }
+  }
+  
 }
 
 module.exports = new HeatMapController();

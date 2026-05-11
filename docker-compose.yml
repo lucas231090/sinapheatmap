@@ -1,0 +1,79 @@
+services:
+  mongodb:
+    image: mongo:6
+    container_name: sinapheatmap-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+    networks:
+      - sinapheatmap-network
+
+  backend:
+    build:
+      context: ./be
+      dockerfile: Dockerfile
+    container_name: sinapheatmap-backend
+    restart: unless-stopped
+    ports:
+      - "3333:3333"
+    environment:
+      PORT: ${PORT}
+      MONGO_URL: ${MONGO_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: ${NODE_ENV}
+      # Origens permitidas para CORS (separe por vírgula para múltiplas)
+      # Em desenvolvimento: ALLOWED_ORIGINS=http://localhost:3000
+      # Em produção: ALLOWED_ORIGINS=https://seuapp.com
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+    volumes:
+      # Volume para persistir uploads fora do container
+      # O backend grava em /app/uploads (ver src/app/configs/uploadsPaths.js)
+      - ./be/uploads:/app/uploads
+      # Volume para persistir logs fora do container
+      - ./be/logs:/app/logs
+    depends_on:
+      - mongodb
+    networks:
+      - sinapheatmap-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:3333/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+  frontend:
+    build:
+      context: ./fe
+      dockerfile: Dockerfile
+      args:
+        # URL da API que o NAVEGADOR do usuário vai usar para fazer as requisições
+        # Em desenvolvimento local: http://localhost:3333
+        # Em produção: https://api.seudominio.com
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3333}
+    container_name: sinapheatmap-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - sinapheatmap-network
+
+volumes:
+  mongo_data:
+    driver: local
+
+networks:
+  sinapheatmap-network:
+    driver: bridge

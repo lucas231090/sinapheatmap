@@ -11,9 +11,9 @@ const logger = createLogger({
     }),
     format.errors({ stack: true }),
     format.splat(),
-    format.json()
+    format.json(),
   ),
-  defaultMeta: { service: "user-service" },
+  defaultMeta: { service: "sinapheatmap-api" },
   transports: [
     new transports.File({
       filename: path.join(logDir, "error.log"),
@@ -27,7 +27,7 @@ if (process.env.NODE_ENV !== "production") {
   logger.add(
     new transports.Console({
       format: format.combine(format.colorize(), format.simple()),
-    })
+    }),
   );
 }
 

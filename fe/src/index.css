@@ -1,22 +1,100 @@
-html {
-  height: 100%;
+@import "tailwindcss";
+
+@theme {
+  --color-midnight: #121063;
+  --color-tahiti: #3ab7bf;
+  --color-bermuda: #78dcca;
+  --color-bluegray: #bbcada;
+  --color-black50opacity: rgba(0, 0, 0, 0.5);
+  --color-black75opacity: rgba(0, 0, 0, 0.75);
+  --color-sinapgreen-500: #3ebdd4;
+  --color-sinapgreen-800: #2B8DA3;
+
+  --color-sinapgray: #505253;
+}
+
+/* 
+  Cores do Projeto
+  White-Mode
+  - Background : bg-white
+  - Background 2 : bg-gradient-to-l bg-radial-[at_50%_55%] to-green-300 from-white from-40% 
+  - Card : bg-white shadow-md rounded-lg;
+  - Card 2 : bg-gray-50 shadow-sm rounded-md;
+  - Card 3 : bg-gray-100 border border-gray-200 dark:border-gray-500 rounded;
+  - Title : text-black
+  - small text : text-gray-700
+  - smaller text : text-gray-500
+  - input text : bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500
+  Dark-Mode
+  - Background : bg-gray-800 
+  - Background 2 : bg-gradient-to-l bg-radial-[at_50%_55%] dark:to-black dark:from-gray-600 from-40%
+  - Card : bg-gray-600 shadow-md rounded-lg;
+  - Card 2 : bg-gray-500 shadow-sm rounded- md;
+  - Card 3 : bg-gray-400 border border-gray-500 dark:border-gray-500 rounded;
+  - Title : text-white
+  - small text : text-gray-300
+  - smaller text : text-gray-500
+  - input text : dark:bg-gray-700 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500  dark:border-gray-600 dark:text-white
+*/
+
+@theme inline {
+  /* White Mode */
+  --color-bg: var(--color-white);
+  --color-bgoffcolor: var(--color-sinapgreen-500);
+  --color-card: var(--color-white);
+  --color-card2: var(--color-gray-50);
+  --color-card3: var(--color-gray-100);
+  --color-title: var(--color-black);
+  --color-smalltext: var(--color-gray-700);
+  --color-smallertext: var(--color-gray-500);
+  --color-inputtext: var(--color-white);
+  --color-inputtextborder: var(--color-gray-300);
+  --color-inputtextfocus: var(--color-indigo-500);
+  --color-inputtextfocusborder: var(--color-indigo-500);
+  --color-inputtextdarktext: var(--color-black);
+  --color-inputfilehover: var(--color-gray-200);
+  /* Dark Mode */
+  --color-darkbg: var(--color-gray-800);
+  --color-darkbgoffcolor: var(--color-gray-600);
+  --color-darkcard: var(--color-gray-700);
+  --color-darkcard2: var(--color-gray-600);
+  --color-darkcard3: var(--color-gray-500);
+  --color-darktitle: var(--color-white);
+  --color-darksmalltext: var(--color-gray-300);
+  --color-darksmallertext: var(--color-gray-400);
+  --color-darkinputtext: var(--color-gray-800);
+  --color-darkinputtextborder: var(--color-gray-300);
+  --color-darkinputtextdarktext: var(--color-white);
+  --color-darkinputfilehover: var(--color-gray-700);
+}
+
+
+
+@custom-variant dark (&:where(.dark, .dark *)) {}
+
+.bg-opacity-500 {
+  opacity: 0.5;
+}
+
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  height: 100%;
+  display: flex;
+  place-items: center;
+
 }
 
-#root {
-  height: 100%;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
 }

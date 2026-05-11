@@ -2,8 +2,10 @@ node_modules
 combined.log
 error.log
 
-src/uploads/*
-!src/uploads/
-!src/uploads/.gitkeep
+uploads/*
+
+# Safety net: don't ever commit uploads that were accidentally written inside src/
+src/app/uploads/**
 
 .env
+.env.docker
