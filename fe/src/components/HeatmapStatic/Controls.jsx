@@ -6,7 +6,6 @@ import DownloadIcon from "@mui/icons-material/Download";
 import TestSelector from "@/components/HeatmapStatic/TestSelector";
 
 const Controls = ({
-  transformComponentRef,
   heatmapCanvasVisible,
   setHeatmapCanvasVisible,
   canvasVisible,

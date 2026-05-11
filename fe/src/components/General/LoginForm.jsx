@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
 /**
  * Componente do formulário de login
@@ -15,6 +17,8 @@ const LoginForm = ({
   onSubmit,
   onErrorClear,
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <div className="md:w-1/2 md:pl-6 mt-6 md:mt-0">
       <h2 className="text-2xl font-bold mb-4 text-tittle dark:text-darktitle">
@@ -60,15 +64,30 @@ const LoginForm = ({
           >
             Senha
           </label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => onPasswordChange(e.target.value)}
-            required
-            disabled={isLoading}
-            className="mt-1 block w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-inputtextfocus focus:border-inputtextfocusborder border bg-inputtext border-inputtextborder dark:bg-darkinputtext dark:border-darkinputtextborder dark:text-darkinputtextdarktext disabled:opacity-50 disabled:cursor-not-allowed"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              id="password"
+              value={password}
+              onChange={(e) => onPasswordChange(e.target.value)}
+              required
+              disabled={isLoading}
+              className="mt-1 block w-full px-3 py-2 pr-10 rounded-md shadow-sm focus:outline-none focus:ring-inputtextfocus focus:border-inputtextfocusborder border bg-inputtext border-inputtextborder dark:bg-darkinputtext dark:border-darkinputtextborder dark:text-darkinputtextdarktext disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-smalltext dark:text-darksmalltext"
+              aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              disabled={isLoading}
+            >
+              {showPassword ? (
+                <VisibilityOffIcon fontSize="small" />
+              ) : (
+                <VisibilityIcon fontSize="small" />
+              )}
+            </button>
+          </div>
         </div>
 
         <button

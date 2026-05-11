@@ -1,156 +1,165 @@
-import { renderHook, act } from '@testing-library/react';
-import { useLogin } from '@/hooks/useLogin';
-import { AuthContext } from '@/context/AuthContext';
-import { BrowserRouter } from 'react-router-dom';
+import { renderHook, act } from "@testing-library/react";
+import { useLogin } from "@/hooks/useLogin";
+import { AuthContext } from "@/context/AuthContext";
+import { NotificationContext } from "@/context/NotificationContext";
+import { BrowserRouter } from "react-router-dom";
 
 // Mock do módulo de configuração para evitar problemas com import.meta.env
-jest.mock('@/../config', () => ({
-    default: {
-        API_BASE_URL: 'http://api.example.com'
-    }
+jest.mock("@/../config", () => ({
+  default: {
+    API_BASE_URL: "http://api.example.com",
+  },
 }));
 
 // Mock do useNavigate
 const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-    ...jest.requireActual('react-router-dom'),
-    useNavigate: () => mockNavigate,
+jest.mock("react-router-dom", () => ({
+  ...jest.requireActual("react-router-dom"),
+  useNavigate: () => mockNavigate,
 }));
 
 // Mock do contexto de autenticação
 const mockLogin = jest.fn();
 const mockAuthContext = {
-    login: mockLogin,
-    user: null,
-    logout: jest.fn(),
+  login: mockLogin,
+  user: null,
+  logout: jest.fn(),
 };
 
 const wrapper = ({ children }) => (
-    <BrowserRouter>
-        <AuthContext.Provider value={mockAuthContext}>
-            {children}
-        </AuthContext.Provider>
-    </BrowserRouter>
+  <BrowserRouter>
+    <NotificationContext.Provider
+      value={{ notify: jest.fn(), clear: jest.fn() }}
+    >
+      <AuthContext.Provider value={mockAuthContext}>
+        {children}
+      </AuthContext.Provider>
+    </NotificationContext.Provider>
+  </BrowserRouter>
 );
 
-describe('useLogin', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
+describe("useLogin", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test("should initialize with empty values", () => {
+    const { result } = renderHook(() => useLogin(), { wrapper });
+
+    expect(result.current.email).toBe("");
+    expect(result.current.password).toBe("");
+    expect(result.current.error).toBe("");
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  test("should update email and password", () => {
+    const { result } = renderHook(() => useLogin(), { wrapper });
+
+    act(() => {
+      result.current.setEmail("test@example.com");
+      result.current.setPassword("password123");
     });
 
-    test('should initialize with empty values', () => {
-        const { result } = renderHook(() => useLogin(), { wrapper });
+    expect(result.current.email).toBe("test@example.com");
+    expect(result.current.password).toBe("password123");
+  });
 
-        expect(result.current.email).toBe('');
-        expect(result.current.password).toBe('');
-        expect(result.current.error).toBe('');
-        expect(result.current.isLoading).toBe(false);
+  test("should handle successful login", async () => {
+    mockLogin.mockResolvedValue();
+    const { result } = renderHook(() => useLogin(), { wrapper });
+
+    // Configurar valores
+    act(() => {
+      result.current.setEmail("test@example.com");
+      result.current.setPassword("password123");
     });
 
-    test('should update email and password', () => {
-        const { result } = renderHook(() => useLogin(), { wrapper });
+    // Simular submit
+    const mockEvent = { preventDefault: jest.fn() };
 
-        act(() => {
-            result.current.setEmail('test@example.com');
-            result.current.setPassword('password123');
-        });
-
-        expect(result.current.email).toBe('test@example.com');
-        expect(result.current.password).toBe('password123');
+    await act(async () => {
+      await result.current.handleSubmit(mockEvent);
     });
 
-    test('should handle successful login', async () => {
-        mockLogin.mockResolvedValue();
-        const { result } = renderHook(() => useLogin(), { wrapper });
+    expect(mockEvent.preventDefault).toHaveBeenCalled();
+    expect(mockLogin).toHaveBeenCalledWith("test@example.com", "password123");
+    expect(mockNavigate).toHaveBeenCalledWith("/");
+    expect(result.current.error).toBe("");
+  });
 
-        // Configurar valores
-        act(() => {
-            result.current.setEmail('test@example.com');
-            result.current.setPassword('password123');
-        });
+  test("should handle login error", async () => {
+    const errorMessage = "Login failed";
+    mockLogin.mockRejectedValue(new Error(errorMessage));
 
-        // Simular submit
-        const mockEvent = { preventDefault: jest.fn() };
+    const { result } = renderHook(() => useLogin(), { wrapper });
 
-        await act(async () => {
-            await result.current.handleSubmit(mockEvent);
-        });
-
-        expect(mockEvent.preventDefault).toHaveBeenCalled();
-        expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
-        expect(mockNavigate).toHaveBeenCalledWith('/');
-        expect(result.current.error).toBe('');
+    // Configurar valores
+    act(() => {
+      result.current.setEmail("test@example.com");
+      result.current.setPassword("wrongpassword");
     });
 
-    test('should handle login error', async () => {
-        const errorMessage = 'Login failed';
-        mockLogin.mockRejectedValue(new Error(errorMessage));
+    // Simular submit
+    const mockEvent = { preventDefault: jest.fn() };
 
-        const { result } = renderHook(() => useLogin(), { wrapper });
-
-        // Configurar valores
-        act(() => {
-            result.current.setEmail('test@example.com');
-            result.current.setPassword('wrongpassword');
-        });
-
-        // Simular submit
-        const mockEvent = { preventDefault: jest.fn() };
-
-        await act(async () => {
-            await result.current.handleSubmit(mockEvent);
-        });
-
-        expect(result.current.error).toBe('Falha no login. Verifique seu email e senha.');
-        expect(mockNavigate).not.toHaveBeenCalled();
+    await act(async () => {
+      await result.current.handleSubmit(mockEvent);
     });
 
-    test('should clear form', () => {
-        const { result } = renderHook(() => useLogin(), { wrapper });
+    expect(result.current.error).toBe(
+      "Falha no login. Verifique seu email e senha.",
+    );
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
 
-        // Configurar valores
-        act(() => {
-            result.current.setEmail('test@example.com');
-            result.current.setPassword('password123');
-        });
+  test("should clear form", () => {
+    const { result } = renderHook(() => useLogin(), { wrapper });
 
-        // Limpar formulário
-        act(() => {
-            result.current.clearForm();
-        });
-
-        expect(result.current.email).toBe('');
-        expect(result.current.password).toBe('');
-        expect(result.current.error).toBe('');
+    // Configurar valores
+    act(() => {
+      result.current.setEmail("test@example.com");
+      result.current.setPassword("password123");
     });
 
-    test('should clear error', async () => {
-        // Simular erro de login ANTES de renderizar o hook
-        mockLogin.mockRejectedValue(new Error('Login failed'));
-
-        const { result } = renderHook(() => useLogin(), { wrapper });
-
-        // Configurar valores
-        act(() => {
-            result.current.setEmail('test@example.com');
-            result.current.setPassword('wrongpassword');
-        });
-
-        const mockEvent = { preventDefault: jest.fn() };
-
-        // Executar handleSubmit e aguardar conclusão
-        await act(async () => {
-            await result.current.handleSubmit(mockEvent);
-        });
-
-        // Verificar se erro foi definido
-        expect(result.current.error).toBe('Falha no login. Verifique seu email e senha.');
-
-        // Limpar erro
-        act(() => {
-            result.current.clearError();
-        });
-
-        expect(result.current.error).toBe('');
+    // Limpar formulário
+    act(() => {
+      result.current.clearForm();
     });
+
+    expect(result.current.email).toBe("");
+    expect(result.current.password).toBe("");
+    expect(result.current.error).toBe("");
+  });
+
+  test("should clear error", async () => {
+    // Simular erro de login ANTES de renderizar o hook
+    mockLogin.mockRejectedValue(new Error("Login failed"));
+
+    const { result } = renderHook(() => useLogin(), { wrapper });
+
+    // Configurar valores
+    act(() => {
+      result.current.setEmail("test@example.com");
+      result.current.setPassword("wrongpassword");
+    });
+
+    const mockEvent = { preventDefault: jest.fn() };
+
+    // Executar handleSubmit e aguardar conclusão
+    await act(async () => {
+      await result.current.handleSubmit(mockEvent);
+    });
+
+    // Verificar se erro foi definido
+    expect(result.current.error).toBe(
+      "Falha no login. Verifique seu email e senha.",
+    );
+
+    // Limpar erro
+    act(() => {
+      result.current.clearError();
+    });
+
+    expect(result.current.error).toBe("");
+  });
 });

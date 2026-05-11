@@ -22,39 +22,39 @@ function FileUpload() {
     const file = event.target.files[0];
     setFile(file);
     setName(file.name);
-    
+
     // Se for um vídeo, gerar thumbnail
-    if (file && file.type.startsWith('video/')) {
+    if (file && file.type.startsWith("video/")) {
       generateVideoThumbnail(file);
     }
   };
 
   const generateVideoThumbnail = (videoFile) => {
-    const video = document.createElement('video');
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    video.addEventListener('loadedmetadata', () => {
-      // Definir tamanho do canvas
+    const video = document.createElement("video");
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const videoUrl = URL.createObjectURL(videoFile);
+
+    video.addEventListener("loadedmetadata", () => {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      
-      // Capturar frame no segundo 1 do vídeo
       video.currentTime = 1;
     });
-    
-    video.addEventListener('seeked', () => {
-      // Desenhar o frame atual no canvas
+
+    video.addEventListener("seeked", () => {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      
-      // Converter para blob e criar URL
-      canvas.toBlob((blob) => {
-        const thumbnailUrl = URL.createObjectURL(blob);
-        setMediaThumbnail(thumbnailUrl);
-      }, 'image/jpeg', 0.8);
+      canvas.toBlob(
+        (blob) => {
+          const thumbnailUrl = URL.createObjectURL(blob);
+          setMediaThumbnail(thumbnailUrl);
+          URL.revokeObjectURL(videoUrl); // Liberar URL do vídeo após gerar thumbnail
+        },
+        "image/jpeg",
+        0.8,
+      );
     });
-    
-    video.src = URL.createObjectURL(videoFile);
+
+    video.src = videoUrl;
   };
 
   const handleFileRemove = () => {
@@ -70,7 +70,7 @@ function FileUpload() {
       setSelectedImage(null);
       setSelectedImageName("");
     }
-    
+
     // Limpar thumbnail e liberar memória
     if (mediaThumbnail) {
       URL.revokeObjectURL(mediaThumbnail);
@@ -98,7 +98,7 @@ function FileUpload() {
       console.error(err.message);
       showNotification(
         err.message || "Erro ao fazer upload do arquivo",
-        "error"
+        "error",
       );
     }
 
@@ -110,12 +110,30 @@ function FileUpload() {
   }, [selectedFile]);
 
   useEffect(() => {
-    imageIMGRef.current.src = selectedImage
-      ? selectedImage.type.startsWith('video/') 
-        ? (mediaThumbnail || "Upload.png")  // Se for vídeo, usar thumbnail ou upload padrão
-        : URL.createObjectURL(selectedImage)  // Se for imagem, usar a imagem direta
-      : "Upload.png";
+    let imageObjectUrl = null;
+
+    if (selectedImage) {
+      if (selectedImage.type.startsWith("video/")) {
+        imageIMGRef.current.src = mediaThumbnail || "Upload.png";
+      } else {
+        imageObjectUrl = URL.createObjectURL(selectedImage);
+        imageIMGRef.current.src = imageObjectUrl;
+      }
+    } else {
+      imageIMGRef.current.src = "Upload.png";
+    }
+
+    return () => {
+      if (imageObjectUrl) URL.revokeObjectURL(imageObjectUrl);
+    };
   }, [selectedImage, mediaThumbnail]);
+
+  // Liberar URL da thumbnail ao desmontar o componente
+  useEffect(() => {
+    return () => {
+      if (mediaThumbnail) URL.revokeObjectURL(mediaThumbnail);
+    };
+  }, [mediaThumbnail]);
 
   return (
     // White Box
@@ -158,7 +176,7 @@ function FileUpload() {
               className="h-12 w-12 object-contain pb-2"
             />
             {/* Indicador de vídeo */}
-            {selectedImage && selectedImage.type.startsWith('video/') && (
+            {selectedImage && selectedImage.type.startsWith("video/") && (
               <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-1 rounded">
                 📹
               </div>

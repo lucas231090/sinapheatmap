@@ -1,6 +1,7 @@
 const { ZodError, z } = require("zod");
 const InvalidCredentials = require("../errors/InvalidCredentials");
 const SignInUseCase = require("../useCases/usersCases/SignInUseCase");
+const logger = require("../configs/logger");
 
 const schema = z.object({
   email: z.string().email().min(1),
@@ -21,7 +22,7 @@ class SignInController {
         },
       };
     } catch (error) {
-      console.error(error);
+      logger.error("Erro no SignIn: %s", error.message);
       if (error instanceof ZodError) {
         return {
           statusCode: 400,

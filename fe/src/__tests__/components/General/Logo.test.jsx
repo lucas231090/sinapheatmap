@@ -38,10 +38,16 @@ describe("Logo", () => {
       "dark:border-gray-500",
       "md:border-b-0",
       "md:border-r",
-      "md:dark:border-gray-500"
+      "md:dark:border-gray-500",
     );
 
     const img = screen.getByAltText("Sinapsense Logo");
-    expect(img).toHaveClass("h-30", "w-auto");
+    expect(img).toHaveClass(
+      "h-24",
+      "sm:h-28",
+      "w-auto",
+      "max-w-full",
+      "object-contain",
+    );
   });
 });

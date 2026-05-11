@@ -22,12 +22,8 @@ export default {
    */
   moduleNameMapper: {
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",
+    "^@/\\.\\./config$": "<rootDir>/src/__mocks__/config.js",
     "^@/(.*)$": "<rootDir>/src/$1",
-    "^@/../config$": "<rootDir>/src/__mocks__/config.js",
-    "^../../config$": "<rootDir>/src/__mocks__/config.js",
-    "^../../../config$": "<rootDir>/src/__mocks__/config.js",
-    "^../../../../config$": "<rootDir>/src/__mocks__/config.js",
-    "^../../../../../config$": "<rootDir>/src/__mocks__/config.js"
   },
 
   /**
@@ -44,7 +40,7 @@ export default {
    * jest.setup.js configura polyfills e mocks globais necessários
    * para simular APIs do navegador e variáveis de ambiente do Vite
    */
-  setupFiles: ['./jest.setup.js'],
+  setupFiles: ["./jest.setup.js"],
 
   /**
    * Arquivos executados APÓS a inicialização do framework de teste
@@ -52,5 +48,5 @@ export default {
    * matchers personalizados ao Jest para testar elementos do DOM
    * Esse arquivo precisa ser carregado depois que o Jest está pronto
    */
-  setupFilesAfterEnv: ['./jest-dom.setup.js'],
+  setupFilesAfterEnv: ["./jest-dom.setup.js"],
 };

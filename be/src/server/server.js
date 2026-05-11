@@ -19,7 +19,6 @@ if (!process.env.JWT_SECRET) {
 }
 
 mongoose.connect(process.env.MONGO_URL);
-//mongoose.connect('mongodb://localhost:27017/sinapsense');
 
 mongoose.connection
   .on("error", console.error.bind(console, "Erro na conexão com o MongoDB:"))
@@ -28,9 +27,10 @@ mongoose.connection
   });
 
 const server = http.createServer(app);
-app.get("/server", (request, response) => {
-  const sv = server;
-  response.send(sv);
+
+// Rota de healthcheck usada pelo Docker para verificar se o servidor está rodando
+app.get("/health", (request, response) => {
+  response.status(200).json({ status: "ok" });
 });
 
 server.listen(PORT, () => {

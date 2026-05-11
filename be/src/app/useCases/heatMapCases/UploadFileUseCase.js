@@ -1,14 +1,15 @@
 const fs = require("fs");
 const path = require("path");
 const multer = require("../../configs/multerConfig");
+const { uploadsMediaDir } = require("../../configs/uploadsPaths");
 
 class UploadFilesUseCase {
   // Função para determinar o tipo de mídia usando MIME type
   // Retorna 0 para imagem, 1 para vídeo
   static getMediaType(mimeType) {
-    if (mimeType.startsWith('image/')) {
+    if (mimeType.startsWith("image/")) {
       return 0; // imagem
-    } else if (mimeType.startsWith('video/')) {
+    } else if (mimeType.startsWith("video/")) {
       return 1; // vídeo
     } else {
       return null; // tipo desconhecido
@@ -32,7 +33,7 @@ class UploadFilesUseCase {
           return reject(new Error("O campo 'filename' é obrigatório."));
         }
 
-        const uploadDir = path.join(__dirname, "../../uploads/media");
+        const uploadDir = uploadsMediaDir;
         if (!fs.existsSync(uploadDir)) {
           fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -43,11 +44,13 @@ class UploadFilesUseCase {
           const originalExtension = path.extname(mediaFile[0].originalname);
           const newMediaPath = path.join(
             uploadDir,
-            `${filename}${originalExtension}`
+            `${filename}${originalExtension}`,
           );
 
           // Detectar o tipo de mídia automaticamente
-          detectedMediaType = UploadFilesUseCase.getMediaType(mediaFile[0].mimetype);
+          detectedMediaType = UploadFilesUseCase.getMediaType(
+            mediaFile[0].mimetype,
+          );
 
           fs.renameSync(mediaFile[0].path, newMediaPath);
           mediaFile[0].path = newMediaPath;
@@ -56,10 +59,12 @@ class UploadFilesUseCase {
 
         resolve({
           csvFile: csvFile ? csvFile[0] : null,
-          mediaFile: mediaFile ? {
-            ...mediaFile[0],
-            detectedMediaType
-          } : null,
+          mediaFile: mediaFile
+            ? {
+                ...mediaFile[0],
+                detectedMediaType,
+              }
+            : null,
         });
       });
     });

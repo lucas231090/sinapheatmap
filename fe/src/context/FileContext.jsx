@@ -65,12 +65,10 @@ export const FileProvider = ({ children }) => {
 
   const contextValue = {
     files,
-    setFiles,
     fetchData,
     showNotification,
     clearNotification,
     notification,
-    setNotification,
     loading,
     API_BASE_URL,
   };

@@ -19,7 +19,9 @@ class SignInUseCase {
     }
 
     const accessToken = sign({ sub: user._id }, env.jwtSecret, {
-      expiresIn: "90d",
+      // 7 dias é um bom balanço entre segurança e usabilidade
+      // Para sessões mais longas, considere implementar refresh token
+      expiresIn: "7d",
     });
 
     return {

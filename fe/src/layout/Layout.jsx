@@ -1,4 +1,3 @@
-import { useLocation } from "react-router-dom";
 import LoggedInHeader from "@/layout/LoggedInHeader";
 import WbSunnyIcon from "@mui/icons-material/WbSunny";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
@@ -11,8 +10,6 @@ import useLayout from "@/hooks/useLayout";
  * Toda a lógica está separada no hook useLayout
  */
 function Layout({ children }) {
-  const location = useLocation();
-
   // Hook centralizado para lógica do layout
   const { darkMode, toggleDarkMode, isLoggedIn, handleLogout } = useLayout();
 

@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { Player } from "@remotion/player";
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from "react";
 import { HeatmapComposition } from "@/components/Heatmap/HeatmapComposition";
 import VideoControls from "@/components/Heatmap/VideoControls";
 import useHeatmapVideoLogic from "@/hooks/useHeatmapVideoLogic";
@@ -13,7 +13,6 @@ import useHeatmapVideoLogic from "@/hooks/useHeatmapVideoLogic";
 const HeatmapVideo = () => {
   // Setup MediaRecorder refs and state
   const mediaRecorderRef = useRef(null);
-  const [recordedChunks, setRecordedChunks] = useState([]);
   const [isDownloading, setIsDownloading] = useState(false);
 
   const { id } = useParams();
@@ -45,7 +44,7 @@ const HeatmapVideo = () => {
     handleTestSelect,
     handleVideoStart,
   } = useHeatmapVideoLogic(id);
-  
+
   // Handler to record and download video
   const handleDownloadVideo = () => {
     if (!playerRef.current) return;
@@ -59,22 +58,24 @@ const HeatmapVideo = () => {
     let stream;
     let cleanup;
     // If player video stream available, use it
-    if (typeof videoElem.captureStream === 'function') {
+    if (typeof videoElem.captureStream === "function") {
       stream = videoElem.captureStream();
     } else {
-      const canvasElem = document.querySelector('canvas.heatmap-canvas');
-      const gazeElem = document.querySelector('canvas.gaze-canvas');
-      
+      const canvasElem = document.querySelector("canvas.heatmap-canvas");
+      const gazeElem = document.querySelector("canvas.gaze-canvas");
+
       if (mediaType === 1) {
-        const videoTag = document.querySelector('video');
-        if (!videoTag || typeof videoTag.captureStream !== 'function') {
-          console.error('Cannot record: video element not found or captureStream unsupported');
+        const videoTag = document.querySelector("video");
+        if (!videoTag || typeof videoTag.captureStream !== "function") {
+          console.error(
+            "Cannot record: video element not found or captureStream unsupported",
+          );
           return;
         }
-        const combined = document.createElement('canvas');
+        const combined = document.createElement("canvas");
         combined.width = canvasElem.width;
         combined.height = canvasElem.height;
-        const ctx = combined.getContext('2d');
+        const ctx = combined.getContext("2d");
         stream = combined.captureStream(30);
         // draw loop combining background, heatmap, and gaze layers
         const interval = setInterval(() => {
@@ -88,10 +89,10 @@ const HeatmapVideo = () => {
         cleanup = () => clearInterval(interval);
       } else {
         const imgElem = document.querySelector('img[alt="Heatmap background"]');
-        const combined = document.createElement('canvas');
+        const combined = document.createElement("canvas");
         combined.width = canvasElem.width;
         combined.height = canvasElem.height;
-        const ctx = combined.getContext('2d');
+        const ctx = combined.getContext("2d");
         stream = combined.captureStream(30);
         // draw loop combining background, heatmap, and gaze layers
         const interval = setInterval(() => {
@@ -105,47 +106,47 @@ const HeatmapVideo = () => {
         cleanup = () => clearInterval(interval);
       }
     }
-    const recorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+    const recorder = new MediaRecorder(stream, { mimeType: "video/webm" });
     const chunks = [];
-    recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    recorder.ondataavailable = (e) => {
+      if (e.data.size) chunks.push(e.data);
+    };
     recorder.onstop = () => {
       if (cleanup) cleanup();
-      const blob = new Blob(chunks, { type: 'video/webm' });
+      const blob = new Blob(chunks, { type: "video/webm" });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `${fileName}-heatmap.webm`;
       a.click();
       URL.revokeObjectURL(url);
-      setRecordedChunks([]);
+      setIsDownloading(false);
     };
     recorder.start();
     // start playback and stop recording on video end
     videoElem.play();
     const stopRecording = () => {
-      if (recorder.state === 'recording') recorder.stop();
+      if (recorder.state === "recording") recorder.stop();
     };
     // attach ended event if available
     if (videoElem.addEventListener) {
-      videoElem.addEventListener('ended', stopRecording);
+      videoElem.addEventListener("ended", stopRecording);
       // cleanup listener when recorder stops
       recorder.onstop = () => {
         if (cleanup) cleanup();
-        videoElem.removeEventListener('ended', stopRecording);
-        const blob = new Blob(chunks, { type: 'video/webm' });
+        videoElem.removeEventListener("ended", stopRecording);
+        const blob = new Blob(chunks, { type: "video/webm" });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = `${fileName}-heatmap.webm`;
         a.click();
         URL.revokeObjectURL(url);
-        setRecordedChunks([]);
         setIsDownloading(false);
       };
     }
     mediaRecorderRef.current = recorder;
   };
-  
 
   // Exibe loading se estiver carregando
   if (isLoading) {
@@ -243,8 +244,8 @@ const HeatmapVideo = () => {
                 compositionWidth={width}
                 compositionHeight={height}
                 style={{
-                  width: width/1.9,
-                  height: height/1.9,
+                  width: width / 1.9,
+                  height: height / 1.9,
                 }}
                 controls={!isDownloading}
                 inputProps={{

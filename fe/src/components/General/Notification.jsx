@@ -16,7 +16,7 @@ const Notification = ({ message, type, onClose }) => {
 
   return (
     <div
-      className={`fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white ${getBackgroundColor()}`}
+      className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg text-white ${getBackgroundColor()}`}
     >
       <p>{message}</p>
       <button className="mt-2 text-sm underline" onClick={onClose}>

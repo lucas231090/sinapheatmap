@@ -51,7 +51,7 @@ describe("LoginPage Component", () => {
     render(
       <BrowserRouter>
         <LoginPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
 
   test("renders Logo and LoginForm", () => {
@@ -59,7 +59,7 @@ describe("LoginPage Component", () => {
     expect(screen.getByRole("img", { name: /logo/i })).toBeInTheDocument();
     // Check for form elements instead of form role
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/senha/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^senha$/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /entrar/i })).toBeInTheDocument();
   });
 
@@ -71,7 +71,7 @@ describe("LoginPage Component", () => {
     });
     expect(mockUseLogin.setEmail).toHaveBeenCalledWith("test@example.com");
 
-    fireEvent.change(screen.getByLabelText(/senha/i), {
+    fireEvent.change(screen.getByLabelText(/^senha$/i), {
       target: { value: "password123" },
     });
     expect(mockUseLogin.setPassword).toHaveBeenCalledWith("password123");
@@ -95,7 +95,7 @@ describe("LoginPage Component", () => {
     // When loading, button text changes to "Entrando..." and is disabled
     expect(screen.getByRole("button", { name: /entrando/i })).toBeDisabled();
     expect(
-      screen.getByRole("button", { name: /entrando/i })
+      screen.getByRole("button", { name: /entrando/i }),
     ).toBeInTheDocument();
   });
 
@@ -122,7 +122,7 @@ describe("LoginPage Component", () => {
     render(
       <BrowserRouter>
         <LoginPage />
-      </BrowserRouter>
+      </BrowserRouter>,
     ); // Re-render with new hook value
     expect(screen.getByText("Test Login Error")).toBeInTheDocument();
   });

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCurrentFrame, useVideoConfig, AbsoluteFill, Video } from "remotion";
 import h337 from "@mars3d/heatmap.js";
 
@@ -23,7 +23,7 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
   // FRAMES_PER_POINT: Número de frames por ponto
   // pointsToShow: Número de pontos a serem exibidos
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { durationInFrames } = useVideoConfig();
   const containerRef = useRef(null);
   const heatmapInstanceRef = useRef(null);
   const [canvasSize, setCanvasSize] = useState({ width: 1280, height: 720 });
@@ -38,16 +38,12 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
   const FRAMES_PER_POINT = 10;
   const pointsToShow = Math.min(
     Math.floor(frame / FRAMES_PER_POINT) + 1,
-    heatmapData.coords.length
+    heatmapData.coords.length,
   );
   const currentCoords = heatmapData.coords.slice(0, pointsToShow);
 
   // Check if all points have been displayed
   const isComplete = pointsToShow >= heatmapData.coords.length;
-
-  // Show current gaze point with a different visualization
-  const currentGazePoint =
-    currentCoords.length > 0 ? currentCoords[currentCoords.length - 1] : null;
 
   // Atualiza o tamanho do canvas quando os dados mudam
   useEffect(() => {
@@ -144,17 +140,21 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
   useEffect(() => {
     const canvas = gazeCanvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     // clear previous drawing
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     // smooth gaze between points
     if (!isComplete && heatmapData.coords.length > 0) {
-      const idx = Math.min(Math.floor(frame / FRAMES_PER_POINT), heatmapData.coords.length - 1);
-      const prev = idx === 0 ? heatmapData.coords[0] : heatmapData.coords[idx - 1];
+      const idx = Math.min(
+        Math.floor(frame / FRAMES_PER_POINT),
+        heatmapData.coords.length - 1,
+      );
+      const prev =
+        idx === 0 ? heatmapData.coords[0] : heatmapData.coords[idx - 1];
       const next = heatmapData.coords[idx];
       const frac = (frame % FRAMES_PER_POINT) / FRAMES_PER_POINT;
       // ease-out transition (duration 0.1s equivalent)
-      const easeOutQuad = t => t * (2 - t);
+      const easeOutQuad = (t) => t * (2 - t);
       const easedFrac = easeOutQuad(frac);
       const x = prev.x + (next.x - prev.x) * easedFrac;
       const y = prev.y + (next.y - prev.y) * easedFrac;
@@ -162,12 +162,12 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
       ctx.save();
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, 2 * Math.PI);
-      ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+      ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
       ctx.fill();
       ctx.lineWidth = 2;
-      ctx.strokeStyle = '#fff';
+      ctx.strokeStyle = "#fff";
       ctx.stroke();
-      ctx.shadowColor = 'rgba(255, 0, 0, 0.8)';
+      ctx.shadowColor = "rgba(255, 0, 0, 0.8)";
       ctx.shadowBlur = 10;
       ctx.restore();
     }
@@ -260,7 +260,7 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
   }
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#fff", }}>
+    <AbsoluteFill style={{ backgroundColor: "#fff" }}>
       <div
         ref={containerRef}
         style={{
@@ -270,32 +270,33 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
           margin: "0 auto",
         }}
       >
-        {img && (() => {
-          if (type === 1) {
+        {img &&
+          (() => {
+            if (type === 1) {
+              return (
+                <Video
+                  src={img}
+                  startFrom={0}
+                  endAt={durationInFrames}
+                  style={{
+                    width: `${canvasSize.width}px`,
+                    height: `${canvasSize.height}px`,
+                  }}
+                />
+              );
+            }
             return (
-              <Video
+              <img
                 src={img}
-                startFrom={0}
-                endAt={durationInFrames}
                 style={{
                   width: `${canvasSize.width}px`,
                   height: `${canvasSize.height}px`,
+                  visibility: "visible",
                 }}
+                alt="Heatmap background"
               />
             );
-          }
-          return (
-            <img
-              src={img}
-              style={{
-                width: `${canvasSize.width}px`,
-                height: `${canvasSize.height}px`,
-                visibility: "visible",
-              }}
-              alt="Heatmap background"
-            />
-          );
-        })()}
+          })()}
         {/* Gaze point canvas layer */}
         <canvas
           ref={gazeCanvasRef}

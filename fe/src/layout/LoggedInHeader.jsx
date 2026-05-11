@@ -17,7 +17,7 @@ const LoggedInHeader = React.memo(({ body }) => {
           <img
             src={logoSrc}
             alt="Sinapsense Logo"
-            className="h-25 w-auto mr-4"
+            className="h-10 sm:h-20 w-auto max-w-full object-contain mr-4 shrink-0"
             loading="lazy"
           />
         </Link>
