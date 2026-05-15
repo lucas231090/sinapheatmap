@@ -13,11 +13,14 @@ class SignUpController {
     try {
       const { email, name, password } = schema.parse(body);
 
-      await SignUpUseCase.execute({ email, name, password });
+      const user = await SignUpUseCase.execute({ email, name, password });
 
       return {
-        statusCode: 204,
-        body: null,
+        statusCode: 201,
+        body: {
+          message: "Conta criada com sucesso.",
+          user,
+        },
       };
     } catch (error) {
       if (error instanceof ZodError) {

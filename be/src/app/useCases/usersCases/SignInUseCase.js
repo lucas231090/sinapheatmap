@@ -18,7 +18,8 @@ class SignInUseCase {
       throw new InvalidCredentials();
     }
 
-    const accessToken = sign({ sub: user._id }, env.jwtSecret, {
+    const accessToken = sign({ role: user.role }, env.jwtSecret, {
+      subject: String(user._id),
       // 7 dias é um bom balanço entre segurança e usabilidade
       // Para sessões mais longas, considere implementar refresh token
       expiresIn: "7d",
@@ -26,6 +27,12 @@ class SignInUseCase {
 
     return {
       accessToken,
+      user: {
+        id: String(user._id),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     };
   }
 }

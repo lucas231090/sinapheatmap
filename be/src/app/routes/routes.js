@@ -4,6 +4,7 @@ const routeAdapter = require("./routeAdapter");
 const authMiddleware = require("../middlewares/auth");
 const SignInController = require("../controllers/SignInController");
 const SignUpController = require("../controllers/SignUpController");
+const GetMeController = require("../controllers/GetMeController");
 const EyeTrackingController = require("../controllers/EyeTrackingController");
 const HeatMapController = require("../controllers/HeatMapController");
 const { uploadsMediaDir } = require("../configs/uploadsPaths");
@@ -30,6 +31,7 @@ routes.get("/uploads/media/:filename", (req, res) => {
 routes.use(authMiddleware);
 
 // ─── Rotas Protegidas ─────────────────────────────────────────────────────────
+routes.get("/me", routeAdapter(GetMeController));
 routes.post("/heatmap", HeatMapController.store);
 routes.put("/heatmap/:id", HeatMapController.update);
 routes.put("/eyetracking/:_id", EyeTrackingController.updateActiveStatus);

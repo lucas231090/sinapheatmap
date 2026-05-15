@@ -13,13 +13,11 @@ class SignInController {
     try {
       const { email, password } = schema.parse(body);
 
-      const { accessToken } = await SignInUseCase.execute({ email, password });
+      const result = await SignInUseCase.execute({ email, password });
 
       return {
         statusCode: 200,
-        body: {
-          accessToken,
-        },
+        body: result,
       };
     } catch (error) {
       logger.error("Erro no SignIn: %s", error.message);

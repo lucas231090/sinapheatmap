@@ -24,9 +24,15 @@ class SignUpUseCase {
       name,
       email,
       password: hashedPassword,
+      role: "researcher",
     });
 
-    return newUser;
+    return {
+      id: String(newUser._id),
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+    };
   }
 }
 
