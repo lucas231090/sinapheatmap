@@ -3,6 +3,7 @@ import WbSunnyIcon from "@mui/icons-material/WbSunny";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 import useLayout from "@/hooks/useLayout";
+import { Outlet } from "react-router-dom";
 
 /**
  * Componente de Layout Principal
@@ -55,7 +56,7 @@ function Layout({ children }) {
         </nav>
       </header>
       <main className="m-4 h-max flex flex-col flex-grow rounded-lg bg-gradient-to-l bg-radial-[at_50%_55%] to-bgoffcolor  from-bg from-40%  dark:to-darkbg dark:from-darkbgoffcolor ">
-        {children}
+        <Outlet />
       </main>
     </div>
   );

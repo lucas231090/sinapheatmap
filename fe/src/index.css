@@ -8,7 +8,7 @@
   --color-black50opacity: rgba(0, 0, 0, 0.5);
   --color-black75opacity: rgba(0, 0, 0, 0.75);
   --color-sinapgreen-500: #3ebdd4;
-  --color-sinapgreen-800: #2B8DA3;
+  --color-sinapgreen-800: #2b8da3;
 
   --color-sinapgray: #505253;
 }
@@ -68,15 +68,49 @@
   --color-darkinputfilehover: var(--color-gray-700);
 }
 
+:root {
+  --layout-bg: var(--color-bg);
+}
 
+.dark {
+  --layout-bg: var(--color-darkbg);
+}
 
-@custom-variant dark (&:where(.dark, .dark *)) {}
+@custom-variant dark (&:where(.dark, .dark *)) {
+}
 
 .bg-opacity-500 {
   opacity: 0.5;
 }
 
+@keyframes nlayout-bubble-rise {
+  0% {
+    transform: translate3d(0, 0, 0) scale(var(--bubble-scale));
+    opacity: 0;
+  }
 
+  8% {
+    opacity: var(--bubble-opacity);
+  }
+
+  92% {
+    opacity: var(--bubble-opacity);
+  }
+
+  100% {
+    transform: translate3d(0, -130vh, 0) scale(var(--bubble-scale));
+    opacity: 0;
+  }
+}
+
+.nlayout-bubble {
+  animation-name: nlayout-bubble-rise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+
+/* 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -97,4 +131,4 @@ body {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
-}
+} */
