@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useNotificationStore } from "@/store/useNotificationStore";
 
 export function useNotifications() {
@@ -5,9 +6,20 @@ export function useNotifications() {
     (state) => state.addNotification,
   );
 
-  return {
-    notifySuccess: (message) => addNotification({ type: "success", message }),
-    notifyError: (message) => addNotification({ type: "error", message }),
-    notifyInfo: (message) => addNotification({ type: "info", message }),
-  };
+  const notifySuccess = useCallback(
+    (message) => addNotification({ type: "success", message }),
+    [addNotification],
+  );
+
+  const notifyError = useCallback(
+    (message) => addNotification({ type: "error", message }),
+    [addNotification],
+  );
+
+  const notifyInfo = useCallback(
+    (message) => addNotification({ type: "info", message }),
+    [addNotification],
+  );
+
+  return { notifySuccess, notifyError, notifyInfo };
 }

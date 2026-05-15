@@ -77,11 +77,10 @@ api.interceptors.response.use(
   (error) => {
     // Tratamento centralizado de erros
     if (error.response) {
-      // O servidor respondeu com um status de erro
+      // Não redirecionar automaticamente em 401 para manter o erro na tela atual.
+      // O caller decide como mostrar o problema ao usuário.
       if (error.response.status === 401) {
-        // Token expirado ou inválido - faça logout
         localStorage.removeItem("accessToken");
-        window.location.href = "/login";
       }
     }
     return Promise.reject(error);

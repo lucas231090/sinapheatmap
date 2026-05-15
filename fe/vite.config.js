@@ -5,6 +5,23 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const defaultApiTarget = "http://localhost:3333";
+
+function normalizeTarget(rawTarget) {
+  const target = String(rawTarget || defaultApiTarget).trim();
+
+  if (/^https?:\/\//i.test(target)) {
+    return target;
+  }
+
+  if (/^\d+$/.test(target)) {
+    return `http://localhost:${target}`;
+  }
+
+  return `http://${target}`;
+}
+
+const apiTarget = normalizeTarget(process.env.VITE_API_BASE_URL);
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -17,12 +34,12 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: process.env.VITE_API_BASE_URL || "http://localhost:3000",
+        target: apiTarget,
         changeOrigin: true,
         secure: false,
       },
       "/uploads": {
-        target: process.env.VITE_API_BASE_URL || "http://localhost:3000",
+        target: apiTarget,
         changeOrigin: true,
         secure: false,
       },

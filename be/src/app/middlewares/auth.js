@@ -3,6 +3,10 @@ const authConfig = require("../configs/env");
 const logger = require("../configs/logger");
 
 module.exports = async (request, response, next) => {
+  if (request.method === "POST" && request.path === "/eyetracking") {
+    return next();
+  }
+
   const authHeader = request.headers.authorization;
 
   if (!authHeader) {

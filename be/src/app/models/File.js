@@ -5,6 +5,13 @@ const fileSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  createdBy: {
+    type: String,
+  },
+  experimentType: {
+    type: String,
+    default: "eyetracking-experiment",
+  },
   mediaPath: {
     type: String,
   },

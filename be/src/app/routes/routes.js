@@ -18,6 +18,7 @@ routes.post("/sign-up", routeAdapter(SignUpController));
 // Leitura de experimentos: pública para que a visualização de heatmap funcione sem login
 routes.get("/eyetracking", EyeTrackingController.index);
 routes.get("/eyetracking/:_id", EyeTrackingController.show);
+routes.post("/eyetracking", EyeTrackingController.store);
 
 // Servir arquivos de mídia: público para que a visualização do heatmap carregue a imagem/vídeo
 routes.get("/uploads/media/:filename", (req, res) => {
