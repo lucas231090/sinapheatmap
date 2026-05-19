@@ -107,7 +107,7 @@ function NLayout() {
           />
         ))}
       </div>
-      <header className="relative z-10 w-full px-10 mb-10 text-black">
+      <header className="relative z-10 w-full px-10 pb-10 text-black">
         <nav className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-bg dark:bg-gray-800 w-full px-15 py-10 rounded-b-[5rem]">
           <Link to="/home">
             <img

@@ -23,3 +23,8 @@ export const updateExperimentStatus = async (id, active) => {
   const response = await api.put(`/eyetracking/${id}`, { active });
   return response.data;
 };
+
+export const updateExperiment = async (id, payload) => {
+  const response = await api.put(`/eyetracking/${id}`, payload);
+  return response;
+};

@@ -17,8 +17,8 @@ function NCreatePage() {
   const wizard = useCreateExperimentWizard();
 
   return (
-    <div className="min-h-screen bg-[#00C8E6] px-4 py-6 text-black sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+    <div className=" text-black">
+      <div className="mx-auto flex w-full flex-col gap-10">
         <NPageHeader
           title="CRIAR EXPERIMENTO"
           description="Fluxo em 4 etapas para configurar o experimento de eyetracking com dados, participantes, amostras, peças e organização final."
@@ -35,7 +35,7 @@ function NCreatePage() {
           </div>
         ) : null}
 
-        <main className="rounded-[2rem] bg-white p-4 shadow-[0_18px_50px_rgba(0,0,0,0.16)] sm:p-6 lg:p-8">
+        <main className="rounded-[2rem] bg-white p-6 shadow-[0_18px_50px_rgba(0,0,0,0.16)] lg:p-8">
           {wizard.activeStep === 1 ? (
             <NCreateStepBasic
               basic={wizard.experiment.basic}

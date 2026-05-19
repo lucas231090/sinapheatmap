@@ -14,13 +14,14 @@ export default function NCreateStepBasic({
   onNext,
 }) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <SectionTitle
         kicker="Etapa 1"
         title="Dados básicos"
         description="Configure o nome do experimento, o período de execução e as regras de exibição iniciais."
       />
 
+      {/* Nome e datas */}
       <div className="grid gap-5 lg:grid-cols-2">
         <InputField
           label="Nome *"
@@ -44,51 +45,54 @@ export default function NCreateStepBasic({
         </div>
       </div>
 
-      <TextAreaField
-        label="Descrição"
-        value={basic.description}
-        onChange={(event) => onFieldChange("description", event.target.value)}
-        placeholder="Descreva o objetivo, público e contexto do teste."
-      />
+      {/*  Descrição e opções*/}
+      <div className="grid gap-5 lg:grid-cols-2">
+        <TextAreaField
+          label="Descrição"
+          value={basic.description}
+          onChange={(event) => onFieldChange("description", event.target.value)}
+          placeholder="Descreva o objetivo, público e contexto do teste."
+        />
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <label className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
-          <input
-            type="checkbox"
-            className="mt-1 h-4 w-4 accent-[#00C8E6]"
-            checked={basic.showDescriptionOnTest}
-            onChange={(event) =>
-              onFieldChange("showDescriptionOnTest", event.target.checked)
-            }
-          />
-          <span className="space-y-1">
-            <span className="block text-sm font-semibold text-black">
-              Mostrar a descrição no teste
+        <div className="flex flex-col space-y-4">
+          <label className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+            <input
+              type="checkbox"
+              className="mt-1 h-4 w-4 accent-[#00C8E6]"
+              checked={basic.showDescriptionOnTest}
+              onChange={(event) =>
+                onFieldChange("showDescriptionOnTest", event.target.checked)
+              }
+            />
+            <span className="space-y-1">
+              <span className="block text-sm font-semibold text-black">
+                Mostrar a descrição no teste
+              </span>
+              <span className="block text-sm text-slate-600">
+                A descrição ficará visível para o participante.
+              </span>
             </span>
-            <span className="block text-sm text-slate-600">
-              A descrição ficará visível para o participante durante a execução.
-            </span>
-          </span>
-        </label>
+          </label>
 
-        <label className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
-          <input
-            type="checkbox"
-            className="mt-1 h-4 w-4 accent-[#00C8E6]"
-            checked={basic.allowMultipleSessions}
-            onChange={(event) =>
-              onFieldChange("allowMultipleSessions", event.target.checked)
-            }
-          />
-          <span className="space-y-1">
-            <span className="block text-sm font-semibold text-black">
-              Possibilitar múltiplas testagens numa mesma sessão
+          <label className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+            <input
+              type="checkbox"
+              className="mt-1 h-4 w-4 accent-[#00C8E6]"
+              checked={basic.allowMultipleSessions}
+              onChange={(event) =>
+                onFieldChange("allowMultipleSessions", event.target.checked)
+              }
+            />
+            <span className="space-y-1">
+              <span className="block text-sm font-semibold text-black">
+                Possibilitar múltiplas testagens numa mesma sessão
+              </span>
+              <span className="block text-sm text-slate-600">
+                Um mesmo usuário testar várias vezes.
+              </span>
             </span>
-            <span className="block text-sm text-slate-600">
-              Um mesmo usuário testar várias vezes.
-            </span>
-          </span>
-        </label>
+          </label>
+        </div>
       </div>
 
       <div className="flex flex-wrap justify-between gap-3 border-t border-slate-200 pt-6">

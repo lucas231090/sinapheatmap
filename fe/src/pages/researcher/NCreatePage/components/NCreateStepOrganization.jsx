@@ -20,7 +20,11 @@ export default function NCreateStepOrganization({
   onPrevious,
   onNext,
   onReset,
+  submitLabel = "Criar",
+  submitIcon,
+  isSubmitting = false,
 }) {
+  const finalIcon = submitIcon || <ArrowForwardIcon />;
   const selectedPieces = pieces.filter(
     (piece) => piece.sampleId === selectedOrganizationSampleId,
   );
@@ -177,8 +181,12 @@ export default function NCreateStepOrganization({
           >
             Voltar
           </ActionButton>
-          <ActionButton icon={<ArrowForwardIcon />} onClick={onNext}>
-            Criar
+          <ActionButton
+            icon={finalIcon}
+            onClick={onNext}
+            disabled={isSubmitting}
+          >
+            {submitLabel}
           </ActionButton>
         </div>
       </div>

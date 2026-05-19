@@ -15,7 +15,7 @@ import LoopIcon from "@mui/icons-material/Loop";
 function ParticipantTable({ participants, onChange, onAddRow, onRemoveRow }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-      <div className="grid grid-cols-[1.4fr_1fr_auto] border-b border-slate-200 bg-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-[0.25em] text-slate-700">
+      <div className="grid grid-cols-[1.4fr_1fr_auto] border-b border-slate-200 bg-sinapgreen-500 px-4 py-3 text-xs font-bold uppercase tracking-[0.25em] text-slate-900">
         <span>Nome</span>
         <span>CPF</span>
         <span className="text-right">Ações</span>
@@ -95,7 +95,7 @@ export default function NCreateStepIdentification({
         description="Defina se o participante vai se identificar e edite a lista de participantes diretamente na tabela."
       />
 
-      <CardPanel>
+      <CardPanel className="flex flex-row items-center justify-between gap-6">
         <label className="flex items-start gap-3">
           <input
             type="checkbox"
@@ -116,7 +116,7 @@ export default function NCreateStepIdentification({
           </span>
         </label>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+        <div className=" grid gap-3 sm:grid-cols-3">
           {[
             { value: "nome", label: "Nome" },
             { value: "cpf", label: "CPF" },

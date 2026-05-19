@@ -6,6 +6,7 @@ import { getApiErrorMessage } from "@/services/api";
 import { createExperiment } from "@/services/eyetrackingService";
 import {
   buildExperimentPayload,
+  buildParticipantsText,
   canAdvanceFromAssets,
   createEmptyExperimentState,
   createEmptyParticipant,
@@ -439,6 +440,31 @@ export function useCreateExperimentWizard() {
     [experiment.pieces, experiment.samples],
   );
 
+  const validateBeforeSubmit = useCallback(() => {
+    if (!experiment.basic.name.trim()) {
+      notifyError("O nome do experimento é obrigatório.");
+      setSubmissionError("O nome do experimento é obrigatório.");
+      setActiveStep(1);
+      return false;
+    }
+
+    if (!canContinueToOrganization) {
+      notifyError("Cada amostra precisa ter pelo menos uma peça.");
+      setSubmissionError("Cada amostra precisa ter pelo menos uma peça.");
+      setActiveStep(3);
+      return false;
+    }
+
+    setSubmissionError("");
+    return true;
+  }, [
+    canContinueToOrganization,
+    experiment.basic.name,
+    notifyError,
+    setActiveStep,
+    setSubmissionError,
+  ]);
+
   const goToNextStep = useCallback(() => {
     if (activeStep === 1 && !experiment.basic.name.trim()) {
       notifyError("O nome do experimento é obrigatório.");
@@ -468,17 +494,7 @@ export function useCreateExperimentWizard() {
   }, []);
 
   const createExperimentRequest = useCallback(async () => {
-    if (!experiment.basic.name.trim()) {
-      notifyError("O nome do experimento é obrigatório.");
-      setSubmissionError("O nome do experimento é obrigatório.");
-      setActiveStep(1);
-      return false;
-    }
-
-    if (!canContinueToOrganization) {
-      notifyError("Cada amostra precisa ter pelo menos uma peça.");
-      setSubmissionError("Cada amostra precisa ter pelo menos uma peça.");
-      setActiveStep(3);
+    if (!validateBeforeSubmit()) {
       return false;
     }
 
@@ -522,13 +538,7 @@ export function useCreateExperimentWizard() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [
-    canContinueToOrganization,
-    experiment,
-    navigate,
-    notifyError,
-    notifySuccess,
-  ]);
+  }, [experiment, navigate, notifyError, notifySuccess, validateBeforeSubmit]);
 
   const importParticipants = useCallback(() => {
     const parsedRows = parseParticipantRows(participantsText);
@@ -544,6 +554,66 @@ export function useCreateExperimentWizard() {
     }));
     notifySuccess(`${parsedRows.length} participante(s) importado(s).`);
   }, [notifyError, notifySuccess, participantsText]);
+
+  const hydrateWizard = useCallback(
+    (nextExperiment, options = {}) => {
+      if (!nextExperiment) {
+        return;
+      }
+
+      setExperiment(nextExperiment);
+
+      const nextParticipantsText =
+        options.participantsText ??
+        buildParticipantsText(nextExperiment.participants);
+
+      const defaultSampleId = nextExperiment.samples[0]?.id || null;
+      const defaultPieceId = nextExperiment.pieces[0]?.id || null;
+      const selectedSampleId = options.selectedSampleId ?? defaultSampleId;
+      const selectedPieceId = options.selectedPieceId ?? defaultPieceId;
+
+      const selectedSample = nextExperiment.samples.find(
+        (sample) => sample.id === selectedSampleId,
+      );
+      const selectedPiece = nextExperiment.pieces.find(
+        (piece) => piece.id === selectedPieceId,
+      );
+
+      const organizationSampleId =
+        options.organizationSampleId ??
+        nextExperiment.organization?.sampleOrder?.[0] ??
+        selectedSampleId;
+
+      setParticipantsText(nextParticipantsText);
+      setSelectedSampleId(selectedSampleId);
+      setSelectedPieceId(selectedPieceId);
+      setOrganizationSampleId(organizationSampleId || null);
+      setSampleDraft(
+        selectedSample ? { ...selectedSample } : createEmptySampleDraft(),
+      );
+      setPieceDraft(
+        selectedPiece
+          ? { ...selectedPiece }
+          : createEmptyPieceDraft(selectedSampleId || ""),
+      );
+      setActiveStep(options.activeStep ?? 1);
+      setSubmissionError("");
+      setIsSubmitting(false);
+    },
+    [
+      buildParticipantsText,
+      setActiveStep,
+      setExperiment,
+      setIsSubmitting,
+      setOrganizationSampleId,
+      setParticipantsText,
+      setPieceDraft,
+      setSampleDraft,
+      setSelectedPieceId,
+      setSelectedSampleId,
+      setSubmissionError,
+    ],
+  );
 
   return {
     activeStep,
@@ -568,6 +638,8 @@ export function useCreateExperimentWizard() {
     setSelectedSampleId,
     setSelectedPieceId,
     setOrganizationSampleId,
+    setIsSubmitting,
+    setSubmissionError,
     updateBasicField,
     updateIdentificationField,
     updateOrganizationField,
@@ -591,6 +663,8 @@ export function useCreateExperimentWizard() {
     resetWizard,
     goToNextStep,
     goToPreviousStep,
+    validateBeforeSubmit,
     createExperimentRequest,
+    hydrateWizard,
   };
 }

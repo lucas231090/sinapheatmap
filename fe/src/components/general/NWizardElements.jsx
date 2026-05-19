@@ -1,4 +1,7 @@
-import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 export function ActionButton({
@@ -32,7 +35,7 @@ export function ActionButton({
 
 export function InputField({ label, className = "", ...props }) {
   return (
-    <label className="block space-y-2">
+    <label className="block space-y-2 ">
       <span className="text-sm font-semibold uppercase tracking-[0.2em] text-black">
         {label}
       </span>
@@ -97,9 +100,28 @@ export function RowCard({
   onMoveLeft,
   onMoveRight,
   controlsDisabled = false,
+  orientation = "horizontal",
   draggableProps,
   className = "",
 }) {
+  const isVertical = orientation === "vertical";
+  const moveLeftLabel = isVertical
+    ? "Mover para cima"
+    : "Mover para a esquerda";
+  const moveRightLabel = isVertical
+    ? "Mover para baixo"
+    : "Mover para a direita";
+  const leftIcon = isVertical ? (
+    <ArrowUpwardIcon fontSize="small" />
+  ) : (
+    <ArrowBackIcon fontSize="small" />
+  );
+  const rightIcon = isVertical ? (
+    <ArrowDownwardIcon fontSize="small" />
+  ) : (
+    <ArrowForwardIcon fontSize="small" />
+  );
+
   return (
     <div
       {...draggableProps}
@@ -142,10 +164,10 @@ export function RowCard({
             onMoveLeft?.();
           }}
           disabled={controlsDisabled}
-          className="rounded-full bg-white p-2 text-black transition hover:bg-slate-100 disabled:opacity-40"
-          aria-label="Mover para a esquerda"
+          className="rounded-full bg-white p-2 text-black transition hover:bg-slate-100 disabled:opacity-40 w-10 h-auto leading-none"
+          aria-label={moveLeftLabel}
         >
-          <DragIndicatorIcon fontSize="small" className="rotate-90" />
+          {leftIcon}
         </button>
         <button
           type="button"
@@ -154,10 +176,10 @@ export function RowCard({
             onMoveRight?.();
           }}
           disabled={controlsDisabled}
-          className="rounded-full bg-white p-2 text-black transition hover:bg-slate-100 disabled:opacity-40"
-          aria-label="Mover para a direita"
+          className="rounded-full bg-white p-2 text-black transition hover:bg-slate-100 disabled:opacity-40 w-10 h-auto leading-none"
+          aria-label={moveRightLabel}
         >
-          <DragIndicatorIcon fontSize="small" className="-rotate-90" />
+          {rightIcon}
         </button>
         {onDelete ? (
           <button

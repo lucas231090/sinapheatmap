@@ -9,9 +9,11 @@ import {
 } from "@/components/general/NWizardElements";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import AddIcon from "@mui/icons-material/Add";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import LoopIcon from "@mui/icons-material/Loop";
+import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import MovieOutlinedIcon from "@mui/icons-material/MovieOutlined";
 
@@ -46,6 +48,11 @@ export default function NCreateStepAssets({
   onReset,
   canAdvance,
 }) {
+  const hasUrl = Boolean(pieceDraft.sourceUrl?.trim());
+  const hasFile =
+    pieceDraft.sourceType === "file" && Boolean(pieceDraft.sourceLabel);
+  const fileLabel = pieceDraft.fileName || pieceDraft.sourceLabel;
+
   useEffect(() => {
     if (!samples.length) {
       onPieceDraftChange("sampleId", "");
@@ -96,14 +103,11 @@ export default function NCreateStepAssets({
           />
 
           <div className="flex flex-wrap gap-3">
-            <ActionButton
-              icon={<AddCircleOutlineIcon />}
-              onClick={onSampleSave}
-            >
+            <ActionButton icon={<SaveOutlinedIcon />} onClick={onSampleSave}>
               Salvar amostra
             </ActionButton>
             <ActionButton
-              icon={<LoopIcon />}
+              icon={<AddIcon />}
               variant="ghost"
               onClick={onSampleCreateNew}
             >
@@ -124,6 +128,7 @@ export default function NCreateStepAssets({
                   } peça(s)`}
                   thumbnail={<div className="h-10 w-10 rounded-xl bg-white" />}
                   selected={sample.id === selectedSampleId}
+                  orientation="vertical"
                   onClick={() => onSampleSelect(sample.id)}
                   onDelete={() => onSampleDelete(sample.id)}
                   onMoveLeft={() => onSampleMove(sample.id, -1)}
@@ -158,21 +163,69 @@ export default function NCreateStepAssets({
                 accept="image/*,video/*"
                 className="hidden"
                 onChange={onFileSelected}
+                disabled={hasUrl}
               />
 
-              <ActionButton
-                icon={<CloudUploadIcon />}
-                onClick={onFileUploadClick}
-              >
-                Insira imagem/vídeo
-              </ActionButton>
+              {hasFile ? (
+                <div className="flex flex-col gap-2 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-black">
+                        <PreviewIcon kind={pieceDraft.previewKind} />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold text-black">
+                          Arquivo adicionado
+                        </p>
+                        <p className="text-xs text-slate-600">
+                          {fileLabel || "Arquivo selecionado"}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onPieceDraftChange("sourceLabel", "");
+                        onPieceDraftChange("fileName", "");
+                        onPieceDraftChange("mimeType", "");
+                        onPieceDraftChange("previewKind", "image");
+                        if (!pieceDraft.sourceUrl?.trim()) {
+                          onPieceDraftChange("sourceType", "file");
+                        }
+                      }}
+                      className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-semibold text-black shadow-sm transition hover:bg-red-50"
+                    >
+                      <DeleteOutlineIcon fontSize="small" />
+                      Remover
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <ActionButton
+                  icon={<CloudUploadIcon />}
+                  onClick={onFileUploadClick}
+                  disabled={hasUrl}
+                >
+                  Insira imagem/vídeo
+                </ActionButton>
+              )}
 
               <InputField
                 label="OU URL da imagem/vídeo"
                 value={pieceDraft.sourceUrl}
                 onChange={(event) => {
-                  onPieceDraftChange("sourceType", "url");
-                  onPieceDraftChange("sourceUrl", event.target.value);
+                  const value = event.target.value;
+                  onPieceDraftChange("sourceUrl", value);
+                  onPieceDraftChange(
+                    "sourceType",
+                    value.trim() ? "url" : "file",
+                  );
+                  if (value.trim()) {
+                    onPieceDraftChange("sourceLabel", "");
+                    onPieceDraftChange("fileName", "");
+                    onPieceDraftChange("mimeType", "");
+                    onPieceDraftChange("previewKind", "image");
+                  }
                 }}
                 placeholder="https://..."
               />
@@ -208,14 +261,11 @@ export default function NCreateStepAssets({
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <ActionButton
-                  icon={<AddCircleOutlineIcon />}
-                  onClick={onPieceSave}
-                >
+                <ActionButton icon={<SaveOutlinedIcon />} onClick={onPieceSave}>
                   Salvar peça
                 </ActionButton>
                 <ActionButton
-                  icon={<LoopIcon />}
+                  icon={<AddIcon />}
                   variant="ghost"
                   onClick={onPieceCreateNew}
                 >
@@ -240,6 +290,7 @@ export default function NCreateStepAssets({
                         badge={piece.sourceType === "url" ? "URL" : "arquivo"}
                         thumbnail={<PreviewIcon kind={piece.previewKind} />}
                         selected={piece.id === selectedPieceId}
+                        orientation="vertical"
                         onClick={() => onPieceSelect(piece.id)}
                         onDelete={() => onPieceDelete(piece.id)}
                         onMoveLeft={() => onPieceMove(piece.id, -1)}

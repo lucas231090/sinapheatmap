@@ -3,6 +3,7 @@ const { ZodError, z } = require("zod");
 const CreateEyeTrackingExperimentUseCase = require("../useCases/eyeTrackingCases/CreateEyeTrackingExperimentUseCase");
 const GetAllFilesUseCase = require("../useCases/eyeTrackingCases/GetAllFilesUseCase");
 const GetFileByIdUseCase = require("../useCases/eyeTrackingCases/GetFileByIdUseCase");
+const UpdateEyeTrackingExperimentUseCase = require("../useCases/eyeTrackingCases/UpdateEyeTrackingExperimentUseCase");
 const UpdateFileStatusUseCase = require("../useCases/eyeTrackingCases/UpdateFileStatusUseCase");
 const logger = require("../configs/logger");
 
@@ -77,45 +78,60 @@ const createExperimentSchema = z.object({
     .passthrough(),
 });
 
+function getExperimentValidationError(payload) {
+  const sampleIds = new Set(
+    payload.experiment.samples.map((sample) => sample.id),
+  );
+  const piecesBySample = payload.experiment.pieces.reduce(
+    (accumulator, piece) => {
+      if (!accumulator[piece.sampleId]) {
+        accumulator[piece.sampleId] = [];
+      }
+
+      accumulator[piece.sampleId].push(piece);
+      return accumulator;
+    },
+    {},
+  );
+
+  const samplesWithoutPieces = payload.experiment.samples.filter(
+    (sample) => !piecesBySample[sample.id]?.length,
+  );
+
+  if (samplesWithoutPieces.length) {
+    return {
+      status: 400,
+      body: {
+        error: "Cada amostra precisa ter pelo menos uma peça.",
+        details: samplesWithoutPieces.map((sample) => sample.id),
+      },
+    };
+  }
+
+  const invalidPieces = payload.experiment.pieces.filter(
+    (piece) => !sampleIds.has(piece.sampleId),
+  );
+
+  if (invalidPieces.length) {
+    return {
+      status: 400,
+      body: { error: "Existe peça vinculada a uma amostra inexistente." },
+    };
+  }
+
+  return null;
+}
+
 class EyeTrackingController {
   async store(request, response) {
     try {
       const payload = createExperimentSchema.parse(request.body);
+      const validationError = getExperimentValidationError(payload);
 
-      const sampleIds = new Set(
-        payload.experiment.samples.map((sample) => sample.id),
-      );
-      const piecesBySample = payload.experiment.pieces.reduce(
-        (accumulator, piece) => {
-          if (!accumulator[piece.sampleId]) {
-            accumulator[piece.sampleId] = [];
-          }
-
-          accumulator[piece.sampleId].push(piece);
-          return accumulator;
-        },
-        {},
-      );
-
-      const samplesWithoutPieces = payload.experiment.samples.filter(
-        (sample) => !piecesBySample[sample.id]?.length,
-      );
-
-      if (samplesWithoutPieces.length) {
-        return response.status(400).json({
-          error: "Cada amostra precisa ter pelo menos uma peça.",
-          details: samplesWithoutPieces.map((sample) => sample.id),
-        });
-      }
-
-      const invalidPieces = payload.experiment.pieces.filter(
-        (piece) => !sampleIds.has(piece.sampleId),
-      );
-
-      if (invalidPieces.length) {
-        return response.status(400).json({
-          error: "Existe peça vinculada a uma amostra inexistente.",
-        });
+      if (validationError) {
+        return response
+          .status(validationError.status)
+          .json(validationError.body);
       }
 
       const createdExperiment =
@@ -190,6 +206,11 @@ class EyeTrackingController {
   async updateActiveStatus(request, response) {
     const { _id } = request.params;
     const { active } = request.body;
+    const hasExperimentData = Boolean(
+      request.body?.experiment ||
+      request.body?.name ||
+      request.body?.description,
+    );
 
     if (!isValidId(_id)) {
       logger.warn("ID inválido: %s", _id);
@@ -197,20 +218,62 @@ class EyeTrackingController {
     }
 
     try {
-      const updatedFile = await UpdateFileStatusUseCase.execute(_id, active);
+      if (!hasExperimentData && typeof active === "boolean") {
+        const updatedFile = await UpdateFileStatusUseCase.execute(_id, active);
 
-      if (!updatedFile) {
+        if (!updatedFile) {
+          logger.warn("Teste não encontrado para o ID: %s", _id);
+          return response.status(404).json({ error: "Teste não encontrado" });
+        }
+
+        logger.info("Status do teste atualizado para o ID: %s", _id);
+        return response.status(200).json(updatedFile);
+      }
+
+      const payload = createExperimentSchema.parse(request.body);
+      const validationError = getExperimentValidationError(payload);
+
+      if (validationError) {
+        return response
+          .status(validationError.status)
+          .json(validationError.body);
+      }
+
+      const updatedExperiment =
+        await UpdateEyeTrackingExperimentUseCase.execute({
+          id: _id,
+          filename: payload.name,
+          description: payload.description,
+          experimentData: {
+            ...payload.experiment,
+            updatedAt: new Date().toISOString(),
+            updatedBy: request.userId || null,
+          },
+        });
+
+      if (!updatedExperiment) {
         logger.warn("Teste não encontrado para o ID: %s", _id);
         return response.status(404).json({ error: "Teste não encontrado" });
       }
 
-      logger.info("Status do teste atualizado para o ID: %s", _id);
-      return response.status(200).json(updatedFile);
+      logger.info("Experimento atualizado para o ID: %s", _id);
+      return response.status(200).json({
+        message: "Experimento atualizado com sucesso",
+        data: updatedExperiment,
+      });
     } catch (error) {
-      logger.error("Erro ao atualizar o status do arquivo: %s", error.message);
-      response
-        .status(500)
-        .json({ error: "Erro ao atualizar o status do arquivo" });
+      if (error instanceof ZodError) {
+        return response
+          .status(400)
+          .json({ error: "Dados inválidos", details: error.issues });
+      }
+
+      if (error.code === "EXPERIMENT_ALREADY_EXISTS") {
+        return response.status(409).json({ error: error.message });
+      }
+
+      logger.error("Erro ao atualizar o experimento: %s", error.message);
+      response.status(500).json({ error: "Erro ao atualizar o experimento" });
     }
   }
 }

@@ -1,6 +1,6 @@
 export default function NCreateWizardStepper({ activeStep, labels }) {
   return (
-    <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {labels.map((label, index) => {
         const stepNumber = index + 1;
         const isActive = stepNumber === activeStep;

@@ -156,8 +156,91 @@ export function isVideoSource({
   return /video|\.(mp4|webm|mov|avi)$/i.test(source);
 }
 
-export function buildExperimentPayload(experiment) {
+export function buildParticipantsText(participants = []) {
+  return participants
+    .map((participant) => {
+      const name = participant?.name?.trim() || "";
+      const cpf = participant?.cpf?.trim() || "";
+      if (!name && !cpf) {
+        return "";
+      }
+
+      return cpf ? `${name}, ${cpf}` : name;
+    })
+    .filter(Boolean)
+    .join("\n");
+}
+
+export function normalizeExperimentRecord(record) {
+  const rawExperiment =
+    record?.jsonData ||
+    record?.experiment ||
+    record?.data?.experiment ||
+    record?.experimentData ||
+    {};
+  const baseState = createEmptyExperimentState();
+  const normalizedSamples = Array.isArray(rawExperiment.samples)
+    ? rawExperiment.samples
+    : [];
+  const normalizedPieces = Array.isArray(rawExperiment.pieces)
+    ? rawExperiment.pieces
+    : [];
+  const normalizedParticipants = Array.isArray(rawExperiment.participants)
+    ? rawExperiment.participants
+    : [];
+
+  const experiment = {
+    basic: {
+      ...baseState.basic,
+      ...(rawExperiment.basic || {}),
+      name:
+        rawExperiment?.basic?.name || record?.filename || baseState.basic.name,
+      description:
+        rawExperiment?.basic?.description ||
+        record?.description ||
+        baseState.basic.description,
+    },
+    identification: {
+      ...baseState.identification,
+      ...(rawExperiment.identification || {}),
+    },
+    organization: {
+      ...baseState.organization,
+      ...(rawExperiment.organization || {}),
+    },
+    participants: normalizedParticipants.map((participant) => ({
+      id: participant?.id || createId(),
+      name: participant?.name || "",
+      cpf: participant?.cpf || "",
+    })),
+    samples: normalizedSamples.map((sample) => ({
+      id: sample?.id || createId(),
+      name: sample?.name || "",
+      description: sample?.description || "",
+    })),
+    pieces: normalizedPieces.map((piece) => ({
+      id: piece?.id || createId(),
+      sampleId: piece?.sampleId || "",
+      sourceType: piece?.sourceType || "file",
+      sourceLabel: piece?.sourceLabel || piece?.fileName || "",
+      sourceUrl: piece?.sourceUrl || "",
+      fileName: piece?.fileName || "",
+      mimeType: piece?.mimeType || "",
+      exposureSeconds: String(piece?.exposureSeconds || "10"),
+      previewKind:
+        piece?.previewKind || (isVideoSource(piece || {}) ? "video" : "image"),
+    })),
+  };
+
+  return {
+    experiment,
+    createdAt: rawExperiment?.createdAt || record?.createdAt || "",
+  };
+}
+
+export function buildExperimentPayload(experiment, options = {}) {
   const serializablePieces = experiment.pieces.map((piece) => ({ ...piece }));
+  const createdAt = options.createdAt || new Date().toISOString();
 
   return {
     name: experiment.basic.name.trim(),
@@ -182,7 +265,7 @@ export function buildExperimentPayload(experiment) {
           return accumulator;
         }, {}),
       },
-      createdAt: new Date().toISOString(),
+      createdAt,
     },
   };
 }

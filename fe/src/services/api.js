@@ -41,9 +41,30 @@ export const getApiErrorMessage = (
   return serverMessage;
 };
 
+const getStoredAccessToken = () => {
+  const directToken = localStorage.getItem("accessToken");
+
+  if (directToken) {
+    return directToken;
+  }
+
+  const authStorage = localStorage.getItem("n-auth-storage");
+
+  if (!authStorage) {
+    return "";
+  }
+
+  try {
+    const parsed = JSON.parse(authStorage);
+    return parsed?.state?.accessToken || "";
+  } catch {
+    return "";
+  }
+};
+
 // Função para obter o cabeçalho de autorização
 const getAuthHeader = () => {
-  const token = localStorage.getItem("accessToken");
+  const token = getStoredAccessToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -81,6 +102,7 @@ api.interceptors.response.use(
       // O caller decide como mostrar o problema ao usuário.
       if (error.response.status === 401) {
         localStorage.removeItem("accessToken");
+        localStorage.removeItem("n-auth-storage");
       }
     }
     return Promise.reject(error);
