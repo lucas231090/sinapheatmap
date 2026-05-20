@@ -264,15 +264,22 @@ export function useCreateExperimentWizard() {
       return;
     }
 
-    setPieceDraft((current) => ({
-      ...current,
-      sourceType: "file",
-      sourceLabel: selectedFile.name,
-      fileName: selectedFile.name,
-      mimeType: selectedFile.type,
-      sourceUrl: "",
-      previewKind: selectedFile.type.startsWith("video/") ? "video" : "image",
-    }));
+    const reader = new FileReader();
+    reader.onload = () => {
+      const previewUrl = typeof reader.result === "string" ? reader.result : "";
+
+      setPieceDraft((current) => ({
+        ...current,
+        sourceType: "file",
+        sourceLabel: selectedFile.name,
+        fileName: selectedFile.name,
+        mimeType: selectedFile.type,
+        previewUrl,
+        sourceUrl: "",
+        previewKind: selectedFile.type.startsWith("video/") ? "video" : "image",
+      }));
+    };
+    reader.readAsDataURL(selectedFile);
 
     event.target.value = "";
   }, []);
@@ -326,6 +333,7 @@ export function useCreateExperimentWizard() {
           pieceDraft.sourceType === "url" ? pieceDraft.sourceUrl.trim() : "",
         fileName: pieceDraft.fileName || "",
         mimeType: pieceDraft.mimeType || "",
+        previewUrl: pieceDraft.previewUrl || "",
         exposureSeconds: String(pieceDraft.exposureSeconds || "10").trim(),
         previewKind: isVideoSource(pieceDraft) ? "video" : "image",
       };
@@ -601,7 +609,6 @@ export function useCreateExperimentWizard() {
       setIsSubmitting(false);
     },
     [
-      buildParticipantsText,
       setActiveStep,
       setExperiment,
       setIsSubmitting,

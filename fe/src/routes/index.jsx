@@ -22,7 +22,7 @@ export const appRoutes = createBrowserRouter([
   { path: "/login", element: <NSignInPage /> },
   { path: "/signup", element: <NSignUpPage /> },
   { path: "/unauthorized", element: <NNotFoundPage /> },
-  { path: "/test", element: <NTestPage /> },
+  { path: "/test/:id", element: <NTestPage /> },
 
   {
     element: <NLayout />,

@@ -52,6 +52,7 @@ export function createEmptyPiece(sampleId = "") {
     sourceUrl: "",
     fileName: "",
     mimeType: "",
+    previewUrl: "",
     exposureSeconds: "10",
     previewKind: "image",
   };
@@ -226,6 +227,7 @@ export function normalizeExperimentRecord(record) {
       sourceUrl: piece?.sourceUrl || "",
       fileName: piece?.fileName || "",
       mimeType: piece?.mimeType || "",
+      previewUrl: piece?.previewUrl || "",
       exposureSeconds: String(piece?.exposureSeconds || "10"),
       previewKind:
         piece?.previewKind || (isVideoSource(piece || {}) ? "video" : "image"),

@@ -19,6 +19,11 @@ export const getExperimentById = async (id) => {
   return response.data;
 };
 
+export const getPublicExperimentById = async (id) => {
+  const response = await api.get(`/eyetracking/public/${id}`);
+  return response.data;
+};
+
 export const updateExperimentStatus = async (id, active) => {
   const response = await api.put(`/eyetracking/${id}`, { active });
   return response.data;
@@ -27,4 +32,9 @@ export const updateExperimentStatus = async (id, active) => {
 export const updateExperiment = async (id, payload) => {
   const response = await api.put(`/eyetracking/${id}`, payload);
   return response;
+};
+
+export const createEyeTrackingSession = async (payload) => {
+  const response = await api.post("/eyetracking/sessions", payload);
+  return response.data;
 };

@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import RefreshIcon from "@mui/icons-material/Refresh";
+
+import { updateExperimentStatus } from "@/services/eyetrackingService";
 
 export default function NExperimentsTable({
   experiments,
@@ -8,6 +11,49 @@ export default function NExperimentsTable({
   error,
   onRefresh,
 }) {
+  const [busyExperimentId, setBusyExperimentId] = useState("");
+  const [copiedExperimentId, setCopiedExperimentId] = useState("");
+
+  const buildTestLink = (experimentId) => {
+    if (typeof window === "undefined") {
+      return `/test/${experimentId}`;
+    }
+
+    return `${window.location.origin}/test/${experimentId}`;
+  };
+
+  const handleCopyLink = async (experimentId) => {
+    try {
+      const link = buildTestLink(experimentId);
+      await navigator.clipboard.writeText(link);
+      setCopiedExperimentId(experimentId);
+      window.setTimeout(() => {
+        setCopiedExperimentId((current) =>
+          current === experimentId ? "" : current,
+        );
+      }, 1800);
+    } catch (copyError) {
+      console.error("NExperimentsTable copy error:", copyError);
+      window.alert("Nao foi possivel copiar o link do teste.");
+    }
+  };
+
+  const handleToggleStatus = async (experiment) => {
+    setBusyExperimentId(experiment.id);
+
+    try {
+      await updateExperimentStatus(experiment.id, !experiment.active);
+      if (typeof onRefresh === "function") {
+        await onRefresh();
+      }
+    } catch (toggleError) {
+      console.error("NExperimentsTable toggle error:", toggleError);
+      window.alert("Nao foi possivel alterar o status do teste.");
+    } finally {
+      setBusyExperimentId("");
+    }
+  };
+
   return (
     <section className="rounded-[2rem] bg-white p-4 shadow-[0_18px_50px_rgba(0,0,0,0.16)] sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -99,13 +145,36 @@ export default function NExperimentsTable({
                       </span>
                     </td>
                     <td className="px-4 py-4 text-right">
-                      <Link
-                        to={`/edit/${experiment.id}`}
-                        className="inline-flex items-center justify-center gap-2 rounded-full bg-[#00C8E6] px-4 py-2 text-xs font-semibold text-black shadow-sm transition hover:bg-[#11b5d1]"
-                      >
-                        Editar
-                        <ArrowForwardIcon fontSize="inherit" />
-                      </Link>
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <Link
+                          to={`/edit/${experiment.id}`}
+                          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#00C8E6] px-4 py-2 text-xs font-semibold text-black shadow-sm transition hover:bg-[#11b5d1]"
+                        >
+                          Editar
+                          <ArrowForwardIcon fontSize="inherit" />
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyLink(experiment.id)}
+                          className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-black shadow-sm transition hover:bg-slate-50"
+                        >
+                          {copiedExperimentId === experiment.id
+                            ? "Link copiado"
+                            : "Copiar link"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busyExperimentId === experiment.id}
+                          onClick={() => handleToggleStatus(experiment)}
+                          className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-black shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {busyExperimentId === experiment.id
+                            ? "Salvando..."
+                            : experiment.active
+                            ? "Desativar"
+                            : "Ativar"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

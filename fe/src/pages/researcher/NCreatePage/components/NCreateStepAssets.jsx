@@ -188,6 +188,7 @@ export default function NCreateStepAssets({
                         onPieceDraftChange("sourceLabel", "");
                         onPieceDraftChange("fileName", "");
                         onPieceDraftChange("mimeType", "");
+                        onPieceDraftChange("previewUrl", "");
                         onPieceDraftChange("previewKind", "image");
                         if (!pieceDraft.sourceUrl?.trim()) {
                           onPieceDraftChange("sourceType", "file");
@@ -224,6 +225,7 @@ export default function NCreateStepAssets({
                     onPieceDraftChange("sourceLabel", "");
                     onPieceDraftChange("fileName", "");
                     onPieceDraftChange("mimeType", "");
+                    onPieceDraftChange("previewUrl", "");
                     onPieceDraftChange("previewKind", "image");
                   }
                 }}

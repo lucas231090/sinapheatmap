@@ -3,8 +3,10 @@ const { ZodError, z } = require("zod");
 const CreateEyeTrackingExperimentUseCase = require("../useCases/eyeTrackingCases/CreateEyeTrackingExperimentUseCase");
 const GetAllFilesUseCase = require("../useCases/eyeTrackingCases/GetAllFilesUseCase");
 const GetFileByIdUseCase = require("../useCases/eyeTrackingCases/GetFileByIdUseCase");
+const GetPublicEyeTrackingExperimentUseCase = require("../useCases/eyeTrackingCases/GetPublicEyeTrackingExperimentUseCase");
 const UpdateEyeTrackingExperimentUseCase = require("../useCases/eyeTrackingCases/UpdateEyeTrackingExperimentUseCase");
 const UpdateFileStatusUseCase = require("../useCases/eyeTrackingCases/UpdateFileStatusUseCase");
+const CreateEyeTrackingSessionUseCase = require("../useCases/eyeTrackingCases/CreateEyeTrackingSessionUseCase");
 const logger = require("../configs/logger");
 
 const participantSchema = z
@@ -76,6 +78,41 @@ const createExperimentSchema = z.object({
       createdAt: z.string().optional(),
     })
     .passthrough(),
+});
+
+const eyeTrackingSessionSchema = z.object({
+  sessao_id: z.string().trim().min(1),
+  experimento_id: z.string().trim().min(1),
+  participante: z
+    .object({
+      nome: z.string().trim().default(""),
+      cpf: z.string().trim().default(""),
+    })
+    .passthrough(),
+  amostras: z
+    .array(
+      z.object({
+        amostra_id: z.string().trim().min(1),
+        ordem_apresentacao: z.coerce.number().int().positive(),
+        pecas: z.array(
+          z.object({
+            peca_id: z.string().trim().min(1),
+            ordem_apresentacao: z.coerce.number().int().positive(),
+            dados_eyetracking: z
+              .array(
+                z.object({
+                  timestamp: z.coerce.number(),
+                  x: z.coerce.number(),
+                  y: z.coerce.number(),
+                  frame: z.coerce.number(),
+                }),
+              )
+              .default([]),
+          }),
+        ),
+      }),
+    )
+    .default([]),
 });
 
 function getExperimentValidationError(payload) {
@@ -200,6 +237,57 @@ class EyeTrackingController {
     } catch (error) {
       logger.error("Erro ao buscar o arquivo: %s", error.message);
       response.status(500).json({ error: "Erro ao buscar o arquivo" });
+    }
+  }
+
+  async publicShow(request, response) {
+    const { _id } = request.params;
+
+    if (!isValidId(_id)) {
+      logger.warn("ID inválido para acesso público: %s", _id);
+      return response.status(400).json({ error: "ID inválido" });
+    }
+
+    try {
+      const experiment =
+        await GetPublicEyeTrackingExperimentUseCase.execute(_id);
+
+      if (!experiment) {
+        logger.warn("Teste indisponível no momento: %s", _id);
+        return response
+          .status(403)
+          .json({ error: "Teste indisponível no momento" });
+      }
+
+      logger.info("Teste público encontrado para o ID: %s", _id);
+      return response.status(200).json(experiment);
+    } catch (error) {
+      logger.error("Erro ao buscar teste público: %s", error.message);
+      return response.status(500).json({ error: "Erro ao buscar o teste" });
+    }
+  }
+
+  async storeSession(request, response) {
+    try {
+      const payload = eyeTrackingSessionSchema.parse(request.body);
+      const savedSession =
+        await CreateEyeTrackingSessionUseCase.execute(payload);
+
+      logger.info("Sessão de eyetracking salva: %s", payload.sessao_id);
+
+      return response.status(201).json({
+        message: "Sessão salva com sucesso",
+        data: savedSession,
+      });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return response
+          .status(400)
+          .json({ error: "Dados inválidos", details: error.issues });
+      }
+
+      logger.error("Erro ao salvar sessão: %s", error.message);
+      return response.status(500).json({ error: "Erro ao salvar a sessão" });
     }
   }
 
