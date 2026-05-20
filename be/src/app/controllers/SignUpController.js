@@ -8,7 +8,16 @@ const schema = z.object({
   password: z.string().min(8),
 });
 
+/**
+ * Controller responsible for handling user registration (sign-up).
+ */
 class SignUpController {
+  /**
+   * Handles the sign-up request.
+   * @param {Object} request - The HTTP request object.
+   * @param {Object} request.body - The request body containing name, email, and password.
+   * @returns {Promise<Object>} An object containing the HTTP status code and response body.
+   */
   async handle({ body }) {
     try {
       const { email, name, password } = schema.parse(body);

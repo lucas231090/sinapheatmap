@@ -51,7 +51,7 @@ export default function NTestStepResult({
 
       {status === "success" && (
         <div className="animate-fade-in-up">
-          <h1 className="text-5xl font-black text-[#00C8E6] mb-4">
+          <h1 className="text-5xl font-black text-sinapgreen-500 mb-4">
             MUITO OBRIGADO POR PARTICIPAR!
           </h1>
           <p className="text-xl text-slate-300 mb-8">
@@ -66,7 +66,7 @@ export default function NTestStepResult({
               href="https://instagram.com/sinapsenseufpr"
               target="_blank"
               rel="noreferrer"
-              className="text-2xl font-bold text-white hover:text-[#00C8E6] transition"
+              className="text-2xl font-bold text-white hover:text-sinapgreen-500 transition"
             >
               @sinapsenseufpr
             </a>

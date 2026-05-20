@@ -3,9 +3,15 @@ const path = require("path");
 const multer = require("../../configs/multerConfig");
 const { uploadsMediaDir } = require("../../configs/uploadsPaths");
 
+/**
+ * UseCase for handling multipart form uploads, extracting a CSV file and an optional media file.
+ */
 class UploadFilesUseCase {
-  // Função para determinar o tipo de mídia usando MIME type
-  // Retorna 0 para imagem, 1 para vídeo
+  /**
+   * Determines the media type based on the MIME type.
+   * @param {string} mimeType - The MIME type string.
+   * @returns {number|null} 0 for image, 1 for video, or null if unknown.
+   */
   static getMediaType(mimeType) {
     if (mimeType.startsWith("image/")) {
       return 0; // imagem
@@ -16,6 +22,12 @@ class UploadFilesUseCase {
     }
   }
 
+  /**
+   * Executes the file upload processing using multer.
+   * @param {Object} request - The HTTP request object.
+   * @param {Object} response - The HTTP response object.
+   * @returns {Promise<Object>} A promise resolving to an object containing `csvFile` and `mediaFile` paths.
+   */
   execute(request, response) {
     return new Promise((resolve, reject) => {
       multer.fields([

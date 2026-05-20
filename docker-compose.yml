@@ -28,15 +28,12 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       NODE_ENV: ${NODE_ENV}
       # Origens permitidas para CORS (separe por vírgula para múltiplas)
-      # Em desenvolvimento: ALLOWED_ORIGINS=http://localhost:3000
-      # Em produção: ALLOWED_ORIGINS=https://seuapp.com
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
     volumes:
-      # Volume para persistir uploads fora do container
-      # O backend grava em /app/uploads (ver src/app/configs/uploadsPaths.js)
-      - ./be/uploads:/app/uploads
-      # Volume para persistir logs fora do container
-      - ./be/logs:/app/logs
+      # Volume para persistir uploads de forma nativa no Docker
+      - backend_uploads:/app/uploads
+      # Volume para persistir logs de forma nativa no Docker
+      - backend_logs:/app/logs
     depends_on:
       - mongodb
     networks:
@@ -57,10 +54,7 @@ services:
       context: ./fe
       dockerfile: Dockerfile
       args:
-        # URL da API que o NAVEGADOR do usuário vai usar para fazer as requisições
-        # Em desenvolvimento local: http://localhost:3333
-        # Em produção: https://api.seudominio.com
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3333}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
     container_name: sinapheatmap-frontend
     restart: unless-stopped
     ports:
@@ -72,6 +66,10 @@ services:
 
 volumes:
   mongo_data:
+    driver: local
+  backend_uploads:
+    driver: local
+  backend_logs:
     driver: local
 
 networks:

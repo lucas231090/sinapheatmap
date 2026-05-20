@@ -58,7 +58,7 @@ export default function NCreateStepBasic({
           <label className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
             <input
               type="checkbox"
-              className="mt-1 h-4 w-4 accent-[#00C8E6]"
+              className="mt-1 h-4 w-4 accent-sinapgreen-500"
               checked={basic.showDescriptionOnTest}
               onChange={(event) =>
                 onFieldChange("showDescriptionOnTest", event.target.checked)
@@ -77,7 +77,7 @@ export default function NCreateStepBasic({
           <label className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
             <input
               type="checkbox"
-              className="mt-1 h-4 w-4 accent-[#00C8E6]"
+              className="mt-1 h-4 w-4 accent-sinapgreen-500"
               checked={basic.allowMultipleSessions}
               onChange={(event) =>
                 onFieldChange("allowMultipleSessions", event.target.checked)

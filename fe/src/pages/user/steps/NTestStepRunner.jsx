@@ -179,7 +179,7 @@ export default function NTestStepRunner({
 
   if (phase === "PAUSE") {
     return (
-      <div className="flex items-center justify-center w-full h-full bg-cyan-700">
+      <div className="flex items-center justify-center w-full h-full bg-sinapgreen-800">
         <div className="bg-white text-black p-8 rounded-2xl text-center max-w-md shadow-2xl">
           <h2 className="text-2xl font-bold mb-4">Etapa Concluída</h2>
           <p className="mb-6 text-slate-600">
@@ -193,7 +193,7 @@ export default function NTestStepRunner({
               setCount(3);
               setPhase("COUNTDOWN");
             }}
-            className="px-6 py-3 bg-[#00C8E6] font-bold rounded-full w-full"
+            className="px-6 py-3 bg-sinapgreen-500 font-bold rounded-full w-full"
           >
             Ir para próxima amostra
           </button>
@@ -225,13 +225,21 @@ export default function NTestStepRunner({
             autoPlay
             muted
             // Opcional: loop (adicione se quiser que o vídeo repita até o tempo de exposição acabar)
-            className="max-w-full max-h-full object-contain"
+            className={`max-w-full max-h-full ${
+              activePiece.imageDisplayMode === "cover"
+                ? "object-cover w-full h-full"
+                : "object-contain"
+            }`}
           />
         ) : (
           <img
             src={mediaUrl}
             alt="peça"
-            className="max-w-full max-h-full object-contain"
+            className={`max-w-full max-h-full ${
+              activePiece.imageDisplayMode === "cover"
+                ? "object-cover w-full h-full"
+                : "object-contain"
+            }`}
           />
         )}
       </div>

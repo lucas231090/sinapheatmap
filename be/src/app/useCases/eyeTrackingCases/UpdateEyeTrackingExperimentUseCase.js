@@ -3,9 +3,32 @@ const path = require("path");
 
 const FileRepository = require("../../repositories/FileRepository");
 const { uploadsJsonDir } = require("../../configs/uploadsPaths");
+const { createExperimentSchema, getExperimentValidationError } = require("./EyeTrackingValidation");
 
+/**
+ * UseCase to update an Eye Tracking Experiment.
+ */
 class UpdateEyeTrackingExperimentUseCase {
-  async execute({ id, filename, description = "", experimentData }) {
+  /**
+   * Executes the update of an eye tracking experiment.
+   * @param {string} id - The ID of the experiment to update.
+   * @param {Object} payload - The raw payload for the experiment.
+   * @param {string|null} updatedBy - The user ID who is updating the experiment.
+   * @returns {Promise<Object|null>} The updated experiment file record, or null if not found.
+   * @throws {Error} If validation fails or if a conflicting experiment exists.
+   */
+  async execute(id, payload, updatedBy) {
+    const validatedData = createExperimentSchema.parse(payload);
+    const validationError = getExperimentValidationError(validatedData);
+
+    if (validationError) {
+      const error = new Error(validationError.body.error);
+      error.status = validationError.status;
+      error.details = validationError.body.details;
+      throw error;
+    }
+
+    const { name: filename, description = "", experiment: experimentData } = validatedData;
     const existingFile = await FileRepository.getFileById(id);
 
     if (!existingFile) {
@@ -22,6 +45,12 @@ class UpdateEyeTrackingExperimentUseCase {
       }
     }
 
+    const dataToSave = {
+      ...experimentData,
+      updatedAt: new Date().toISOString(),
+      updatedBy,
+    };
+
     if (!fs.existsSync(uploadsJsonDir)) {
       fs.mkdirSync(uploadsJsonDir, { recursive: true });
     }
@@ -35,12 +64,12 @@ class UpdateEyeTrackingExperimentUseCase {
       jsonPath = path.join(uploadsJsonDir, `${safeFilename}.json`);
     }
 
-    fs.writeFileSync(jsonPath, JSON.stringify(experimentData, null, 2));
+    fs.writeFileSync(jsonPath, JSON.stringify(dataToSave, null, 2));
 
     return await FileRepository.updateFile(id, {
       filename: filename || existingFile.filename,
       description,
-      jsonData: experimentData,
+      jsonData: dataToSave,
       path: jsonPath,
     });
   }

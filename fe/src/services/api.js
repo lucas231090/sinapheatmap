@@ -1,6 +1,12 @@
 import axios from "axios";
 import config from "@/../config";
 
+/**
+ * Retorna uma mensagem de erro amigável com base na resposta da API.
+ * @param {Object} error - O objeto de erro capturado (ex: do axios).
+ * @param {string} [fallbackMessage="Ocorreu um erro. Tente novamente."] - Mensagem padrão caso o erro não seja identificado.
+ * @returns {string} Mensagem de erro para ser exibida ao usuário.
+ */
 export const getApiErrorMessage = (
   error,
   fallbackMessage = "Ocorreu um erro. Tente novamente.",
@@ -41,6 +47,11 @@ export const getApiErrorMessage = (
   return serverMessage;
 };
 
+/**
+ * Obtém o token de acesso armazenado localmente.
+ * Primeiro tenta buscar no localStorage direto e depois no authStorage.
+ * @returns {string} O token de acesso ou uma string vazia se não encontrado.
+ */
 const getStoredAccessToken = () => {
   const directToken = localStorage.getItem("accessToken");
 
@@ -62,7 +73,10 @@ const getStoredAccessToken = () => {
   }
 };
 
-// Função para obter o cabeçalho de autorização
+/**
+ * Gera o cabeçalho de autorização para as requisições.
+ * @returns {Object} Objeto contendo o cabeçalho Authorization se o token existir.
+ */
 const getAuthHeader = () => {
   const token = getStoredAccessToken();
   return token ? { Authorization: `Bearer ${token}` } : {};

@@ -6,7 +6,16 @@ const {
   uploadsMediaDir,
 } = require("../../configs/uploadsPaths");
 
+/**
+ * UseCase for saving processed file data and its associated media to the file system and database.
+ */
 class SaveFileDataUseCase {
+  /**
+   * Executes the saving process for the file data.
+   * @param {Object} fileData - The metadata and paths for the uploaded files.
+   * @param {Array<Object>} processedData - The processed JSON data to save.
+   * @returns {Promise<Object>} A promise resolving to the created file record.
+   */
   async execute(fileData, processedData) {
     const jsonFilename = `${fileData.filename}.json`;
     const jsonDir = uploadsJsonDir;

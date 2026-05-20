@@ -34,7 +34,7 @@ export default function NTestStepTutorial({ onNext }) {
 
         <button
           onClick={onNext}
-          className="px-8 py-4 bg-[#00C8E6] text-black font-bold text-lg rounded-full hover:bg-[#11b5d1] transition shadow-[0_0_15px_rgba(0,200,230,0.4)]"
+          className="px-8 py-4 bg-sinapgreen-500 text-black font-bold text-lg rounded-full hover:bg-sinapgreen-800 transition shadow-[0_0_15px_rgba(0,200,230,0.4)]"
         >
           Entendi, habilitar a câmera
         </button>

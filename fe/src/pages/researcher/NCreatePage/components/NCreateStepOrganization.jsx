@@ -47,7 +47,7 @@ export default function NCreateStepOrganization({
           <label className="flex items-center gap-3 rounded-full bg-white px-4 py-3 text-sm font-semibold shadow-sm">
             <input
               type="checkbox"
-              className="h-4 w-4 accent-[#00C8E6]"
+              className="h-4 w-4 accent-sinapgreen-500"
               checked={organization.randomizeSamples}
               onChange={(event) =>
                 onOrganizationFieldChange(
@@ -104,7 +104,7 @@ export default function NCreateStepOrganization({
           <label className="flex items-center gap-3 rounded-full bg-white px-4 py-3 text-sm font-semibold shadow-sm">
             <input
               type="checkbox"
-              className="h-4 w-4 accent-[#00C8E6]"
+              className="h-4 w-4 accent-sinapgreen-500"
               checked={organization.randomizePieces}
               onChange={(event) =>
                 onOrganizationFieldChange(
@@ -125,7 +125,7 @@ export default function NCreateStepOrganization({
               onClick={() => onSelectOrganizationSample(sample.id)}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 selectedOrganizationSampleId === sample.id
-                  ? "bg-[#00C8E6] text-black"
+                  ? "bg-sinapgreen-500 text-black"
                   : "bg-white text-slate-700 shadow-sm hover:bg-slate-100"
               }`}
             >

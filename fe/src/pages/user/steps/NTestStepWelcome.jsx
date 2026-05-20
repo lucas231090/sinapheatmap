@@ -46,7 +46,7 @@ export default function NTestStepWelcome({ experiment, onNext }) {
         )}
         <button
           type="submit"
-          className="bg-[#00C8E6] font-bold p-3 rounded-full hover:bg-[#11b5d1] transition mt-2"
+          className="bg-sinapgreen-500 font-bold p-3 rounded-full hover:bg-sinapgreen-800 transition mt-2"
         >
           Iniciar Experimento
         </button>

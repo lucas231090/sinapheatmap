@@ -8,7 +8,8 @@ import {
   ransacLinear,
   CALIBRATION_POINTS,
 } from "@/utils/eyeTrackingMath";
-import { useCallback } from "react"; // Adicione useCallback aqui!
+import { useCallback } from "react";
+import { useEyeTracking } from "@/hooks/useEyeTracking";
 
 // Importação das Etapas (Criaremos abaixo)
 import NTestStepWelcome from "./steps/NTestStepWelcome";
@@ -34,20 +35,19 @@ export default function NTestPage() {
   const [participantInfo, setParticipantInfo] = useState({ nome: "", cpf: "" });
   const [sessionData, setSessionData] = useState([]); // Array de amostras coletadas
 
-  // Ref de Câmera e MediaPipe
+  // Ref de Câmera
   const videoRef = useRef(null);
-  const faceLandmarkerRef = useRef(null);
-  const reqRef = useRef(null);
-  const [cameraActive, setCameraActive] = useState(false);
-  const [faceValid, setFaceValid] = useState(false); // Rosto centralizado/válido?
-  const [mpLoaded, setMpLoaded] = useState(false);
 
-  // Modelos de Calibração e Buffers
-  const modelX = useRef(null);
-  const modelY = useRef(null);
-  const frameBuffer = useRef([]);
-  const calibrationDataset = useRef([]);
-  const latestFeatures = useRef(null); // Últimas features capturadas da face
+  // Hook de Eye Tracking
+  const {
+    cameraActive,
+    faceValid,
+    mpLoaded,
+    startCamera,
+    addCalibrationPoint,
+    finalizeCalibration,
+    getCurrentGaze,
+  } = useEyeTracking(videoRef);
 
   // 1. Busca os dados do experimento
   useEffect(() => {
@@ -56,7 +56,7 @@ export default function NTestPage() {
         const data = await getPublicExperimentById(id);
         setExperiment(data);
       } catch (err) {
-        console.error("Erro ao buscar experimento:", err); // Correção do erro da linha 61
+        console.error("Erro ao buscar experimento:", err);
         setError("Não foi possível carregar este teste ou ele está inativo.");
       } finally {
         setLoading(false);
@@ -65,129 +65,18 @@ export default function NTestPage() {
     fetchTest();
   }, [id]);
 
-  // 2. Carrega o MediaPipe (ocorre em background enquanto o usuário lê o Welcome)
-  useEffect(() => {
-    async function initMediaPipe() {
-      try {
-        const vision = await FilesetResolver.forVisionTasks(
-          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm",
-        );
-        faceLandmarkerRef.current = await FaceLandmarker.createFromOptions(
-          vision,
-          {
-            baseOptions: {
-              modelAssetPath:
-                "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-              delegate: "GPU",
-            },
-            runningMode: "VIDEO",
-            numFaces: 1,
-          },
-        );
-        setMpLoaded(true);
-      } catch (err) {
-        console.error("Erro ao carregar MediaPipe", err);
-      }
-    }
-    initMediaPipe();
-    return () => {
-      if (reqRef.current) cancelAnimationFrame(reqRef.current);
-      if (faceLandmarkerRef.current) faceLandmarkerRef.current.close();
-    };
-  }, []);
-
-  // 3. Função para iniciar a câmera (chamada pelo Alignment Step)
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 640, height: 480 },
-      });
-      videoRef.current.srcObject = stream;
-      videoRef.current.play();
-      setCameraActive(true);
-      startPredictionLoop();
-    } catch (err) {
-      console.error("Erro ao iniciar câmera:", err); // Correção do erro da linha 111
-      alert("Precisamos de acesso à câmera para prosseguir.");
-    }
-  };
-
-  // 4. Loop de predição contínuo (roda invisível por trás das telas)
-  const startPredictionLoop = () => {
-    let lastVideoTime = -1;
-    const loop = () => {
-      if (videoRef.current && videoRef.current.readyState >= 2) {
-        if (videoRef.current.currentTime !== lastVideoTime) {
-          lastVideoTime = videoRef.current.currentTime;
-          const results = faceLandmarkerRef.current.detectForVideo(
-            videoRef.current,
-            performance.now(),
-          );
-
-          if (results.faceLandmarks && results.faceLandmarks.length > 0) {
-            const landmarks = results.faceLandmarks[0];
-            const nose = landmarks[1];
-            const faceWidth = Math.abs(landmarks[234].x - landmarks[454].x);
-
-            // Validação de face simples (pode ser ajustada)
-            const isCenteredX = nose.x > 0.35 && nose.x < 0.65;
-            const isCenteredY = nose.y > 0.35 && nose.y < 0.75;
-            const isRightDistance = faceWidth > 0.2 && faceWidth < 0.6;
-
-            setFaceValid(isCenteredX && isCenteredY && isRightDistance);
-
-            // Extração fictícia/simplificada para caber (Use o seu getEyeData completo aqui)
-            // Para brevidade, estou mockando as features. Substitua pelo seu `getEyeData(landmarks)`
-            const avgX = landmarks[468].x; // Iris direita
-            const avgY = landmarks[468].y;
-            latestFeatures.current = [
-              1,
-              avgX,
-              avgY,
-              avgX * avgY,
-              avgX * avgX,
-              avgY * avgY,
-            ];
-
-            frameBuffer.current.push(latestFeatures.current);
-            if (frameBuffer.current.length > 30) frameBuffer.current.shift();
-          } else {
-            setFaceValid(false);
-          }
-        }
-      }
-      reqRef.current = requestAnimationFrame(loop);
-    };
-    reqRef.current = requestAnimationFrame(loop);
-  };
-
-  // 5. Função de calibração a ser passada para NTestStepCalibration
-  const addCalibrationPoint = (targetX, targetY) => {
-    frameBuffer.current.forEach((feat) => {
-      calibrationDataset.current.push({ features: feat, targetX, targetY });
-    });
-  };
-
-  const finalizeCalibration = () => {
-    modelX.current = ransacLinear(calibrationDataset.current, (s) => s.targetX);
-    modelY.current = ransacLinear(calibrationDataset.current, (s) => s.targetY);
+  // Função chamada após a calibração
+  const handleFinalizeCalibration = () => {
+    finalizeCalibration();
     setCurrentStep("RUNNER");
   };
-
-  // 6. Função para obter o olhar atual durante o RUNNER
-  const getCurrentGaze = useCallback(() => {
-    if (!latestFeatures.current || !modelX.current || !modelY.current)
-      return null;
-    let pX = clamp(dot(modelX.current, latestFeatures.current), 0, 1);
-    let pY = clamp(dot(modelY.current, latestFeatures.current), 0, 1);
-    return { x: pX, y: pY, timestamp: Date.now() };
-  }, []); // Sem dependências dinâmicas, pois usamos refs
 
   // Callback para quando o runner terminar
   const handleRunnerFinish = useCallback((finalData) => {
     setSessionData(finalData);
+    stopCamera();
     setCurrentStep("RESULT");
-  }, []);
+  }, [stopCamera]);
 
   // Renderização das Telas
   if (loading)
@@ -249,7 +138,7 @@ export default function NTestPage() {
         <NTestStepCalibration
           faceValid={faceValid}
           addCalibrationPoint={addCalibrationPoint}
-          onFinishCalibration={finalizeCalibration}
+          onFinishCalibration={handleFinalizeCalibration}
         />
       )}
 

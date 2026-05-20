@@ -3,7 +3,16 @@ const UploadCsvUseCase = require("../useCases/uploadCases/UploadCsvUseCase");
 const FindFileByFilenameUseCase = require("../useCases/uploadCases/FindFileByFilenameUseCase");
 const logger = require("../configs/logger");
 
+/**
+ * Controller responsible for handling CSV file uploads.
+ */
 class CsvController {
+  /**
+   * Stores an uploaded CSV file.
+   * @param {Object} request - The HTTP request object.
+   * @param {Object} response - The HTTP response object.
+   * @returns {Promise<void>} 
+   */
   async store(request, response) {
     upload.single("file")(request, response, async (err) => {
       if (err) {

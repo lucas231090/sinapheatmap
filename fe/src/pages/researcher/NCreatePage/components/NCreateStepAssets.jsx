@@ -251,13 +251,33 @@ export default function NCreateStepAssets({
                     onChange={(event) =>
                       onPieceDraftChange("sampleId", event.target.value)
                     }
-                    className="w-full rounded-2xl border border-black/15 bg-slate-100 px-4 py-3 text-sm text-black shadow-sm transition focus:border-cyan-500 focus:bg-white focus:outline-none"
+                    className="w-full rounded-2xl border border-black/15 bg-slate-100 px-4 py-3 text-sm text-black shadow-sm transition focus:border-sinapgreen-500 focus:bg-white focus:outline-none"
                   >
                     {samples.map((sample) => (
                       <option key={sample.id} value={sample.id}>
                         {sample.name || "Amostra sem nome"}
                       </option>
                     ))}
+                  </select>
+                </label>
+
+                <label className="block space-y-2 sm:col-span-2">
+                  <span className="text-sm font-semibold uppercase tracking-[0.2em] text-black">
+                    Exibição da Imagem
+                  </span>
+                  <select
+                    value={pieceDraft.imageDisplayMode || "original"}
+                    onChange={(event) =>
+                      onPieceDraftChange("imageDisplayMode", event.target.value)
+                    }
+                    className="w-full rounded-2xl border border-black/15 bg-slate-100 px-4 py-3 text-sm text-black shadow-sm transition focus:border-sinapgreen-500 focus:bg-white focus:outline-none"
+                  >
+                    <option value="original">
+                      Tamanho Original (redimensiona mantendo a proporção)
+                    </option>
+                    <option value="cover">
+                      Preencher Tela (pode cortar bordas da imagem)
+                    </option>
                   </select>
                 </label>
               </div>

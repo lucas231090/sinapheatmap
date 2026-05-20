@@ -18,7 +18,7 @@ export function ActionButton({
   const variantClasses =
     variant === "ghost"
       ? "border border-slate-200 bg-white text-black shadow-sm hover:bg-slate-50"
-      : "bg-[#00C8E6] text-black shadow-lg shadow-cyan-500/20 hover:translate-y-[-1px] hover:bg-[#11b5d1]";
+      : "bg-sinapgreen-500 text-black shadow-lg shadow-sinapgreen-500/20 hover:translate-y-[-1px] hover:bg-sinapgreen-800";
 
   return (
     <button
@@ -41,7 +41,7 @@ export function InputField({ label, className = "", ...props }) {
       </span>
       <input
         {...props}
-        className={`w-full rounded-2xl border border-black/15 bg-slate-100 px-4 py-3 text-sm text-black placeholder:text-slate-500 shadow-sm transition focus:border-cyan-500 focus:bg-white focus:outline-none ${className}`}
+        className={`w-full rounded-2xl border border-black/15 bg-slate-100 px-4 py-3 text-sm text-black placeholder:text-slate-500 shadow-sm transition focus:border-sinapgreen-500 focus:bg-white focus:outline-none ${className}`}
       />
     </label>
   );
@@ -55,7 +55,7 @@ export function TextAreaField({ label, className = "", ...props }) {
       </span>
       <textarea
         {...props}
-        className={`min-h-[140px] w-full rounded-2xl border border-black/15 bg-slate-100 px-4 py-3 text-sm text-black placeholder:text-slate-500 shadow-sm transition focus:border-cyan-500 focus:bg-white focus:outline-none ${className}`}
+        className={`min-h-[140px] w-full rounded-2xl border border-black/15 bg-slate-100 px-4 py-3 text-sm text-black placeholder:text-slate-500 shadow-sm transition focus:border-sinapgreen-500 focus:bg-white focus:outline-none ${className}`}
       />
     </label>
   );
@@ -65,7 +65,7 @@ export function SectionTitle({ kicker, title, description }) {
   return (
     <div className="space-y-1">
       {kicker ? (
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-700">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sinapgreen-800">
           {kicker}
         </p>
       ) : null}
@@ -138,7 +138,7 @@ export function RowCard({
             }
           : undefined
       }
-      className={`flex items-center gap-3 rounded-3xl border bg-[#00C8E6] p-3 text-black shadow-sm transition ${
+      className={`flex items-center gap-3 rounded-3xl border bg-sinapgreen-500 p-3 text-black shadow-sm transition ${
         selected ? "border-black/40 ring-2 ring-black/20" : "border-cyan-100"
       } ${onClick ? "cursor-pointer" : ""} ${className}`}
     >

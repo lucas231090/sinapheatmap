@@ -1,6 +1,15 @@
 const UsersRepository = require("../repositories/UserRepository");
 
+/**
+ * Controller responsible for retrieving the authenticated user's information.
+ */
 class GetMeController {
+  /**
+   * Handles the request to retrieve user information.
+   * @param {Object} params - The request parameters.
+   * @param {string} params.userId - The ID of the authenticated user.
+   * @returns {Promise<Object>} An object containing the HTTP status code and response body.
+   */
   async handle({ userId }) {
     const user = await UsersRepository.findById(userId);
 

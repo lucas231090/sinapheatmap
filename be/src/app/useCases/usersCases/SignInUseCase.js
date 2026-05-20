@@ -4,7 +4,18 @@ const UsersRepository = require("../../repositories/UserRepository");
 const env = require("../../configs/env");
 const InvalidCredentials = require("../../errors/InvalidCredentials");
 
+/**
+ * UseCase for user authentication (Sign In).
+ */
 class SignInUseCase {
+  /**
+   * Executes the sign-in logic.
+   * @param {Object} credentials - The user's credentials.
+   * @param {string} credentials.email - The user's email address.
+   * @param {string} credentials.password - The user's plaintext password.
+   * @returns {Promise<Object>} A promise resolving to an object containing the JWT access token and user information.
+   * @throws {InvalidCredentials} If the email is not found or the password does not match.
+   */
   async execute({ email, password }) {
     const user = await UsersRepository.findByEmail(email);
 

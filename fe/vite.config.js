@@ -5,10 +5,14 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const defaultApiTarget = "http://localhost:3333";
+
+if (!process.env.VITE_API_BASE_URL) {
+  console.error("ERRO: VITE_API_BASE_URL não está definida nas variáveis de ambiente!");
+  process.exit(1);
+}
 
 function normalizeTarget(rawTarget) {
-  const target = String(rawTarget || defaultApiTarget).trim();
+  const target = String(rawTarget).trim();
 
   if (/^https?:\/\//i.test(target)) {
     return target;

@@ -6,7 +6,18 @@ const FileRepository = require("../../repositories/FileRepository");
 const logger = require("../../configs/logger");
 const { uploadsJsonDir } = require("../../configs/uploadsPaths");
 
+/**
+ * UseCase for uploading and processing a basic CSV file, mapping specific keys to x, y, and value coordinates.
+ */
 class UploadCsvUseCase {
+  /**
+   * Executes the CSV processing and saves the JSON representation.
+   * @param {Object} file - The file object from multer containing `path` and `filename`.
+   * @param {string} filename - The desired name for the file.
+   * @param {string} description - A description for the file.
+   * @returns {Promise<Object>} A promise resolving to the created file record in the repository.
+   * @throws {Error} If filename is missing or an error occurs during parsing/saving.
+   */
   async execute(file, filename, description) {
     if (!filename) {
       if (file) {

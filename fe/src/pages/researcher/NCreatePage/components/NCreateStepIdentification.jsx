@@ -33,7 +33,7 @@ function ParticipantTable({ participants, onChange, onAddRow, onRemoveRow }) {
                   onChange(participant.id, "name", event.target.value)
                 }
                 placeholder="Nome"
-                className="w-full rounded-2xl border border-black/15 bg-slate-100 px-3 py-2 text-sm text-black placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
+                className="w-full rounded-2xl border border-black/15 bg-slate-100 px-3 py-2 text-sm text-black placeholder:text-slate-500 focus:border-sinapgreen-500 focus:outline-none"
               />
               <input
                 value={participant.cpf}
@@ -41,7 +41,7 @@ function ParticipantTable({ participants, onChange, onAddRow, onRemoveRow }) {
                   onChange(participant.id, "cpf", event.target.value)
                 }
                 placeholder="CPF"
-                className="w-full rounded-2xl border border-black/15 bg-slate-100 px-3 py-2 text-sm text-black placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
+                className="w-full rounded-2xl border border-black/15 bg-slate-100 px-3 py-2 text-sm text-black placeholder:text-slate-500 focus:border-sinapgreen-500 focus:outline-none"
               />
               <button
                 type="button"
@@ -99,7 +99,7 @@ export default function NCreateStepIdentification({
         <label className="flex items-start gap-3">
           <input
             type="checkbox"
-            className="mt-1 h-4 w-4 accent-[#00C8E6]"
+            className="mt-1 h-4 w-4 accent-sinapgreen-500"
             checked={identification.required}
             onChange={(event) =>
               onIdentificationChange("required", event.target.checked)
@@ -135,7 +135,7 @@ export default function NCreateStepIdentification({
                   onIdentificationChange("mode", event.target.value)
                 }
                 disabled={!identification.required}
-                className="h-4 w-4 accent-[#00C8E6]"
+                className="h-4 w-4 accent-sinapgreen-500"
               />
               {option.label}
             </label>

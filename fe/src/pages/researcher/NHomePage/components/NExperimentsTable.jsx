@@ -58,7 +58,7 @@ export default function NExperimentsTable({
     <section className="rounded-[2rem] bg-white p-4 shadow-[0_18px_50px_rgba(0,0,0,0.16)] sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.35em] text-cyan-700">
+          <p className="text-xs font-bold uppercase tracking-[0.35em] text-sinapgreen-800">
             Testes criados
           </p>
           <h2 className="mt-2 text-2xl font-black uppercase tracking-tight text-black sm:text-3xl">
@@ -134,46 +134,56 @@ export default function NExperimentsTable({
                       {experiment.piecesCount}
                     </td>
                     <td className="px-4 py-4">
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                          experiment.active
-                            ? "bg-cyan-100 text-cyan-900"
-                            : "bg-slate-200 text-slate-700"
-                        }`}
-                      >
-                        {experiment.active ? "Ativo" : "Inativo"}
-                      </span>
+                      {experiment.isImported ? (
+                        <span className="inline-flex rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-900">
+                          Importado
+                        </span>
+                      ) : (
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                            experiment.active
+                              ? "bg-sinapgreen-100 text-sinapgreen-900"
+                              : "bg-slate-200 text-slate-700"
+                          }`}
+                        >
+                          {experiment.active ? "Ativo" : "Inativo"}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-4 text-right">
                       <div className="flex flex-wrap justify-end gap-2">
                         <Link
                           to={`/edit/${experiment.id}`}
-                          className="inline-flex items-center justify-center gap-2 rounded-full bg-[#00C8E6] px-4 py-2 text-xs font-semibold text-black shadow-sm transition hover:bg-[#11b5d1]"
+                          className="inline-flex items-center justify-center gap-2 rounded-full bg-sinapgreen-500 px-4 py-2 text-xs font-semibold text-black shadow-sm transition hover:bg-sinapgreen-800"
                         >
                           Editar
                           <ArrowForwardIcon fontSize="inherit" />
                         </Link>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyLink(experiment.id)}
-                          className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-black shadow-sm transition hover:bg-slate-50"
-                        >
-                          {copiedExperimentId === experiment.id
-                            ? "Link copiado"
-                            : "Copiar link"}
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busyExperimentId === experiment.id}
-                          onClick={() => handleToggleStatus(experiment)}
-                          className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-black shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {busyExperimentId === experiment.id
-                            ? "Salvando..."
-                            : experiment.active
-                            ? "Desativar"
-                            : "Ativar"}
-                        </button>
+                        {!experiment.isImported && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleCopyLink(experiment.id)}
+                              className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-black shadow-sm transition hover:bg-slate-50"
+                            >
+                              {copiedExperimentId === experiment.id
+                                ? "Link copiado"
+                                : "Copiar link"}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busyExperimentId === experiment.id}
+                              onClick={() => handleToggleStatus(experiment)}
+                              className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-black shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {busyExperimentId === experiment.id
+                                ? "Salvando..."
+                                : experiment.active
+                                ? "Desativar"
+                                : "Ativar"}
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

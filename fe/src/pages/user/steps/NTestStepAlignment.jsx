@@ -32,7 +32,7 @@ export default function NTestStepAlignment({
         <button
           onClick={startCamera}
           disabled={!mpLoaded}
-          className="px-6 py-3 bg-cyan-600 rounded-full font-bold mt-20 disabled:opacity-50"
+          className="px-6 py-3 bg-sinapgreen-800 rounded-full font-bold mt-20 disabled:opacity-50"
         >
           {mpLoaded ? "Ativar Câmera" : "Carregando Modelos..."}
         </button>

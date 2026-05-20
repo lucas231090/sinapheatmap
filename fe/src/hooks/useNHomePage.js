@@ -34,6 +34,7 @@ function normalizeExperiment(record) {
     createdAt: formatDateTime(jsonData?.createdAt || record?.createdAt),
     samplesCount: samples.length,
     piecesCount: pieces.length,
+    isImported: Boolean(jsonData?.basic?.isImported),
   };
 }
 
