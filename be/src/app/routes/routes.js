@@ -25,8 +25,26 @@ routes.get("/eyetracking/:_id/sessions", EyeTrackingController.getSessions);
 
 // Servir arquivos de mídia: público para que a visualização do heatmap carregue a imagem/vídeo
 routes.get("/uploads/media/:filename", (req, res) => {
-  const filePath = path.join(uploadsMediaDir, req.params.filename);
-  res.sendFile(filePath);
+  const requested = req.params.filename;
+  const filePath = path.join(uploadsMediaDir, requested);
+
+  console.info("/uploads/media request for:", { requested, filePath });
+
+  try {
+    if (!require("fs").existsSync(filePath)) {
+      console.warn("Requested media not found:", filePath);
+      return res.status(404).send("Not found");
+    }
+
+    return res.sendFile(filePath);
+  } catch (err) {
+    console.error(
+      "Error serving media file:",
+      filePath,
+      err.stack || err.message,
+    );
+    return res.status(500).send("Error serving media");
+  }
 });
 
 // ─── Middleware de Autenticação ───────────────────────────────────────────────

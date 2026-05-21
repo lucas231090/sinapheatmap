@@ -49,6 +49,22 @@ class FileRepository {
   }
 
   /**
+   * Counts how many file records still reference a given media path.
+   * @param {string} mediaPath - The media path to search for.
+   * @param {string} [excludeId] - Optional file ID to exclude from the count.
+   * @returns {Promise<number>} The number of matching records.
+   */
+  async countByMediaPath(mediaPath, excludeId = null) {
+    const query = { mediaPath };
+
+    if (excludeId) {
+      query._id = { $ne: excludeId };
+    }
+
+    return await File.countDocuments(query);
+  }
+
+  /**
    * Updates a file by its database ID.
    * @param {string} id - The MongoDB ObjectID of the file.
    * @param {Object} updateData - An object containing fields to update.

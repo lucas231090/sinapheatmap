@@ -205,6 +205,13 @@ class EyeTrackingController {
 
       fs.renameSync(mediaFile.path, destinationPath);
 
+      // Log location and verify file existence for debugging uploads
+      logger.info("Uploaded media moved to: %s", destinationPath);
+      logger.info(
+        "File exists after move: %s",
+        fs.existsSync(destinationPath) ? "yes" : "no",
+      );
+
       return response.status(201).json({
         mediaPath: `/app/uploads/media/${filename}`,
         mediaUrl: `/uploads/media/${filename}`,

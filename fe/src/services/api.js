@@ -64,7 +64,10 @@ export const getPublicMediaUrl = (mediaPath) => {
     .replace("/uploads/media/", "")
     .replace(/^\//, "");
 
-  return `${config.API_BASE_URL}/uploads/media/${cleanPath}`;
+  // encodeURIComponent so filenames with spaces or special chars are safe in URLs
+  return `${config.API_BASE_URL}/uploads/media/${encodeURIComponent(
+    cleanPath,
+  )}`;
 };
 
 /**

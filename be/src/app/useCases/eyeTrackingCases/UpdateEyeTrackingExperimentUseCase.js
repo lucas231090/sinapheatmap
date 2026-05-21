@@ -3,12 +3,40 @@ const path = require("path");
 
 const FileRepository = require("../../repositories/FileRepository");
 const { uploadsJsonDir } = require("../../configs/uploadsPaths");
-const { createExperimentSchema, getExperimentValidationError } = require("./EyeTrackingValidation");
+const {
+  createExperimentSchema,
+  getExperimentValidationError,
+} = require("./EyeTrackingValidation");
 
 /**
  * UseCase to update an Eye Tracking Experiment.
  */
 class UpdateEyeTrackingExperimentUseCase {
+  extractUpdatedMediaPath(experimentData) {
+    const pieces = Array.isArray(experimentData?.pieces)
+      ? experimentData.pieces
+      : [];
+
+    for (const piece of pieces) {
+      const candidate =
+        piece?.mediaPath ||
+        (typeof piece?.sourceUrl === "string" &&
+        piece.sourceUrl.startsWith("/app/uploads/media/")
+          ? piece.sourceUrl
+          : null) ||
+        (typeof piece?.previewUrl === "string" &&
+        piece.previewUrl.startsWith("/app/uploads/media/")
+          ? piece.previewUrl
+          : null);
+
+      if (candidate) {
+        return candidate;
+      }
+    }
+
+    return null;
+  }
+
   /**
    * Executes the update of an eye tracking experiment.
    * @param {string} id - The ID of the experiment to update.
@@ -28,8 +56,16 @@ class UpdateEyeTrackingExperimentUseCase {
       throw error;
     }
 
-    const { name: filename, description = "", experiment: experimentData } = validatedData;
+    const {
+      name: filename,
+      description = "",
+      experiment: experimentData,
+    } = validatedData;
     const existingFile = await FileRepository.getFileById(id);
+    const previousMediaPath = existingFile?.mediaPath || null;
+    const updatedMediaPath = this.extractUpdatedMediaPath(experimentData);
+    const updatedMediaType =
+      experimentData?.pieces?.[0]?.previewKind === "video" ? 1 : 0;
 
     if (!existingFile) {
       return null;
@@ -51,6 +87,11 @@ class UpdateEyeTrackingExperimentUseCase {
       updatedBy,
     };
 
+    if (updatedMediaPath) {
+      dataToSave.mediaPath = updatedMediaPath;
+      dataToSave.mediaType = updatedMediaType;
+    }
+
     if (!fs.existsSync(uploadsJsonDir)) {
       fs.mkdirSync(uploadsJsonDir, { recursive: true });
     }
@@ -66,12 +107,33 @@ class UpdateEyeTrackingExperimentUseCase {
 
     fs.writeFileSync(jsonPath, JSON.stringify(dataToSave, null, 2));
 
-    return await FileRepository.updateFile(id, {
+    const updatedFile = await FileRepository.updateFile(id, {
       filename: filename || existingFile.filename,
       description,
       jsonData: dataToSave,
       path: jsonPath,
+      ...(updatedMediaPath
+        ? { mediaPath: updatedMediaPath, mediaType: updatedMediaType }
+        : {}),
     });
+
+    if (
+      previousMediaPath &&
+      updatedMediaPath &&
+      previousMediaPath !== updatedMediaPath &&
+      fs.existsSync(previousMediaPath)
+    ) {
+      const remainingRefs = await FileRepository.countByMediaPath(
+        previousMediaPath,
+        id,
+      );
+
+      if (remainingRefs === 0) {
+        fs.unlinkSync(previousMediaPath);
+      }
+    }
+
+    return updatedFile;
   }
 }
 
