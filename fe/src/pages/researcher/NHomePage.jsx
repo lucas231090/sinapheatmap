@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import FileUploadIcon from "@mui/icons-material/FileUpload";
 
 import NExperimentsTable from "@/pages/researcher/NHomePage/components/NExperimentsTable";
 import { useNHomePage } from "@/hooks/useNHomePage";
@@ -7,59 +9,47 @@ function NHomePage() {
   const { experiments, isLoading, error, stats, refresh } = useNHomePage();
 
   return (
-    <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="rounded-[2rem] bg-white p-6 shadow-[0_18px_50px_rgba(0,0,0,0.16)] sm:p-8">
-        <p className="text-xs font-bold uppercase tracking-[0.35em] text-sinapgreen-800">
-          Eyetracking
-        </p>
-        <h1 className="mt-2 text-3xl font-black uppercase tracking-tight sm:text-4xl lg:text-5xl">
-          Página inicial
-        </h1>
-        <p className="mt-4 max-w-2xl text-sm text-slate-600 sm:text-base">
-          Acompanhe os testes criados e acesse rapidamente a criação de um novo
-          experimento.
-        </p>
+    <section className="flex flex-col gap-10">
+      <div className="rounded-[2rem] bg-white p-6 shadow-[0_18px_50px_rgba(0,0,0,0.12)] sm:p-8">
+        <div className="max-w-3xl">
+          <p className="text-xs font-bold uppercase tracking-[0.35em] text-sinapgreen-800">
+            Painel do pesquisador
+          </p>
+          <h1 className="mt-3 text-3xl font-black uppercase tracking-tight text-black sm:text-4xl lg:text-5xl">
+            Página inicial
+          </h1>
+          <p className="mt-4 text-sm text-slate-600 sm:text-base">
+            Acompanhe os testes criados, crie novos experimentos e importe dados
+            sem sair da visão geral.
+          </p>
+        </div>
 
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
           <Link
             to="/create"
-            className="inline-flex items-center justify-center rounded-full bg-sinapgreen-500 px-5 py-3 text-sm font-semibold text-black shadow-lg shadow-sinapgreen-500/20 transition hover:bg-sinapgreen-800"
+            className="inline-flex h-full min-h-20 items-center justify-center gap-3 rounded-[1.5rem] border border-slate-200 bg-white px-6 py-5 text-base font-semibold text-black shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-lg"
           >
+            <AddCircleOutlineIcon fontSize="small" />
             Criar experimento
           </Link>
           <Link
             to="/import"
-            className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:bg-slate-50"
+            className="inline-flex h-full min-h-20 items-center justify-center gap-3 rounded-[1.5rem] border border-slate-200 bg-white px-6 py-5 text-base font-semibold text-black shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-lg"
           >
+            <FileUploadIcon fontSize="small" />
             Importar teste
           </Link>
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        {[
-          { label: "Total de testes", value: stats.total },
-          { label: "Testes ativos", value: stats.active },
-          { label: "Testes inativos", value: stats.inactive },
-        ].map((item) => (
-          <div
-            key={item.label}
-            className="rounded-[1.75rem] bg-white p-5 shadow-[0_18px_50px_rgba(0,0,0,0.12)]"
-          >
-            <p className="text-xs font-bold uppercase tracking-[0.3em] text-sinapgreen-800">
-              {item.label}
-            </p>
-            <p className="mt-3 text-3xl font-black text-black">{item.value}</p>
-          </div>
-        ))}
+      <div className="flex flex-col gap-10">
+        <NExperimentsTable
+          experiments={experiments}
+          isLoading={isLoading}
+          error={error}
+          onRefresh={refresh}
+        />
       </div>
-
-      <NExperimentsTable
-        experiments={experiments}
-        isLoading={isLoading}
-        error={error}
-        onRefresh={refresh}
-      />
     </section>
   );
 }

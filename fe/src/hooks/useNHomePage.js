@@ -23,18 +23,46 @@ function formatDateTime(value) {
 
 function normalizeExperiment(record) {
   const jsonData = record?.jsonData || {};
-  const samples = Array.isArray(jsonData.samples) ? jsonData.samples : [];
-  const pieces = Array.isArray(jsonData.pieces) ? jsonData.pieces : [];
+  const isOldImported = Array.isArray(jsonData);
+  const rawBasic = jsonData?.basic || {};
+
+  const samples = isOldImported
+    ? []
+    : Array.isArray(jsonData.samples)
+    ? jsonData.samples
+    : [];
+  const pieces = isOldImported
+    ? []
+    : Array.isArray(jsonData.pieces)
+    ? jsonData.pieces
+    : [];
+  const normalizedParticipants = isOldImported
+    ? []
+    : Array.isArray(jsonData.participants)
+    ? jsonData.participants
+    : [];
 
   return {
     id: record?._id || record?.id || crypto.randomUUID(),
-    name: record?.filename || jsonData?.basic?.name || "Sem nome",
-    description: record?.description || jsonData?.basic?.description || "",
+    name: record?.filename || rawBasic?.name || "Sem nome",
+    description: record?.description || rawBasic?.description || "",
     active: Boolean(record?.active),
-    createdAt: formatDateTime(jsonData?.createdAt || record?.createdAt),
-    samplesCount: samples.length,
-    piecesCount: pieces.length,
-    isImported: Boolean(jsonData?.basic?.isImported),
+    isImported: Boolean(rawBasic?.isImported) || isOldImported,
+    createdAt: formatDateTime(
+      isOldImported
+        ? record?.createdAt
+        : jsonData?.createdAt || record?.createdAt,
+    ),
+    createdAtValue: isOldImported
+      ? record?.createdAt || ""
+      : jsonData?.createdAt || record?.createdAt || "",
+    startDate: formatDateTime(rawBasic?.startDate || record?.startDate),
+    endDate: formatDateTime(rawBasic?.endDate || record?.endDate),
+    startDateValue: rawBasic?.startDate || record?.startDate || "",
+    endDateValue: rawBasic?.endDate || record?.endDate || "",
+    participantsCount: normalizedParticipants.length,
+    samplesCount: isOldImported ? jsonData.length : samples.length,
+    piecesCount: isOldImported ? 1 : pieces.length,
   };
 }
 
@@ -45,13 +73,11 @@ export function useNHomePage() {
   const [error, setError] = useState("");
 
   const loadExperiments = useCallback(async () => {
-    console.debug("useNHomePage: loadExperiments start");
     setIsLoading(true);
     setError("");
 
     try {
       const response = await getExperiments();
-      console.debug("useNHomePage: getExperiments response:", response);
       const normalizedList = Array.isArray(response)
         ? response.map(normalizeExperiment)
         : [];

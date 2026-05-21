@@ -48,6 +48,26 @@ export const getApiErrorMessage = (
 };
 
 /**
+ * Retorna a URL pública para acessar uma mídia (imagem/vídeo).
+ * @param {string} mediaPath - O caminho da mídia.
+ * @returns {string} URL completa.
+ */
+export const getPublicMediaUrl = (mediaPath) => {
+  if (!mediaPath) return "";
+  if (mediaPath.startsWith("http")) return mediaPath;
+  if (mediaPath.startsWith("data:") || mediaPath.startsWith("blob:")) {
+    return mediaPath;
+  }
+
+  const cleanPath = mediaPath
+    .replace("/app/uploads/media/", "")
+    .replace("/uploads/media/", "")
+    .replace(/^\//, "");
+
+  return `${config.API_BASE_URL}/uploads/media/${cleanPath}`;
+};
+
+/**
  * Obtém o token de acesso armazenado localmente.
  * Primeiro tenta buscar no localStorage direto e depois no authStorage.
  * @returns {string} O token de acesso ou uma string vazia se não encontrado.

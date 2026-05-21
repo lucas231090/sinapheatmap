@@ -53,8 +53,10 @@ export function createEmptyPiece(sampleId = "") {
     fileName: "",
     mimeType: "",
     previewUrl: "",
+    mediaPath: "",
     exposureSeconds: "10",
     previewKind: "image",
+    imageDisplayMode: "original",
   };
 }
 
@@ -200,6 +202,9 @@ export function normalizeExperimentRecord(record) {
         rawExperiment?.basic?.description ||
         record?.description ||
         baseState.basic.description,
+      isImported:
+        rawExperiment?.basic?.isImported || Array.isArray(record?.jsonData),
+      recordId: record?._id || record?.id,
     },
     identification: {
       ...baseState.identification,
@@ -228,9 +233,11 @@ export function normalizeExperimentRecord(record) {
       fileName: piece?.fileName || "",
       mimeType: piece?.mimeType || "",
       previewUrl: piece?.previewUrl || "",
+      mediaPath: piece?.mediaPath || "",
       exposureSeconds: String(piece?.exposureSeconds || "10"),
       previewKind:
         piece?.previewKind || (isVideoSource(piece || {}) ? "video" : "image"),
+      imageDisplayMode: piece?.imageDisplayMode || "original",
     })),
   };
 
@@ -241,7 +248,15 @@ export function normalizeExperimentRecord(record) {
 }
 
 export function buildExperimentPayload(experiment, options = {}) {
-  const serializablePieces = experiment.pieces.map((piece) => ({ ...piece }));
+  const serializablePieces = experiment.pieces.map((piece) => ({
+    ...piece,
+    previewUrl:
+      piece.previewUrl &&
+      !piece.previewUrl.startsWith("data:") &&
+      !piece.previewUrl.startsWith("blob:")
+        ? piece.previewUrl
+        : "",
+  }));
   const createdAt = options.createdAt || new Date().toISOString();
 
   return {
