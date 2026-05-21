@@ -18,6 +18,22 @@ const trackingPointSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    normalized_x: {
+      type: Number,
+      default: null,
+    },
+    normalized_y: {
+      type: Number,
+      default: null,
+    },
+    screen_width: {
+      type: Number,
+      default: null,
+    },
+    screen_height: {
+      type: Number,
+      default: null,
+    },
   },
   { _id: false },
 );

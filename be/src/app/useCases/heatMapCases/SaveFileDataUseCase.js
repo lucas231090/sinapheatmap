@@ -30,14 +30,28 @@ class SaveFileDataUseCase {
 
     const jsonPath = path.join(jsonDir, jsonFilename);
 
-    fs.writeFileSync(jsonPath, JSON.stringify(processedData, null, 2));
-
     const mediaPath = fileData.mediaPath
       ? path.join(mediaDir, path.basename(fileData.mediaPath))
       : null;
 
     if (mediaPath && fs.existsSync(fileData.mediaPath)) {
       fs.renameSync(fileData.mediaPath, mediaPath);
+    }
+
+    if (mediaPath && processedData?.pieces) {
+      fs.writeFileSync(jsonPath, JSON.stringify(processedData, null, 2));
+      const publicMediaUrl = `/app/uploads/media/${path.basename(mediaPath)}`;
+
+      processedData.pieces = processedData.pieces.map((piece) => {
+        if (!piece || piece.sourceType !== "file") {
+          return piece;
+        }
+
+        return {
+          ...piece,
+          sourceUrl: publicMediaUrl,
+        };
+      });
     }
 
     const savedFile = await FileRepository.create({

@@ -6,6 +6,12 @@ const GetPublicEyeTrackingExperimentUseCase = require("../useCases/eyeTrackingCa
 const UpdateEyeTrackingExperimentUseCase = require("../useCases/eyeTrackingCases/UpdateEyeTrackingExperimentUseCase");
 const UpdateFileStatusUseCase = require("../useCases/eyeTrackingCases/UpdateFileStatusUseCase");
 const CreateEyeTrackingSessionUseCase = require("../useCases/eyeTrackingCases/CreateEyeTrackingSessionUseCase");
+const GetEyeTrackingSessionsUseCase = require("../useCases/eyeTrackingCases/GetEyeTrackingSessionsUseCase");
+const DeleteEyeTrackingExperimentUseCase = require("../useCases/eyeTrackingCases/DeleteEyeTrackingExperimentUseCase");
+const upload = require("../configs/multerConfig");
+const fs = require("fs");
+const path = require("path");
+const { uploadsMediaDir } = require("../configs/uploadsPaths");
 const logger = require("../configs/logger");
 
 /**
@@ -20,10 +26,11 @@ class EyeTrackingController {
    */
   async store(request, response) {
     try {
-      const createdExperiment = await CreateEyeTrackingExperimentUseCase.execute(
-        request.body,
-        request.userId || null
-      );
+      const createdExperiment =
+        await CreateEyeTrackingExperimentUseCase.execute(
+          request.body,
+          request.userId || null,
+        );
 
       logger.info("Experimento de eyetracking criado: %s", request.body.name);
 
@@ -39,7 +46,9 @@ class EyeTrackingController {
       }
 
       if (error.status) {
-        return response.status(error.status).json({ error: error.message, details: error.details });
+        return response
+          .status(error.status)
+          .json({ error: error.message, details: error.details });
       }
 
       if (error.code === "EXPERIMENT_ALREADY_EXISTS") {
@@ -113,7 +122,8 @@ class EyeTrackingController {
     }
 
     try {
-      const experiment = await GetPublicEyeTrackingExperimentUseCase.execute(_id);
+      const experiment =
+        await GetPublicEyeTrackingExperimentUseCase.execute(_id);
 
       if (!experiment) {
         logger.warn("Teste indisponível no momento: %s", _id);
@@ -138,7 +148,15 @@ class EyeTrackingController {
    */
   async storeSession(request, response) {
     try {
-      const savedSession = await CreateEyeTrackingSessionUseCase.execute(request.body);
+      // Requested by user: console log to see if the data is being sent correctly
+      console.log("====================================");
+      console.log("Recebendo dados de Sessão de Eyetracking:");
+      console.log(JSON.stringify(request.body, null, 2));
+      console.log("====================================");
+
+      const savedSession = await CreateEyeTrackingSessionUseCase.execute(
+        request.body,
+      );
 
       logger.info("Sessão de eyetracking salva: %s", request.body.sessao_id);
 
@@ -155,6 +173,70 @@ class EyeTrackingController {
 
       logger.error("Erro ao salvar sessão: %s", error.message);
       return response.status(500).json({ error: "Erro ao salvar a sessão" });
+    }
+  }
+
+  async uploadMedia(request, response) {
+    upload.single("mediaFile")(request, response, (err) => {
+      if (err) {
+        logger.error("Erro ao fazer upload da midia: %s", err.message);
+        return response.status(400).json({ error: err.message });
+      }
+
+      const mediaFile = request.file;
+
+      if (!mediaFile) {
+        return response
+          .status(400)
+          .json({ error: "Envie um arquivo de mídia." });
+      }
+
+      if (!fs.existsSync(uploadsMediaDir)) {
+        fs.mkdirSync(uploadsMediaDir, { recursive: true });
+      }
+
+      const extension = path.extname(mediaFile.originalname);
+      const baseName = path.basename(
+        mediaFile.filename || mediaFile.originalname,
+        extension,
+      );
+      const filename = `${Date.now()}-${baseName}${extension}`;
+      const destinationPath = path.join(uploadsMediaDir, filename);
+
+      fs.renameSync(mediaFile.path, destinationPath);
+
+      return response.status(201).json({
+        mediaPath: `/app/uploads/media/${filename}`,
+        mediaUrl: `/uploads/media/${filename}`,
+        fileName: mediaFile.originalname,
+        mimeType: mediaFile.mimetype,
+        mediaType: mediaFile.mimetype.startsWith("video/") ? 1 : 0,
+      });
+    });
+  }
+
+  /**
+   * Retrieves all sessions for an Eye Tracking experiment.
+   * @param {Object} request - The HTTP request object.
+   * @param {Object} response - The HTTP response object.
+   * @returns {Promise<Object>} The HTTP response with the sessions.
+   */
+  async getSessions(request, response) {
+    const { _id } = request.params;
+
+    try {
+      const sessions = await GetEyeTrackingSessionsUseCase.execute(_id);
+      logger.info("Sessões retornadas para o experimento ID: %s", _id);
+      return response.status(200).json(sessions);
+    } catch (error) {
+      if (error.status) {
+        return response.status(error.status).json({ error: error.message });
+      }
+
+      logger.error("Erro ao buscar sessões do experimento: %s", error.message);
+      return response
+        .status(500)
+        .json({ error: "Erro ao buscar sessões do experimento" });
     }
   }
 
@@ -191,11 +273,12 @@ class EyeTrackingController {
         return response.status(200).json(updatedFile);
       }
 
-      const updatedExperiment = await UpdateEyeTrackingExperimentUseCase.execute(
-        _id,
-        request.body,
-        request.userId || null
-      );
+      const updatedExperiment =
+        await UpdateEyeTrackingExperimentUseCase.execute(
+          _id,
+          request.body,
+          request.userId || null,
+        );
 
       if (!updatedExperiment) {
         logger.warn("Teste não encontrado para o ID: %s", _id);
@@ -215,7 +298,9 @@ class EyeTrackingController {
       }
 
       if (error.status) {
-        return response.status(error.status).json({ error: error.message, details: error.details });
+        return response
+          .status(error.status)
+          .json({ error: error.message, details: error.details });
       }
 
       if (error.code === "EXPERIMENT_ALREADY_EXISTS") {
@@ -223,7 +308,42 @@ class EyeTrackingController {
       }
 
       logger.error("Erro ao atualizar o experimento: %s", error.message);
-      return response.status(500).json({ error: "Erro ao atualizar o experimento" });
+      return response
+        .status(500)
+        .json({ error: "Erro ao atualizar o experimento" });
+    }
+  }
+
+  /**
+   * Deletes an existing Eye Tracking experiment.
+   * @param {Object} request - The HTTP request object.
+   * @param {Object} response - The HTTP response object.
+   * @returns {Promise<Object>} The HTTP response with success or error message.
+   */
+  async delete(request, response) {
+    const { _id } = request.params;
+
+    if (!isValidId(_id)) {
+      logger.warn("ID inválido: %s", _id);
+      return response.status(400).json({ error: "ID inválido" });
+    }
+
+    try {
+      await DeleteEyeTrackingExperimentUseCase.execute(_id);
+
+      logger.info("Experimento deletado com sucesso: %s", _id);
+      return response.status(200).json({
+        message: "Experimento deletado com sucesso",
+      });
+    } catch (error) {
+      if (error.status) {
+        return response.status(error.status).json({ error: error.message });
+      }
+
+      logger.error("Erro ao deletar o experimento: %s", error.message);
+      return response
+        .status(500)
+        .json({ error: "Erro ao deletar o experimento" });
     }
   }
 }

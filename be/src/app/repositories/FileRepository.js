@@ -67,6 +67,14 @@ class FileRepository {
   async updateFileStatus(id, active) {
     return await File.findByIdAndUpdate(id, { active }, { new: true });
   }
+  /**
+   * Deletes a file by its database ID.
+   * @param {string} id - The MongoDB ObjectID of the file.
+   * @returns {Promise<Object|null>} A promise resolving to the deleted file document, or null if not found.
+   */
+  async deleteFile(id) {
+    return await File.findByIdAndDelete(id);
+  }
 }
 
 module.exports = new FileRepository();

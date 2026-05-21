@@ -98,6 +98,10 @@ const eyeTrackingSessionSchema = z.object({
                   x: z.coerce.number(),
                   y: z.coerce.number(),
                   frame: z.coerce.number(),
+                  normalized_x: z.coerce.number().optional(),
+                  normalized_y: z.coerce.number().optional(),
+                  screen_width: z.coerce.number().optional(),
+                  screen_height: z.coerce.number().optional(),
                 }),
               )
               .default([]),

@@ -21,6 +21,7 @@ routes.get("/eyetracking/:_id", EyeTrackingController.show);
 routes.get("/eyetracking/public/:_id", EyeTrackingController.publicShow);
 routes.post("/eyetracking", EyeTrackingController.store);
 routes.post("/eyetracking/sessions", EyeTrackingController.storeSession);
+routes.get("/eyetracking/:_id/sessions", EyeTrackingController.getSessions);
 
 // Servir arquivos de mídia: público para que a visualização do heatmap carregue a imagem/vídeo
 routes.get("/uploads/media/:filename", (req, res) => {
@@ -35,8 +36,10 @@ routes.use(authMiddleware);
 
 // ─── Rotas Protegidas ─────────────────────────────────────────────────────────
 routes.get("/me", routeAdapter(GetMeController));
+routes.post("/eyetracking/media", EyeTrackingController.uploadMedia);
 routes.post("/heatmap", HeatMapController.store);
 routes.put("/heatmap/:id", HeatMapController.update);
 routes.put("/eyetracking/:_id", EyeTrackingController.updateActiveStatus);
+routes.delete("/eyetracking/:_id", EyeTrackingController.delete);
 
 module.exports = routes;
