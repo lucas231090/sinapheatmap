@@ -3,6 +3,29 @@ import { shuffleArray } from "@/utils/eyeTrackingMath";
 import { getFileMedia } from "@/services/fileService";
 import { getPublicMediaUrl } from "@/services/api";
 
+const estimateCaptureFps = (points) => {
+  if (!Array.isArray(points) || points.length < 2) return 0;
+
+  const deltas = [];
+  for (let index = 1; index < points.length; index += 1) {
+    const previousTimestamp = Number(points[index - 1]?.timestamp);
+    const currentTimestamp = Number(points[index]?.timestamp);
+    const delta = currentTimestamp - previousTimestamp;
+    if (Number.isFinite(delta) && delta > 0) deltas.push(delta);
+  }
+
+  if (deltas.length === 0) return 0;
+
+  deltas.sort((a, b) => a - b);
+  const middle = Math.floor(deltas.length / 2);
+  const medianDelta =
+    deltas.length % 2 === 0
+      ? (deltas[middle - 1] + deltas[middle]) / 2
+      : deltas[middle];
+
+  return medianDelta > 0 ? Math.round(1000 / medianDelta) : 0;
+};
+
 export default function NTestStepRunner({
   experiment,
   getCurrentGaze,
@@ -24,6 +47,11 @@ export default function NTestStepRunner({
   const sessionOutput = useRef([]);
   // Armazena os rastros da peça ATUAL
   const currentEyeData = useRef([]);
+  const faceValidRef = useRef(faceValid);
+
+  useEffect(() => {
+    faceValidRef.current = faceValid;
+  }, [faceValid]);
 
   // 1. Organiza a fila de reprodução (Randomização)
   useEffect(() => {
@@ -48,40 +76,51 @@ export default function NTestStepRunner({
 
   // 2. Loop de Coleta de Dados
   useEffect(() => {
-    let interval;
-    if (phase === "EXPOSURE" && faceValid) {
-      const startTime = Date.now();
+    let frameId;
+
+    if (phase === "EXPOSURE") {
+      const startTime = performance.now();
       let frame = 0;
-      interval = setInterval(() => {
-        const gaze = getCurrentGaze();
-        if (gaze) {
-          if (showDebugGaze) {
-            setDebugGaze({
+
+      const loop = () => {
+        if (faceValidRef.current) {
+          const gaze = getCurrentGaze();
+          if (gaze) {
+            if (showDebugGaze) {
+              setDebugGaze({
+                x: gaze.x * window.innerWidth,
+                y: gaze.y * window.innerHeight,
+              });
+            }
+
+            const now = performance.now();
+            currentEyeData.current.push({
+              timestamp: now - startTime,
               x: gaze.x * window.innerWidth,
               y: gaze.y * window.innerHeight,
+              normalized_x: gaze.x,
+              normalized_y: gaze.y,
+              screen_width: window.innerWidth,
+              screen_height: window.innerHeight,
+              frame: frame++,
             });
           }
-
-          currentEyeData.current.push({
-            timestamp: Date.now() - startTime,
-            x: gaze.x * window.innerWidth,
-            y: gaze.y * window.innerHeight,
-            normalized_x: gaze.x,
-            normalized_y: gaze.y,
-            screen_width: window.innerWidth,
-            screen_height: window.innerHeight,
-            frame: frame++,
-          });
         }
-      }, 1000 / 60);
+
+        frameId = requestAnimationFrame(loop);
+      };
+
+      frameId = requestAnimationFrame(loop);
     }
 
     if (phase !== "EXPOSURE" && showDebugGaze) {
       setDebugGaze(null);
     }
 
-    return () => clearInterval(interval);
-  }, [phase, faceValid, getCurrentGaze, showDebugGaze]);
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId);
+    };
+  }, [phase, getCurrentGaze, showDebugGaze]);
 
   useEffect(() => {
     const activeSample = samplesList[currentSampleIdx];
@@ -161,10 +200,15 @@ export default function NTestStepRunner({
     if (phase === "EXPOSURE") {
       const ms = Number(activePiece.exposureSeconds) * 1000;
       const t = setTimeout(() => {
+        const captureFps = estimateCaptureFps(currentEyeData.current);
+
         // Salva os dados desta peça
         const savedPiece = {
           peca_id: activePiece.id,
           ordem_apresentacao: currentPieceIdx + 1,
+          exposure_seconds: Number(activePiece.exposureSeconds) || 0,
+          capture_fps: captureFps,
+          sample_count: currentEyeData.current.length,
           dados_eyetracking: [...currentEyeData.current],
         };
         currentEyeData.current = []; // Reseta pro próximo
