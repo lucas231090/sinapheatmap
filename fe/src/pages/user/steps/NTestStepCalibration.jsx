@@ -24,14 +24,14 @@ export default function NTestStepCalibration({
   const point = CALIBRATION_POINTS[step];
 
   return (
-    <div className="w-full h-full bg-white relative overflow-hidden">
-      <p className="absolute top-10 w-full text-center text-slate-500 font-bold">
+    <div className="relative flex h-screen bg-black w-full items-center justify-center overflow-hidden p-8 text-white">
+      <p className="absolute top-10 w-full text-center font-bold text-white/80">
         Olhe fixamente para a bolinha azul e clique nela. ({step + 1}/
         {CALIBRATION_POINTS.length})
       </p>
 
       {!faceValid && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white p-4 rounded-xl z-50 animate-pulse">
+        <div className="absolute left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 animate-pulse rounded-xl bg-red-500 p-4 text-white">
           Câmera perdeu seu rosto! Centralize-se novamente.
         </div>
       )}
@@ -44,7 +44,7 @@ export default function NTestStepCalibration({
           top: `${point.y * 100}%`,
           transform: "translate(-50%, -50%)",
         }}
-        className="w-10 h-10 bg-blue-600 rounded-full cursor-pointer shadow-[0_0_15px_rgba(37,99,235,0.8)] transition-all"
+        className="h-10 w-10 cursor-pointer rounded-full bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.8)] transition-all"
       />
     </div>
   );

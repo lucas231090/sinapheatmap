@@ -32,15 +32,17 @@ export default function NTestStepResult({
   }, [experimentId, participantInfo, sessionData]);
 
   return (
-    <div className="w-full h-full bg-[#1e293b] flex flex-col items-center justify-center text-center p-8">
+    <div className="flex h-screen w-full items-center justify-center p-8 text-center text-white">
       {status === "saving" && (
-        <h2 className="text-2xl font-bold animate-pulse">
-          Salvando seus resultados...
-        </h2>
+        <div className="rounded-[2rem] border border-white/15 bg-slate-950/35 px-8 py-6 shadow-2xl backdrop-blur-md">
+          <h2 className="text-2xl font-bold animate-pulse">
+            Salvando seus resultados...
+          </h2>
+        </div>
       )}
 
       {status === "error" && (
-        <div className="text-red-400">
+        <div className="rounded-[2rem] border border-red-300/20 bg-red-950/30 px-8 py-6 text-red-200 shadow-2xl backdrop-blur-md">
           <h2 className="text-2xl font-bold mb-2">Ops, tivemos um problema!</h2>
           <p>
             Não foi possível enviar os dados da sua sessão. Comunique o
@@ -50,23 +52,23 @@ export default function NTestStepResult({
       )}
 
       {status === "success" && (
-        <div className="animate-fade-in-up">
-          <h1 className="text-5xl font-black text-sinapgreen-500 mb-4">
+        <div className="animate-fade-in-up rounded-[2rem] border border-white/15 bg-slate-950/35 px-8 py-8 shadow-2xl backdrop-blur-md">
+          <h1 className="mb-4 text-5xl font-black text-sinapgreen-200">
             MUITO OBRIGADO POR PARTICIPAR!
           </h1>
-          <p className="text-xl text-slate-300 mb-8">
+          <p className="mb-8 text-xl text-slate-200">
             Sua contribuição é essencial para nossa pesquisa.
           </p>
 
-          <div className="inline-block bg-slate-800 rounded-xl p-6 border border-slate-700">
-            <p className="text-sm uppercase tracking-widest text-slate-400 mb-2">
+          <div className="inline-block rounded-2xl border border-white/10 bg-white/10 p-6">
+            <p className="mb-2 text-sm uppercase tracking-widest text-slate-300">
               Acompanhe nosso trabalho
             </p>
             <a
               href="https://instagram.com/sinapsenseufpr"
               target="_blank"
               rel="noreferrer"
-              className="text-2xl font-bold text-white hover:text-sinapgreen-500 transition"
+              className="text-2xl font-bold text-white transition hover:text-sinapgreen-200"
             >
               @sinapsenseufpr
             </a>

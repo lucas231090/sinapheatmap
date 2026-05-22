@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { shuffleArray } from "@/utils/eyeTrackingMath";
 import { getFileMedia } from "@/services/fileService";
+import { getPublicMediaUrl } from "@/services/api";
 
 export default function NTestStepRunner({
   experiment,
@@ -15,6 +16,9 @@ export default function NTestStepRunner({
   const [currentSampleIdx, setCurrentSampleIdx] = useState(0);
   const [currentPieceIdx, setCurrentPieceIdx] = useState(0);
   const [mediaUrl, setMediaUrl] = useState("");
+  const [debugGaze, setDebugGaze] = useState(null);
+
+  const showDebugGaze = import.meta.env.DEV;
 
   // Armazena todos os resultados finais do teste
   const sessionOutput = useRef([]);
@@ -51,17 +55,33 @@ export default function NTestStepRunner({
       interval = setInterval(() => {
         const gaze = getCurrentGaze();
         if (gaze) {
+          if (showDebugGaze) {
+            setDebugGaze({
+              x: gaze.x * window.innerWidth,
+              y: gaze.y * window.innerHeight,
+            });
+          }
+
           currentEyeData.current.push({
             timestamp: Date.now() - startTime,
-            x: gaze.x,
-            y: gaze.y,
+            x: gaze.x * window.innerWidth,
+            y: gaze.y * window.innerHeight,
+            normalized_x: gaze.x,
+            normalized_y: gaze.y,
+            screen_width: window.innerWidth,
+            screen_height: window.innerHeight,
             frame: frame++,
           });
         }
       }, 1000 / 60);
     }
+
+    if (phase !== "EXPOSURE" && showDebugGaze) {
+      setDebugGaze(null);
+    }
+
     return () => clearInterval(interval);
-  }, [phase, faceValid, getCurrentGaze]); // Adicionado getCurrentGaze
+  }, [phase, faceValid, getCurrentGaze, showDebugGaze]);
 
   useEffect(() => {
     const activeSample = samplesList[currentSampleIdx];
@@ -74,7 +94,17 @@ export default function NTestStepRunner({
     }
 
     if (activePiece.sourceType === "url" && activePiece.sourceUrl) {
-      setMediaUrl(activePiece.sourceUrl);
+      setMediaUrl(getPublicMediaUrl(activePiece.sourceUrl));
+      return undefined;
+    }
+
+    if (activePiece.sourceUrl) {
+      setMediaUrl(getPublicMediaUrl(activePiece.sourceUrl));
+      return undefined;
+    }
+
+    if (activePiece.mediaPath) {
+      setMediaUrl(getPublicMediaUrl(activePiece.mediaPath));
       return undefined;
     }
 
@@ -167,8 +197,8 @@ export default function NTestStepRunner({
   // RENDERIZAÇÃO
   if (phase === "COUNTDOWN") {
     return (
-      <div className="flex items-center justify-center w-full h-full bg-black">
-        <div className="w-32 h-32 rounded-full border-4 border-white flex items-center justify-center animate-pulse">
+      <div className="flex h-screen bg-black w-full items-center justify-center bg-transparent">
+        <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-white bg-slate-950/30 animate-pulse backdrop-blur-md">
           <span className="text-6xl font-bold">
             {count === 0 ? "!" : count}
           </span>
@@ -179,10 +209,10 @@ export default function NTestStepRunner({
 
   if (phase === "PAUSE") {
     return (
-      <div className="flex items-center justify-center w-full h-full bg-sinapgreen-800">
-        <div className="bg-white text-black p-8 rounded-2xl text-center max-w-md shadow-2xl">
+      <div className="flex h-screen w-full items-center justify-center bg-transparent p-8">
+        <div className="max-w-md rounded-[2rem] border border-white/15 bg-slate-950/35 p-8 text-center text-white shadow-2xl backdrop-blur-md">
           <h2 className="text-2xl font-bold mb-4">Etapa Concluída</h2>
-          <p className="mb-6 text-slate-600">
+          <p className="mb-6 text-slate-200">
             Você finalizou uma etapa do teste. Descanse os olhos e clique abaixo
             quando estiver pronto.
           </p>
@@ -193,7 +223,7 @@ export default function NTestStepRunner({
               setCount(3);
               setPhase("COUNTDOWN");
             }}
-            className="px-6 py-3 bg-sinapgreen-500 font-bold rounded-full w-full"
+            className="w-full rounded-full bg-sinapgreen-500 px-6 py-3 font-bold text-black"
           >
             Ir para próxima amostra
           </button>
@@ -204,9 +234,9 @@ export default function NTestStepRunner({
   if (phase === "EXPOSURE" && samplesList.length > 0) {
     const activePiece = samplesList[currentSampleIdx].pieces[currentPieceIdx];
     const isVideo = activePiece.previewKind === "video";
-
+    const shouldCover = activePiece.imageDisplayMode === "cover";
     return (
-      <div className="w-full h-full bg-black flex items-center justify-center relative">
+      <div className="relative h-screen w-full overflow-hidden bg-black">
         {!faceValid && (
           <div className="absolute top-5 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-1 rounded-full z-50 animate-pulse font-bold shadow-lg">
             Atenção: Seu rosto saiu da área de rastreio!
@@ -219,27 +249,46 @@ export default function NTestStepRunner({
           </div>
         )}
 
-        {isVideo ? (
-          <video
-            src={mediaUrl}
-            autoPlay
-            muted
-            // Opcional: loop (adicione se quiser que o vídeo repita até o tempo de exposição acabar)
-            className={`max-w-full max-h-full ${
-              activePiece.imageDisplayMode === "cover"
-                ? "object-cover w-full h-full"
-                : "object-contain"
-            }`}
-          />
-        ) : (
-          <img
-            src={mediaUrl}
-            alt="peça"
-            className={`max-w-full max-h-full ${
-              activePiece.imageDisplayMode === "cover"
-                ? "object-cover w-full h-full"
-                : "object-contain"
-            }`}
+        <div
+          className={
+            shouldCover
+              ? "absolute inset-0"
+              : "flex h-full w-full items-center justify-center"
+          }
+        >
+          {isVideo ? (
+            <video
+              src={mediaUrl}
+              autoPlay
+              muted
+              playsInline
+              className={
+                shouldCover
+                  ? "h-full w-full object-contain"
+                  : "max-h-full max-w-full object-contain"
+              }
+            />
+          ) : (
+            <img
+              src={mediaUrl}
+              alt="peça"
+              className={
+                shouldCover
+                  ? "h-full w-full object-contain"
+                  : "max-h-full max-w-full object-contain"
+              }
+            />
+          )}
+        </div>
+
+        {showDebugGaze && debugGaze && (
+          <div
+            className="pointer-events-none absolute z-[60] h-4 w-4 rounded-full border-2 border-white bg-sinapgreen-500 shadow-[0_0_18px_rgba(34,197,94,0.9)]"
+            style={{
+              left: `${debugGaze.x}px`,
+              top: `${debugGaze.y}px`,
+              transform: "translate(-50%, -50%)",
+            }}
           />
         )}
       </div>

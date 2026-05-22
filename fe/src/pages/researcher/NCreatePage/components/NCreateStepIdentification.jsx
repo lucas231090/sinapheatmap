@@ -11,6 +11,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import LoopIcon from "@mui/icons-material/Loop";
+import { formatCpf } from "@/utils/cpf";
 
 function ParticipantTable({ participants, onChange, onAddRow, onRemoveRow }) {
   return (
@@ -38,9 +39,10 @@ function ParticipantTable({ participants, onChange, onAddRow, onRemoveRow }) {
               <input
                 value={participant.cpf}
                 onChange={(event) =>
-                  onChange(participant.id, "cpf", event.target.value)
+                  onChange(participant.id, "cpf", formatCpf(event.target.value))
                 }
                 placeholder="CPF"
+                inputMode="numeric"
                 className="w-full rounded-2xl border border-black/15 bg-slate-100 px-3 py-2 text-sm text-black placeholder:text-slate-500 focus:border-sinapgreen-500 focus:outline-none"
               />
               <button

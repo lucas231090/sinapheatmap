@@ -1,3 +1,5 @@
+import { formatCpf, isValidCpf } from "@/utils/cpf";
+
 export function createId() {
   return crypto.randomUUID();
 }
@@ -108,10 +110,17 @@ export function parseParticipantRows(text) {
       return {
         id: createId(),
         name: parts[0] || "",
-        cpf: parts[1] || "",
+        cpf: parts[1] ? formatCpf(parts[1]) : "",
       };
     })
     .filter(Boolean);
+}
+
+export function hasInvalidParticipantCpf(participants = []) {
+  return participants.some((participant) => {
+    const cpf = String(participant?.cpf || "").trim();
+    return Boolean(cpf) && !isValidCpf(cpf);
+  });
 }
 
 export function sampleHasPieces(sampleId, pieces) {
@@ -163,7 +172,7 @@ export function buildParticipantsText(participants = []) {
   return participants
     .map((participant) => {
       const name = participant?.name?.trim() || "";
-      const cpf = participant?.cpf?.trim() || "";
+      const cpf = participant?.cpf?.trim() ? formatCpf(participant.cpf) : "";
       if (!name && !cpf) {
         return "";
       }

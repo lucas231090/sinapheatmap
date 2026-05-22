@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function NTestStepAlignment({
+  stream,
   mpLoaded,
   startCamera,
   cameraActive,
@@ -8,6 +9,14 @@ export default function NTestStepAlignment({
   onNext,
 }) {
   const [timeValid, setTimeValid] = useState(0);
+  const displayVideoRef = useRef(null); // Ref apenas para mostrar o rosto na UI
+
+  // Conecta o stream da câmera ao vídeo de exibição local
+  useEffect(() => {
+    if (displayVideoRef.current && stream) {
+      displayVideoRef.current.srcObject = stream;
+    }
+  }, [stream]);
 
   // Conta o tempo que o rosto está válido para liberar o botão
   useEffect(() => {
@@ -21,42 +30,65 @@ export default function NTestStepAlignment({
   }, [faceValid]);
 
   return (
-    <div className="relative w-full h-full bg-slate-900 flex flex-col items-center pt-10">
-      <h2 className="text-2xl font-bold mb-2">Alinhamento da Câmera</h2>
-      <p className="text-slate-400 mb-8 max-w-lg text-center">
-        Posicione seu rosto dentro da marcação virtual. Certifique-se de estar
-        em um ambiente iluminado.
-      </p>
+    <div className="relative flex h-screen w-full flex-col items-center justify-center p-8 text-center text-white">
+      <div className="w-full max-w-4xl rounded-[2rem] bg-slate-950/35 p-8 shadow-[0_24px_80px_rgba(0,0,0,0.32)] backdrop-blur-md">
+        <h2 className="mb-2 text-2xl font-bold">Alinhamento da Câmera</h2>
+        <p className="mx-auto mb-8 max-w-lg text-slate-300">
+          Posicione seu rosto dentro da marcação virtual. Certifique-se de estar
+          em um ambiente iluminado.
+        </p>
 
-      {!cameraActive && (
-        <button
-          onClick={startCamera}
-          disabled={!mpLoaded}
-          className="px-6 py-3 bg-sinapgreen-800 rounded-full font-bold mt-20 disabled:opacity-50"
-        >
-          {mpLoaded ? "Ativar Câmera" : "Carregando Modelos..."}
-        </button>
-      )}
+        <div className="mx-auto mb-8 flex w-full max-w-3xl flex-col items-center gap-6">
+          <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[1.75rem] border border-white/15 bg-black/70 shadow-[0_18px_50px_rgba(0,0,0,0.3)]">
+            <video
+              ref={displayVideoRef} // Usando a ref local de exibição
+              autoPlay
+              playsInline
+              muted
+              className={`h-full w-full object-cover scale-x-[-1] transition-opacity duration-300 ${
+                cameraActive ? "opacity-100" : "opacity-0"
+              }`}
+            />
 
-      {/* Overlay guia da face em cima da tag video original */}
-      {cameraActive && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[640px] h-[480px] pointer-events-none z-[1000]">
-          <div
-            className={`absolute top-[15%] left-[25%] w-[50%] h-[70%] border-4 rounded-full transition-colors ${
-              faceValid ? "border-green-500" : "border-red-500"
-            }`}
-          />
+            {!cameraActive && (
+              <div className="absolute inset-0 flex items-center justify-center px-6 text-sm text-slate-300">
+                A câmera aparecerá aqui após ativá-la.
+              </div>
+            )}
+
+            {cameraActive && (
+              <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+                <div className="h-[70%] w-[50%] rounded-full border-4 border-red-500/90 transition-colors">
+                  <div
+                    className={`h-full w-full rounded-full border-4 transition-colors ${
+                      faceValid ? "border-green-500/90" : "border-red-500/90"
+                    }`}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {!cameraActive ? (
+            <button
+              onClick={startCamera}
+              disabled={!mpLoaded}
+              className="rounded-full bg-sinapgreen-500 px-6 py-3 font-bold text-black disabled:opacity-50"
+            >
+              {mpLoaded ? "Ativar Câmera" : "Carregando Modelos..."}
+            </button>
+          ) : null}
         </div>
-      )}
 
-      {timeValid > 2 && (
-        <button
-          onClick={onNext}
-          className="absolute bottom-10 px-8 py-4 bg-green-500 text-white font-bold rounded-full animate-bounce z-[1001]"
-        >
-          Posição Perfeita! Continuar
-        </button>
-      )}
+        {timeValid > 2 && (
+          <button
+            onClick={onNext}
+            className="mt-2 rounded-full bg-green-500 px-8 py-4 font-bold text-white animate-bounce"
+          >
+            Posição Perfeita! Continuar
+          </button>
+        )}
+      </div>
     </div>
   );
 }

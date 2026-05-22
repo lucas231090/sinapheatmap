@@ -48,7 +48,8 @@ export default function NCreateStepAssets({
   onReset,
   canAdvance,
 }) {
-  const hasUrl = Boolean(pieceDraft.sourceUrl?.trim());
+  const hasUrl =
+    pieceDraft.sourceType === "url" && Boolean(pieceDraft.sourceUrl?.trim());
   const hasFile =
     pieceDraft.sourceType === "file" && Boolean(pieceDraft.sourceLabel);
   const fileLabel = pieceDraft.fileName || pieceDraft.sourceLabel;
@@ -189,10 +190,10 @@ export default function NCreateStepAssets({
                         onPieceDraftChange("fileName", "");
                         onPieceDraftChange("mimeType", "");
                         onPieceDraftChange("previewUrl", "");
+                        onPieceDraftChange("sourceUrl", "");
+                        onPieceDraftChange("mediaPath", "");
                         onPieceDraftChange("previewKind", "image");
-                        if (!pieceDraft.sourceUrl?.trim()) {
-                          onPieceDraftChange("sourceType", "file");
-                        }
+                        onPieceDraftChange("sourceType", "file");
                       }}
                       className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-semibold text-black shadow-sm transition hover:bg-red-50"
                     >

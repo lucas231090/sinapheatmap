@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 
 import NLayout from "@/layout/NLayout";
+import NUserLayout from "@/layout/NUserLayout";
 import NSignUpPage from "@/pages/user/NSignUpPage";
 import NSignInPage from "@/pages/user/NSignInPage";
 import NNotFoundPage from "@/pages/user/NNotFoundPage";
@@ -18,11 +19,17 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { PublicOnlyRoute } from "./PublicOnlyRoute";
 
 export const appRoutes = createBrowserRouter([
-  { path: "/", element: <NSignInPage /> },
-  { path: "/login", element: <NSignInPage /> },
-  { path: "/signup", element: <NSignUpPage /> },
-  { path: "/unauthorized", element: <NNotFoundPage /> },
-  { path: "/test/:id", element: <NTestPage /> },
+  {
+    element: <NUserLayout />,
+    children: [
+      { path: "/", element: <NSignInPage /> },
+      { path: "/login", element: <NSignInPage /> },
+      { path: "/signup", element: <NSignUpPage /> },
+      { path: "/unauthorized", element: <NNotFoundPage /> },
+      { path: "/test/:id", element: <NTestPage /> },
+      { path: "*", element: <NNotFoundPage /> },
+    ],
+  },
 
   {
     element: <NLayout />,
@@ -44,9 +51,6 @@ export const appRoutes = createBrowserRouter([
         element: <ProtectedRoute allowedRoles={["admin"]} />,
         children: [{ path: "/admin", element: <NDashboardPage /> }],
       },
-
-      // --- FALLBACK (PÁGINA 404) ---
-      { path: "*", element: <NNotFoundPage /> },
     ],
   },
 ]);

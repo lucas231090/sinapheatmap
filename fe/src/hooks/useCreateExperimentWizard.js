@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 
 import { useNotifications } from "@/hooks/useNotifications";
 import { getApiErrorMessage } from "@/services/api";
-import { createExperiment } from "@/services/eyetrackingService";
+import {
+  createExperiment,
+  uploadExperimentMedia,
+} from "@/services/eyetrackingService";
 import {
   buildExperimentPayload,
   buildParticipantsText,
@@ -16,6 +19,7 @@ import {
   moveItem,
   parseParticipantRows,
   reorderPiecesWithinSample,
+  hasInvalidParticipantCpf,
 } from "@/utils/eyetrackingExperimentWizard";
 
 export function useCreateExperimentWizard() {
@@ -257,32 +261,52 @@ export function useCreateExperimentWizard() {
     }));
   }, []);
 
-  const handlePieceFileSelected = useCallback((event) => {
-    const selectedFile = event.target.files?.[0];
+  const handlePieceFileSelected = useCallback(
+    (event) => {
+      const selectedFile = event.target.files?.[0];
 
-    if (!selectedFile) {
-      return;
-    }
+      if (!selectedFile) {
+        return;
+      }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const previewUrl = typeof reader.result === "string" ? reader.result : "";
+      const localPreviewUrl = URL.createObjectURL(selectedFile);
 
-      setPieceDraft((current) => ({
-        ...current,
-        sourceType: "file",
-        sourceLabel: selectedFile.name,
-        fileName: selectedFile.name,
-        mimeType: selectedFile.type,
-        previewUrl,
-        sourceUrl: "",
-        previewKind: selectedFile.type.startsWith("video/") ? "video" : "image",
-      }));
-    };
-    reader.readAsDataURL(selectedFile);
+      (async () => {
+        try {
+          const uploadedMedia = await uploadExperimentMedia(selectedFile);
+          const uploadedUrl =
+            uploadedMedia?.data?.mediaUrl || uploadedMedia?.mediaUrl || "";
+          const uploadedPath =
+            uploadedMedia?.data?.mediaPath || uploadedMedia?.mediaPath || "";
 
-    event.target.value = "";
-  }, []);
+          setPieceDraft((current) => ({
+            ...current,
+            sourceType: "file",
+            sourceLabel: selectedFile.name,
+            fileName: selectedFile.name,
+            mimeType: selectedFile.type,
+            previewUrl: localPreviewUrl,
+            sourceUrl: uploadedUrl,
+            mediaPath: uploadedPath,
+            previewKind: selectedFile.type.startsWith("video/")
+              ? "video"
+              : "image",
+          }));
+        } catch (error) {
+          URL.revokeObjectURL(localPreviewUrl);
+          notifyError(
+            getApiErrorMessage(
+              error,
+              "Nao foi possivel enviar a midia selecionada.",
+            ),
+          );
+        }
+      })();
+
+      event.target.value = "";
+    },
+    [notifyError],
+  );
 
   const clearPieceDraft = useCallback(() => {
     setPieceDraft(createEmptyPieceDraft(selectedSampleId || ""));
@@ -323,19 +347,30 @@ export function useCreateExperimentWizard() {
         return null;
       }
 
+      if (pieceDraft.sourceType === "file" && !pieceDraft.sourceUrl.trim()) {
+        notifyError("A mídia do arquivo ainda nao foi enviada.");
+        return null;
+      }
+
       const pieceId = selectedPieceId || pieceDraft.id || crypto.randomUUID();
       const normalizedPiece = {
         id: pieceId,
         sampleId: pieceDraft.sampleId,
         sourceType: pieceDraft.sourceType,
         sourceLabel,
-        sourceUrl:
-          pieceDraft.sourceType === "url" ? pieceDraft.sourceUrl.trim() : "",
+        sourceUrl: pieceDraft.sourceUrl.trim(),
         fileName: pieceDraft.fileName || "",
         mimeType: pieceDraft.mimeType || "",
-        previewUrl: pieceDraft.previewUrl || "",
+        previewUrl:
+          pieceDraft.previewUrl &&
+          !pieceDraft.previewUrl.startsWith("data:") &&
+          !pieceDraft.previewUrl.startsWith("blob:")
+            ? pieceDraft.previewUrl
+            : "",
+        mediaPath: pieceDraft.mediaPath || "",
         exposureSeconds: String(pieceDraft.exposureSeconds || "10").trim(),
         previewKind: isVideoSource(pieceDraft) ? "video" : "image",
+        imageDisplayMode: pieceDraft.imageDisplayMode || "original",
       };
 
       setExperiment((current) => {
@@ -456,6 +491,13 @@ export function useCreateExperimentWizard() {
       return false;
     }
 
+    if (hasInvalidParticipantCpf(experiment.participants)) {
+      notifyError("Existe um CPF inválido na lista de participantes.");
+      setSubmissionError("Existe um CPF inválido na lista de participantes.");
+      setActiveStep(2);
+      return false;
+    }
+
     if (!canContinueToOrganization) {
       notifyError("Cada amostra precisa ter pelo menos uma peça.");
       setSubmissionError("Cada amostra precisa ter pelo menos uma peça.");
@@ -553,6 +595,11 @@ export function useCreateExperimentWizard() {
 
     if (!parsedRows.length) {
       notifyError("Cole uma lista válida no formato Nome, CPF.");
+      return;
+    }
+
+    if (hasInvalidParticipantCpf(parsedRows)) {
+      notifyError("Um ou mais CPFs importados são inválidos.");
       return;
     }
 

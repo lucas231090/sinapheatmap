@@ -1,7 +1,9 @@
+import Tutorial from "../../../assets/Tutorial.mp4";
+
 export default function NTestStepTutorial({ onNext }) {
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full bg-[#1e293b] p-8 text-center text-white overflow-y-auto">
-      <div className="max-w-3xl w-full flex flex-col items-center">
+    <div className="flex h-screen w-full items-center justify-center overflow-y-auto p-8 text-center text-white">
+      <div className="flex w-full max-w-3xl flex-col items-center rounded-[2rem] bg-slate-950/35 p-8 shadow-[0_24px_80px_rgba(0,0,0,0.32)] backdrop-blur-md">
         <h1 className="text-4xl font-bold mb-4">Como funcionará o teste?</h1>
         <p className="text-lg text-slate-300 mb-8">
           Assista ao vídeo abaixo para entender como realizar o teste
@@ -10,12 +12,7 @@ export default function NTestStepTutorial({ onNext }) {
 
         {/* Container do Vídeo Tutorial */}
         <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl mb-8 border border-slate-700">
-          <video
-            // Substitua o 'src' abaixo pelo link real do seu vídeo de tutorial ou arquivo estático
-            src="https://www.w3schools.com/html/mov_bbb.mp4"
-            controls
-            className="w-full h-full object-cover"
-          >
+          <video src={Tutorial} controls className="w-full h-full object-cover">
             Seu navegador não suporta o elemento de vídeo.
           </video>
         </div>
