@@ -10,9 +10,17 @@ let observerSubscribers = new Set();
  * Detecta mudanças no tema (dark/light) e retorna informações do tema
  */
 export const useTheme = () => {
-    const [isDark, setIsDark] = useState(() =>
-        document.documentElement.classList.contains("dark")
-    );
+    const [isDark, setIsDark] = useState(() => {
+        if (typeof window === "undefined") return false;
+        
+        const storedTheme = localStorage.getItem("theme");
+        if (storedTheme === "dark" || (!storedTheme && document.documentElement.classList.contains("dark"))) {
+            document.documentElement.classList.add("dark");
+            return true;
+        }
+        document.documentElement.classList.remove("dark");
+        return false;
+    });
 
     // Memoizar o logo baseado no estado do tema
     const logoSrc = isDark ? "/SinapsenseLogoDarkMode.png" : "/SinapsenseLogo.png";
@@ -21,6 +29,11 @@ export const useTheme = () => {
     const updateTheme = useCallback(() => {
         const isDarkMode = document.documentElement.classList.contains("dark");
         setIsDark(isDarkMode);
+        if (isDarkMode) {
+            localStorage.setItem("theme", "dark");
+        } else {
+            localStorage.setItem("theme", "light");
+        }
     }, []);
 
     useEffect(() => {

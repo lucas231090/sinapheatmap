@@ -8,25 +8,26 @@ import axios from 'axios';
  * Mock completo para o axios
  * Cria uma versão simulada do axios com todos os métodos necessários para teste
  */
-jest.mock('axios', () => {
+vi.mock('axios', () => {
+
     // Cria objetos mock para os interceptors de requisição e resposta
     const mockInterceptors = {
-        request: { use: jest.fn() },  // Função simulada para registrar interceptors de requisição
-        response: { use: jest.fn() }  // Função simulada para registrar interceptors de resposta
+        request: { use: vi.fn() },  // Função simulada para registrar interceptors de requisição
+        response: { use: vi.fn() }  // Função simulada para registrar interceptors de resposta
     };
 
-    const mockCreate = jest.fn(() => ({
+    const mockCreate = vi.fn(() => ({
         interceptors: mockInterceptors
     }));
 
-    return {
+    return { default: {
         create: mockCreate,
-        mockInterceptors // Expoe os interceptors mockados para acesso nos testes
+        mockInterceptors } 
     };
 });
 
 // Configuração do mock para o módulo de configuração
-jest.mock('@/../config', () => ({
+vi.mock('@/../config', () => ({
     __esModule: true,
     default: {
         API_BASE_URL: 'http://api.example.com'
@@ -34,17 +35,16 @@ jest.mock('@/../config', () => ({
 }));
 
 describe('api', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
+    beforeEach(async () => {
+        vi.clearAllMocks();
         // Importa o módulo api para executar a configuração
-        jest.isolateModules(() => {
-            require('@/services/api');
-        });
+        vi.resetModules();
+        await import('@/services/api');
     });
 
-    test('creates axios instance with correct config', () => {
+    test('creates axios instance with correct config', async () => {
         // Importa o módulo de configuração mockado
-        const { default: config } = require('@/../config');
+        const { default: config } = await import('@/../config');
 
         expect(axios.create).toHaveBeenCalledWith(expect.objectContaining({
             baseURL: config.API_BASE_URL,

@@ -8,8 +8,8 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutlined";
 import LoopIcon from "@mui/icons-material/Loop";
 import { formatCpf } from "@/utils/cpf";
 

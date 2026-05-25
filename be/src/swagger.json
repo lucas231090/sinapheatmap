@@ -11,12 +11,8 @@
   },
   "servers": [
     {
-      "url": "https://",
-      "description": "API prod"
-    },
-    {
-      "url": "http://localhost:3333",
-      "description": "API dev"
+      "url": "/",
+      "description": "API Base URL"
     }
   ],
 

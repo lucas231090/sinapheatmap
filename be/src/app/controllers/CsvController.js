@@ -5,13 +5,20 @@ const logger = require("../configs/logger");
 
 /**
  * Controller responsible for handling CSV file uploads.
+ * This controller manages the process of receiving a CSV file from a client,
+ * validating it, parsing its contents, and delegating the persistence of
+ * the data to the appropriate UseCase.
  */
 class CsvController {
   /**
    * Stores an uploaded CSV file.
-   * @param {Object} request - The HTTP request object.
-   * @param {Object} response - The HTTP response object.
-   * @returns {Promise<void>} 
+   * Uses Multer for handling multipart/form-data to extract the uploaded file.
+   * Checks if a file with the same filename already exists, then delegates
+   * the storage process to the UploadCsvUseCase.
+   * 
+   * @param {Object} request - The Express HTTP request object containing the file and body parameters (filename, description).
+   * @param {Object} response - The Express HTTP response object used to send back the result.
+   * @returns {Promise<void>} Sends a JSON response with status 200 on success, or 400/500 on error.
    */
   async store(request, response) {
     upload.single("file")(request, response, async (err) => {

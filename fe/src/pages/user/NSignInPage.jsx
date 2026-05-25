@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import { validateSignInForm } from "@/utils/authValidation";
+import Card from "@/components/general/Card";
+import Input from "@/components/general/Input";
+import Button from "@/components/general/Button";
 
 function NSignInPage() {
   const navigate = useNavigate();
@@ -51,8 +54,8 @@ function NSignInPage() {
   };
 
   return (
-    <section className="flex w-full items-center justify-center p-6 text-black">
-      <div className="w-full max-w-md rounded-[2rem] bg-white p-6 shadow-[0_18px_50px_rgba(0,0,0,0.16)] sm:p-8">
+    <section className="flex w-full items-center justify-center p-6 text-black dark:text-white">
+      <Card className="w-full max-w-md">
         <h1 className="text-3xl font-black tracking-tight">Login</h1>
 
         <form
@@ -62,43 +65,42 @@ function NSignInPage() {
         >
           <div className="flex flex-col gap-1">
             <label htmlFor="email">Email</label>
-            <input
+            <Input
               id="email"
               name="email"
               type="email"
               value={formData.email}
               onChange={handleChange}
               autoComplete="email"
-              className="border-black border-2 rounded"
+              error={errors.email}
             />
-            {errors.email ? <span>{errors.email}</span> : null}
           </div>
 
           <div className="flex flex-col gap-1">
             <label htmlFor="password">Senha</label>
-            <input
+            <Input
               id="password"
               name="password"
               type="password"
               value={formData.password}
               onChange={handleChange}
               autoComplete="current-password"
-              className="border-black border-2 rounded"
+              error={errors.password}
             />
-            {errors.password ? <span>{errors.password}</span> : null}
           </div>
 
-          <button
+          <Button
             type="submit"
             disabled={isLoading}
-            className="rounded-full bg-sinapgreen-500 px-4 py-3 font-bold text-black transition hover:bg-sinapgreen-400 disabled:opacity-50"
+            className="w-full mt-2"
           >
             {isLoading ? "Entrando..." : "Entrar"}
-          </button>
+          </Button>
         </form>
-      </div>
+      </Card>
     </section>
   );
 }
 
 export default NSignInPage;
+

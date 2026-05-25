@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useCurrentFrame, useVideoConfig, AbsoluteFill, Video } from "remotion";
 import h337 from "@mars3d/heatmap.js";
+import { interpolateCoordinates } from "@/utils/heatmapUtils";
 
 export const HeatmapComposition = ({ heatmapData, img, type }) => {
   const frame = useCurrentFrame();
@@ -15,29 +16,34 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
 
   // MATEMÁTICA DO TEMPO REAL
   const currentTimeMs = (frame / fps) * 1000; // Tempo atual do vídeo em milissegundos
-  const totalPoints = heatmapData.coords.length;
+  // INTERPOLAÇÃO (Executada uma vez no vídeo todo)
+  const interpolatedCoords = useMemo(
+    () => interpolateCoordinates(heatmapData.coords),
+    [heatmapData.coords]
+  );
+
+  const totalPoints = interpolatedCoords.length;
   const expectedDurationMs =
     Number(heatmapData.durationMs) > 0
       ? Number(heatmapData.durationMs)
       : Number(heatmapData.exposureSeconds) > 0
       ? Number(heatmapData.exposureSeconds) * 1000
       : totalPoints > 0
-      ? heatmapData.coords[totalPoints - 1]?.timestamp || 0
+      ? interpolatedCoords[totalPoints - 1]?.timestamp || 0
       : 0;
 
-  // Encontra o último ponto de eyetracking que ocorreu ANTES ou NO MOMENTO do tempo atual
+  // Encontra o último ponto interpolado que ocorreu ANTES ou NO MOMENTO do tempo atual
   let latestIdx =
-    heatmapData.coords.findIndex((c) => c.timestamp > currentTimeMs) - 1;
+    interpolatedCoords.findIndex((c) => c.timestamp > currentTimeMs) - 1;
 
   if (latestIdx === -2) {
-    // Se o findIndex retornou -1, significa que o currentTimeMs é maior que todos os pontos (chegou no fim)
     latestIdx = totalPoints - 1;
   }
   if (latestIdx < 0) {
-    latestIdx = 0; // Previne erro no frame 0
+    latestIdx = 0;
   }
 
-  const currentCoords = heatmapData.coords.slice(0, latestIdx + 1);
+  const currentCoords = interpolatedCoords.slice(0, latestIdx + 1);
 
   // A visualização está completa quando passamos do tempo do último ponto + 1 segundo folga
   const isComplete =
@@ -59,7 +65,7 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
           container: containerRef.current,
           radius: Math.max(10, 50 * (heatmapData.radiusScale || 1)),
           maxOpacity: 1,
-          minOpacity: 0.2,
+          minOpacity: 0.1,
           blur: 0.9,
           backgroundColor: "rgba(255, 255, 255, 0)",
         });
@@ -67,8 +73,10 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
         heatmapInstanceRef.current = heatmapInstance;
 
         if (totalPoints > 0) {
+          const dynamicMax = Math.max(300, Math.min(3000, totalPoints * 3));
           heatmapInstanceRef.current.setData({
-            data: [heatmapData.coords[0]],
+            max: dynamicMax,
+            data: [interpolatedCoords[0]],
           });
         }
         setHeatmapInitialized(true);
@@ -92,9 +100,13 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
       heatmapInitialized &&
       currentCoords.length > 0
     ) {
-      heatmapInstanceRef.current.setData({ data: currentCoords });
+      const dynamicMax = Math.max(300, Math.min(3000, totalPoints * 3));
+      heatmapInstanceRef.current.setData({ 
+        max: dynamicMax, 
+        data: currentCoords 
+      });
     }
-  }, [currentCoords, heatmapInitialized]);
+  }, [currentCoords, heatmapInitialized, totalPoints]);
 
   // DESENHA O RASTRO DO OLHAR (GAZE) BASEADO NO TEMPO REAL
   useEffect(() => {
@@ -104,9 +116,9 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (!isComplete && totalPoints > 0) {
-      const prev = heatmapData.coords[latestIdx];
+      const prev = interpolatedCoords[latestIdx];
       const nextIdx = Math.min(latestIdx + 1, totalPoints - 1);
-      const next = heatmapData.coords[nextIdx];
+      const next = interpolatedCoords[nextIdx];
 
       let x = prev.x;
       let y = prev.y;
@@ -137,7 +149,7 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
   }, [
     frame,
     canvasSize,
-    heatmapData.coords,
+    interpolatedCoords,
     totalPoints,
     latestIdx,
     currentTimeMs,

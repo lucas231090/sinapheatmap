@@ -1,4 +1,5 @@
 import NPageHeader from "@/components/general/NPageHeader";
+import Card from "@/components/general/Card";
 import NCreateWizardStepper from "@/pages/researcher/NCreatePage/components/NCreateWizardStepper";
 import NCreateStepBasic from "@/pages/researcher/NCreatePage/components/NCreateStepBasic";
 import NCreateStepIdentification from "@/pages/researcher/NCreatePage/components/NCreateStepIdentification";
@@ -69,7 +70,7 @@ function NEditPage() {
               </div>
             ) : null}
 
-            <main className="rounded-[2rem] bg-white p-6 shadow-[0_18px_50px_rgba(0,0,0,0.16)] lg:p-8">
+            <Card as="main">
               {wizard.activeStep === 1 ? (
                 <NCreateStepBasic
                   basic={wizard.experiment.basic}
@@ -143,7 +144,7 @@ function NEditPage() {
                   isSubmitting={wizard.isSubmitting}
                 />
               ) : null}
-            </main>
+            </Card>
           </>
         )}
       </div>

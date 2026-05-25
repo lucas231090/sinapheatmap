@@ -6,7 +6,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
@@ -16,6 +16,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 
 import { updateExperimentStatus } from "@/services/eyetrackingService";
+import Button from "@/components/general/Button";
 
 const STATUS_FILTER_OPTIONS = [
   { value: "all", label: "Todos" },
@@ -123,29 +124,31 @@ function sortExperiments(experiments, sortKey, sortDirection) {
 
 function ActionButton({ title, onClick, disabled, children, className = "" }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="secondary"
+      size="icon"
       title={title}
-      aria-label={title}
-      disabled={disabled}
       onClick={onClick}
-      className={`inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-black shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      disabled={disabled}
+      className={className}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
 function ActionLink({ title, to, children, className = "" }) {
   return (
-    <Link
+    <Button
+      asLink
       to={to}
+      variant="secondary"
+      size="icon"
       title={title}
-      aria-label={title}
-      className={`inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-black shadow-sm transition hover:bg-slate-50 ${className}`}
+      className={className}
     >
       {children}
-    </Link>
+    </Button>
   );
 }
 

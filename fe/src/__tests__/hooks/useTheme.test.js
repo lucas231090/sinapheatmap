@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useTheme } from '@/hooks/useTheme';
 
 
-jest.mock('@/../config', () => ({
+vi.mock('@/../config', async () => ({
     default: {
         API_BASE_URL: 'http://api.example.com'
     }

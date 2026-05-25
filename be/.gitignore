@@ -9,3 +9,5 @@ src/app/uploads/**
 
 .env
 .env.docker
+coverage/
+test_output.txt

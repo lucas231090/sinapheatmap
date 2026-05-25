@@ -17,10 +17,14 @@ import api from '@/services/api';
  * Substitui as funções de requisição HTTP por versões simuladas
  * para evitar chamadas reais à API durante os testes
  */
-jest.mock('@/services/api', () => ({
-    get: jest.fn(),    // Mock para requisições GET
-    post: jest.fn(),   // Mock para requisições POST
-    put: jest.fn()     // Mock para requisições PUT
+vi.mock('@/services/api', async () => ({
+    default: {
+        get: vi.fn(),
+        post: vi.fn(),
+        put: vi.fn(),
+        delete: vi.fn(),
+        defaults: { baseURL: 'http://api.example.com' } // Mock para propriedades default
+    }
 }));
 
 /**
@@ -28,7 +32,7 @@ jest.mock('@/services/api', () => ({
  * Substitui import.meta.env que não é suportado no ambiente Jest
  * por uma implementação estática para testes
  */
-jest.mock('@/../config', () => ({
+vi.mock('@/../config', async () => ({
     default: {
         API_BASE_URL: 'http://api.example.com'  // URL base para API em ambiente de teste
     }
@@ -38,7 +42,7 @@ jest.mock('@/../config', () => ({
  * Mock para a API URL.createObjectURL do navegador
  * Essa API converte blobs em URLs que podem ser usadas pelo navegador
  */
-global.URL.createObjectURL = jest.fn();
+global.URL.createObjectURL = vi.fn();
 
 describe('fileService', () => {
     /**
@@ -46,7 +50,7 @@ describe('fileService', () => {
      * para garantir que cada teste seja isolado
      */
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     /**
@@ -254,7 +258,7 @@ describe('fileService', () => {
 
             // Verifica se retorna URL de fallback quando há erro (comportamento real da função)
             const result = await getFileMedia('invalid.png');
-            expect(result).toBe('/uploads/media/invalid.png');
+            expect(result).toBe('http://api.example.com/uploads/media/invalid.png');
         });
 
         test('returns direct URL for video files when accessible', async () => {
@@ -264,7 +268,7 @@ describe('fileService', () => {
             const result = await getFileMedia('test-video.mp4');
 
             // Verifica se retorna URL direta para vídeos
-            expect(result).toBe('/uploads/media/test-video.mp4');
+            expect(result).toBe('http://api.example.com/uploads/media/test-video.mp4');
         });
     });
 });

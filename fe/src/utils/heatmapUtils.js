@@ -47,6 +47,41 @@ export const scaleCoordinates = (coords, scale) => {
   }));
 };
 
+export const interpolateCoordinates = (coords, maxDistance = 30) => {
+  if (!Array.isArray(coords) || coords.length < 2) return coords;
+
+  const interpolated = [];
+  interpolated.push(coords[0]);
+
+  for (let i = 1; i < coords.length; i++) {
+    const prev = coords[i - 1];
+    const curr = coords[i];
+
+    const dx = curr.x - prev.x;
+    const dy = curr.y - prev.y;
+    const distance = Math.hypot(dx, dy);
+
+    if (distance > maxDistance) {
+      const steps = Math.floor(distance / maxDistance);
+      for (let j = 1; j <= steps; j++) {
+        const factor = j / (steps + 1);
+        const newCoord = {
+          x: Math.round(prev.x + dx * factor),
+          y: Math.round(prev.y + dy * factor),
+          value: prev.value || 50,
+        };
+        // Preserva o timestamp se existir, calculando proporcionalmente
+        if (prev.timestamp !== undefined && curr.timestamp !== undefined) {
+          newCoord.timestamp = prev.timestamp + (curr.timestamp - prev.timestamp) * factor;
+        }
+        interpolated.push(newCoord);
+      }
+    }
+    interpolated.push(curr);
+  }
+  return interpolated;
+};
+
 export const calculateResponsiveScale = (
   originalWidth,
   originalHeight,

@@ -41,7 +41,10 @@ export default function NTestStepRunner({
   const [mediaUrl, setMediaUrl] = useState("");
   const [debugGaze, setDebugGaze] = useState(null);
 
-  const showDebugGaze = import.meta.env.DEV;
+  const showDebugGaze =
+    typeof import.meta !== "undefined" && import.meta.env
+      ? import.meta.env.DEV
+      : false;
 
   // Armazena todos os resultados finais do teste
   const sessionOutput = useRef([]);

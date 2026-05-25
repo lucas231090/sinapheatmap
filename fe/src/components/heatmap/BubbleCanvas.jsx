@@ -41,7 +41,7 @@ const BubbleCanvas = ({
 
       context.shadowBlur = 0;
     });
-  }, [coords, canvasSize, transformComponentRef?.current?.state?.scale]);
+  }, [coords, canvasSize, transformComponentRef?.current?.state?.scale, canvasRef, transformComponentRef]);
 
   return (
     <canvas

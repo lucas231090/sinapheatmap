@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import h337 from "@mars3d/heatmap.js";
+import { interpolateCoordinates } from "@/utils/heatmapUtils";
 
 const HeatmapRenderer = ({
   heatmapCanvasRef,
@@ -17,13 +18,18 @@ const HeatmapRenderer = ({
         container: document.querySelector(".heatmapContainer"),
         radius: Math.max(10, 50 * radiusScale),
         maxOpacity: 1,
-        minOpacity: 0.2,
+        minOpacity: 0.3,
         blur: 0.9,
         backgroundColor: "rgba(255, 255, 255, 0)",
       });
 
+      const interpolated = interpolateCoordinates(coords);
+      // Dinâmico: quanto mais frames (tempo e trajeto), mais "resistente" é a tela para ficar vermelha
+      const dynamicMax = Math.max(200, Math.min(50, interpolated.length * 3));
+
       heatmapInstance.setData({
-        data: coords,
+        max: dynamicMax,
+        data: interpolated,
       });
     }
   }, [coords, canvasSize, radiusScale]);

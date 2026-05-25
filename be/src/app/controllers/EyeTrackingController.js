@@ -16,13 +16,18 @@ const logger = require("../configs/logger");
 
 /**
  * Controller responsible for managing EyeTracking operations.
+ * It handles creating, retrieving, updating, and deleting eye tracking experiments,
+ * as well as handling related sessions and media uploads.
  */
 class EyeTrackingController {
   /**
    * Stores a new Eye Tracking experiment.
-   * @param {Object} request - The HTTP request object.
-   * @param {Object} response - The HTTP response object.
-   * @returns {Promise<Object>} The HTTP response with success or error message.
+   * Expects experiment details in the request body and an optional authenticated user ID.
+   * Delegates the creation to the CreateEyeTrackingExperimentUseCase.
+   *
+   * @param {Object} request - The Express HTTP request object containing experiment data in `body` and `userId`.
+   * @param {Object} response - The Express HTTP response object.
+   * @returns {Promise<Object>} The HTTP response with status 201 on success, or corresponding error codes (400, 409, 500).
    */
   async store(request, response) {
     try {
@@ -61,10 +66,12 @@ class EyeTrackingController {
   }
 
   /**
-   * Retrieves all Eye Tracking files.
-   * @param {Object} request - The HTTP request object.
-   * @param {Object} response - The HTTP response object.
-   * @returns {Promise<Object>} The HTTP response with the list of experiments.
+   * Retrieves all Eye Tracking files/experiments.
+   * Calls the GetAllFilesUseCase to fetch the list of all available experiments.
+   *
+   * @param {Object} request - The Express HTTP request object.
+   * @param {Object} response - The Express HTTP response object.
+   * @returns {Promise<Object>} The HTTP response with status 200 containing the list of experiments, or 500 on error.
    */
   async index(request, response) {
     try {
@@ -79,9 +86,11 @@ class EyeTrackingController {
 
   /**
    * Retrieves a specific Eye Tracking experiment by ID.
-   * @param {Object} request - The HTTP request object.
-   * @param {Object} response - The HTTP response object.
-   * @returns {Promise<Object>} The HTTP response with the experiment data.
+   * Validates the provided ID and uses GetFileByIdUseCase to fetch the experiment data.
+   *
+   * @param {Object} request - The Express HTTP request object containing the experiment `_id` in params.
+   * @param {Object} response - The Express HTTP response object.
+   * @returns {Promise<Object>} The HTTP response with status 200 containing the experiment data, or 400/404/500 on error.
    */
   async show(request, response) {
     const { _id } = request.params;
@@ -109,9 +118,11 @@ class EyeTrackingController {
 
   /**
    * Retrieves a specific Eye Tracking experiment by ID for public access.
-   * @param {Object} request - The HTTP request object.
-   * @param {Object} response - The HTTP response object.
-   * @returns {Promise<Object>} The HTTP response with the public experiment data.
+   * Similar to `show`, but might filter or adjust data for public view using GetPublicEyeTrackingExperimentUseCase.
+   *
+   * @param {Object} request - The Express HTTP request object containing the experiment `_id` in params.
+   * @param {Object} response - The Express HTTP response object.
+   * @returns {Promise<Object>} The HTTP response with status 200 containing the public experiment data, or 400/403/500 on error.
    */
   async publicShow(request, response) {
     const { _id } = request.params;
@@ -142,9 +153,11 @@ class EyeTrackingController {
 
   /**
    * Stores a new session for an Eye Tracking experiment.
-   * @param {Object} request - The HTTP request object.
-   * @param {Object} response - The HTTP response object.
-   * @returns {Promise<Object>} The HTTP response with success or error message.
+   * Expects session data in the request body and delegates creation to CreateEyeTrackingSessionUseCase.
+   *
+   * @param {Object} request - The Express HTTP request object containing session data in `body`.
+   * @param {Object} response - The Express HTTP response object.
+   * @returns {Promise<Object>} The HTTP response with status 201 and the saved session, or 400/500 on error.
    */
   async storeSession(request, response) {
     try {
@@ -176,6 +189,14 @@ class EyeTrackingController {
     }
   }
 
+  /**
+   * Uploads media for an Eye Tracking experiment.
+   * Uses Multer to handle the `mediaFile` upload and saves it to a designated local directory.
+   * 
+   * @param {Object} request - The Express HTTP request object containing the file in `request.file`.
+   * @param {Object} response - The Express HTTP response object.
+   * @returns {Promise<Object>} The HTTP response with status 201 and the media path/URL, or 400 on error.
+   */
   async uploadMedia(request, response) {
     upload.single("mediaFile")(request, response, (err) => {
       if (err) {
@@ -223,10 +244,12 @@ class EyeTrackingController {
   }
 
   /**
-   * Retrieves all sessions for an Eye Tracking experiment.
-   * @param {Object} request - The HTTP request object.
-   * @param {Object} response - The HTTP response object.
-   * @returns {Promise<Object>} The HTTP response with the sessions.
+   * Retrieves all sessions for a specific Eye Tracking experiment.
+   * Expects the experiment ID in the request parameters and uses GetEyeTrackingSessionsUseCase.
+   *
+   * @param {Object} request - The Express HTTP request object containing the experiment `_id` in params.
+   * @param {Object} response - The Express HTTP response object.
+   * @returns {Promise<Object>} The HTTP response with status 200 containing the list of sessions, or 500 on error.
    */
   async getSessions(request, response) {
     const { _id } = request.params;
@@ -249,9 +272,12 @@ class EyeTrackingController {
 
   /**
    * Updates an existing Eye Tracking experiment or its active status.
-   * @param {Object} request - The HTTP request object.
-   * @param {Object} response - The HTTP response object.
-   * @returns {Promise<Object>} The HTTP response with success or error message.
+   * Depending on the provided body data, it either updates the active status via UpdateFileStatusUseCase
+   * or updates the full experiment details via UpdateEyeTrackingExperimentUseCase.
+   *
+   * @param {Object} request - The Express HTTP request object containing the `_id` in params and update data in `body`.
+   * @param {Object} response - The Express HTTP response object.
+   * @returns {Promise<Object>} The HTTP response with status 200 and the updated data, or 400/404/409/500 on error.
    */
   async updateActiveStatus(request, response) {
     const { _id } = request.params;
@@ -323,9 +349,11 @@ class EyeTrackingController {
 
   /**
    * Deletes an existing Eye Tracking experiment.
-   * @param {Object} request - The HTTP request object.
-   * @param {Object} response - The HTTP response object.
-   * @returns {Promise<Object>} The HTTP response with success or error message.
+   * Validates the provided ID and delegates the deletion to DeleteEyeTrackingExperimentUseCase.
+   *
+   * @param {Object} request - The Express HTTP request object containing the experiment `_id` in params.
+   * @param {Object} response - The Express HTTP response object.
+   * @returns {Promise<Object>} The HTTP response with status 200 on successful deletion, or 400/500 on error.
    */
   async delete(request, response) {
     const { _id } = request.params;

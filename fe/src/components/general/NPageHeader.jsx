@@ -1,5 +1,5 @@
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { Link } from "react-router-dom";
+import Button from "@/components/general/Button";
 
 export default function NPageHeader({
   title,
@@ -24,13 +24,15 @@ export default function NPageHeader({
 
         <div className="flex flex-wrap items-center gap-3">
           {children}
-          <Link
+          <Button
+            asLink
             to={backHref}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:bg-slate-50"
+            variant="secondary"
+            className="px-5 py-3"
           >
-            <ArrowBackIcon />
+            <ArrowBackIcon fontSize="small" />
             <span>{backLabel}</span>
-          </Link>
+          </Button>
         </div>
       </div>
     </header>

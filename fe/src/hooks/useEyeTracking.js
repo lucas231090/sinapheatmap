@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { FaceLandmarker, FilesetResolver } from "@mediapipe/tasks-vision";
-import { clamp, dot, ransacLinear } from "@/utils/eyeTrackingMath";
+import { clamp, dot, ransacLinear, adaptiveEMA } from "@/utils/eyeTrackingMath";
 
 /**
  * Hook para gerenciar a câmera, a detecção facial e a calibração do Eye Tracking.
@@ -18,7 +18,8 @@ export function useEyeTracking(videoRef) {
   const reqRef = useRef(null);
   const frameBuffer = useRef([]);
   const calibrationDataset = useRef([]);
-  const latestFeatures = useRef(null);
+  const latestEyeData = useRef(null);
+  const lastSmoothedGazeRef = useRef(null);
   const lastVideoTimeRef = useRef(-1); // NOVO: Evita duplicar frames no MediaPipe
 
   const modelX = useRef(null);
@@ -85,18 +86,24 @@ export function useEyeTracking(videoRef) {
     const headPitch = (nose.y - eyeCenter.y) / Math.max(faceWidth, 1e-6);
     const roll = Math.atan2(lCenter.y - rCenter.y, lCenter.x - rCenter.x);
 
-    return [
-      1,
-      avgX,
-      avgY,
+    return {
+      features: [
+        1,
+        lX,
+        lY,
+        rX,
+        rY,
+        avgEAR,
+        lX * lX,
+        lY * lY,
+        rX * rX,
+        rY * rY,
+        headYaw * 0.01,
+        headPitch,
+        roll,
+      ],
       avgEAR,
-      avgX * avgY,
-      avgX * avgX,
-      avgY * avgY,
-      headYaw * 0.01,
-      headPitch,
-      roll,
-    ];
+    };
   }, []);
 
   useEffect(() => {
@@ -157,10 +164,14 @@ export function useEyeTracking(videoRef) {
 
             setFaceValid(isCenteredX && isCenteredY && isRightDistance);
 
-            latestFeatures.current = buildEyeFeatures(landmarks);
+            const eyeData = buildEyeFeatures(landmarks);
+            latestEyeData.current = eyeData;
 
-            frameBuffer.current.push(latestFeatures.current);
-            if (frameBuffer.current.length > 30) frameBuffer.current.shift();
+            // Filtro de Piscada (Blink Detection)
+            if (eyeData.avgEAR >= 0.22) {
+              frameBuffer.current.push(eyeData.features);
+              if (frameBuffer.current.length > 30) frameBuffer.current.shift();
+            }
           } else {
             setFaceValid(false);
           }
@@ -206,6 +217,8 @@ export function useEyeTracking(videoRef) {
     if (reqRef.current) {
       cancelAnimationFrame(reqRef.current);
     }
+    lastSmoothedGazeRef.current = null;
+    latestEyeData.current = null;
   }, [videoRef]);
 
   const addCalibrationPoint = (targetX, targetY) => {
@@ -220,12 +233,31 @@ export function useEyeTracking(videoRef) {
   };
 
   const getCurrentGaze = useCallback(() => {
-    if (!latestFeatures.current || !modelX.current || !modelY.current) {
+    if (!latestEyeData.current || !modelX.current || !modelY.current) {
       return null;
     }
-    let pX = clamp(dot(modelX.current, latestFeatures.current), 0, 1);
-    let pY = clamp(dot(modelY.current, latestFeatures.current), 0, 1);
-    return { x: pX, y: pY, timestamp: Date.now() };
+
+    // Se estiver piscando (limiar mais alto p/ pegar o início do fechar do olho)
+    if (latestEyeData.current.avgEAR < 0.22) {
+      return null;
+    }
+
+    let pX = clamp(dot(modelX.current, latestEyeData.current.features), 0, 1);
+    let pY = clamp(dot(modelY.current, latestEyeData.current.features), 0, 1);
+    
+    // Proteção contra o "escorregão" vertical falso no pré-piscar
+    if (lastSmoothedGazeRef.current && latestEyeData.current.avgEAR < 0.26) {
+      const dy = pY - lastSmoothedGazeRef.current.y;
+      if (dy > 0.15) {
+        return null;
+      }
+    }
+
+    const currentGaze = { x: pX, y: pY };
+    const smoothedGaze = adaptiveEMA(currentGaze, lastSmoothedGazeRef.current);
+    lastSmoothedGazeRef.current = smoothedGaze;
+
+    return { x: smoothedGaze.x, y: smoothedGaze.y, timestamp: Date.now() };
   }, []);
 
   return {

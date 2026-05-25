@@ -510,6 +510,7 @@ export function useCreateExperimentWizard() {
   }, [
     canContinueToOrganization,
     experiment.basic.name,
+    experiment.participants,
     notifyError,
     setActiveStep,
     setSubmissionError,

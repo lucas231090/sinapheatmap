@@ -11,7 +11,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import AddIcon from "@mui/icons-material/Add";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import LoopIcon from "@mui/icons-material/Loop";
 import SaveOutlinedIcon from "@mui/icons-material/SaveOutlined";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";

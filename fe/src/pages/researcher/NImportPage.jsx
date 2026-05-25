@@ -6,6 +6,11 @@ import ImageIcon from "@mui/icons-material/Image";
 import VideocamIcon from "@mui/icons-material/Videocam";
 
 import NPageHeader from "@/components/general/NPageHeader";
+import Card from "@/components/general/Card";
+import Input from "@/components/general/Input";
+import Textarea from "@/components/general/Textarea";
+import Button from "@/components/general/Button";
+import FileUpload from "@/components/general/FileUpload";
 import { useNotifications } from "@/hooks/useNotifications";
 import { getApiErrorMessage } from "@/services/api";
 import { importHeatmap } from "@/services/eyetrackingService";
@@ -138,88 +143,51 @@ function NImportPage() {
       />
 
       <div className="gap-6 ">
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col gap-5 rounded-[2rem] bg-white p-6 shadow-[0_18px_50px_rgba(0,0,0,0.16)] sm:p-8"
-        >
+        <Card as="form" onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="grid gap-4 md:grid-cols-1">
             <label className="block flex flex-col gap-2">
-              <span className=" block text-sm font-semibold text-slate-700">
+              <span className=" block text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Nome do experimento
               </span>
-              <input
+              <Input
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-100"
                 placeholder="Ex.: Heatmap da leitura"
               />
             </label>
           </div>
 
           <label className="flex flex-col gap-2 block">
-            <span className="block text-sm font-semibold text-slate-700">
+            <span className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
               Descrição
             </span>
-            <textarea
+            <Textarea
               value={description}
               onChange={(event) => setDescription(event.target.value)}
               rows={4}
-              className="w-full rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-100"
+              className="rounded-3xl focus:ring-2 focus:ring-sinapgreen-100"
               placeholder="Opcional: detalhes do teste importado"
             />
           </label>
 
           <div className=" grid gap-5">
-            <label className="group block cursor-pointer rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50 p-5 transition hover:border-sinapgreen-500 hover:bg-sinapgreen-50/40">
-              <input
-                type="file"
-                accept=".csv,text/csv"
-                onChange={handleCsvChange}
-                className="sr-only"
-              />
-              <div className="flex items-start gap-4">
-                <div className="rounded-2xl bg-sinapgreen-100 p-3 text-sinapgreen-800">
-                  <DescriptionIcon />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-black">
-                    Arquivo CSV
-                  </p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    Clique para selecionar a planilha com as coordenadas. Os
-                    campos X e Y são obrigatórios.
-                  </p>
-                  <p className="mt-2 truncate text-sm font-medium text-slate-900">
-                    {csvFile?.name || "Nenhum CSV selecionado"}
-                  </p>
-                </div>
-              </div>
-            </label>
+            <FileUpload
+              accept=".csv,text/csv"
+              onChange={handleCsvChange}
+              title="Arquivo CSV"
+              subtitle="Clique para selecionar a planilha com as coordenadas. Os campos X e Y são obrigatórios."
+              fileName={csvFile?.name}
+              icon={<DescriptionIcon />}
+            />
 
-            <label className="group block cursor-pointer rounded-[1.75rem] border border-dashed border-slate-300 bg-slate-50 p-5 transition hover:border-sinapgreen-500 hover:bg-sinapgreen-50/40">
-              <input
-                type="file"
-                accept="image/*,video/*"
-                onChange={handleMediaChange}
-                className="sr-only"
-              />
-              <div className="flex items-start gap-4">
-                <div className="rounded-2xl bg-sinapgreen-100 p-3 text-sinapgreen-800">
-                  {mediaKind === "video" ? <VideocamIcon /> : <ImageIcon />}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-black">
-                    Imagem ou vídeo de apoio
-                  </p>
-                  <p className="mt-1 text-sm text-slate-600">
-                    Use a mídia que será exibida como fundo do heatmap.
-                  </p>
-                  <p className="mt-2 truncate text-sm font-medium text-slate-900">
-                    {mediaFile?.name || "Nenhuma mídia selecionada"}
-                  </p>
-                </div>
-              </div>
-            </label>
+            <FileUpload
+              accept="image/*,video/*"
+              onChange={handleMediaChange}
+              title="Imagem ou vídeo de apoio"
+              subtitle="Use a mídia que será exibida como fundo do heatmap."
+              fileName={mediaFile?.name}
+              icon={mediaKind === "video" ? <VideocamIcon /> : <ImageIcon />}
+            />
           </div>
 
           {errorMessage ? (
@@ -247,23 +215,19 @@ function NImportPage() {
           ) : null}
 
           <div className="flex flex-wrap gap-3">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-sinapgreen-500 px-5 py-3 text-sm font-semibold text-black shadow-lg shadow-sinapgreen-500/20 transition hover:bg-sinapgreen-800 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <CloudUploadIcon fontSize="small" />
+            <Button type="submit" disabled={isSubmitting}>
+              <CloudUploadIcon fontSize="small" className="mr-2" />
               {isSubmitting ? "Importando..." : "Importar experimento"}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="secondary"
               onClick={() => navigate("/home")}
-              className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-black shadow-sm transition hover:bg-slate-50"
             >
               Cancelar
-            </button>
+            </Button>
           </div>
-        </form>
+        </Card>
       </div>
     </section>
   );

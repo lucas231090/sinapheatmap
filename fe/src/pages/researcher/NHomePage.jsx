@@ -1,16 +1,19 @@
 import { Link } from "react-router-dom";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutlined";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 
 import NExperimentsTable from "@/pages/researcher/NHomePage/components/NExperimentsTable";
 import { useNHomePage } from "@/hooks/useNHomePage";
 
+import Card from "@/components/general/Card";
+import Button from "@/components/general/Button";
+
 function NHomePage() {
-  const { experiments, isLoading, error, stats, refresh } = useNHomePage();
+  const { experiments, isLoading, error, refresh } = useNHomePage();
 
   return (
     <section className="flex flex-col gap-10">
-      <div className="rounded-[2rem] bg-white p-6 shadow-[0_18px_50px_rgba(0,0,0,0.12)] sm:p-8">
+      <Card>
         <div className="max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.35em] text-sinapgreen-800">
             Painel do pesquisador
@@ -25,22 +28,26 @@ function NHomePage() {
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <Link
+          <Button
+            asLink
             to="/create"
-            className="inline-flex h-full min-h-20 items-center justify-center gap-3 rounded-[1.5rem] border border-slate-200 bg-white px-6 py-5 text-base font-semibold text-black shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-lg"
+            variant="secondary"
+            className="h-full min-h-20 px-6 py-5 text-base hover:-translate-y-0.5 hover:shadow-lg rounded-[1.5rem]"
           >
             <AddCircleOutlineIcon fontSize="small" />
             Criar experimento
-          </Link>
-          <Link
+          </Button>
+          <Button
+            asLink
             to="/import"
-            className="inline-flex h-full min-h-20 items-center justify-center gap-3 rounded-[1.5rem] border border-slate-200 bg-white px-6 py-5 text-base font-semibold text-black shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-lg"
+            variant="secondary"
+            className="h-full min-h-20 px-6 py-5 text-base hover:-translate-y-0.5 hover:shadow-lg rounded-[1.5rem]"
           >
             <FileUploadIcon fontSize="small" />
             Importar teste
-          </Link>
+          </Button>
         </div>
-      </div>
+      </Card>
 
       <div className="flex flex-col gap-10">
         <NExperimentsTable

@@ -4,13 +4,17 @@ const logger = require("../configs/logger");
 
 /**
  * Controller responsible for managing HeatMap operations.
+ * Handles storing and updating HeatMap experiments, including the
+ * associated media files and configurations.
  */
 class HeatMapController {
   /**
    * Stores a new HeatMap experiment.
-   * @param {Object} request - The HTTP request object containing files and body data.
-   * @param {Object} response - The HTTP response object.
-   * @returns {Promise<Object>} The HTTP response with success or error message.
+   * Delegates the processing of uploaded files and data storage to StoreHeatMapUseCase.
+   *
+   * @param {Object} request - The Express HTTP request object containing files and body data.
+   * @param {Object} response - The Express HTTP response object.
+   * @returns {Promise<Object>} The HTTP response with status 200 on success, or 500 on error.
    */
   async store(request, response) {
     try {
@@ -39,9 +43,12 @@ class HeatMapController {
 
   /**
    * Updates an existing HeatMap experiment.
-   * @param {Object} request - The HTTP request object containing parameters and body data.
-   * @param {Object} response - The HTTP response object.
-   * @returns {Promise<Object>} The HTTP response with success or error message.
+   * Allows updating the filename, description, and potentially replacing the media file.
+   * Delegates to UpdateHeatMapUseCase.
+   *
+   * @param {Object} request - The Express HTTP request object containing `id` in params, and `filename`, `description`, `mediaFile` in body/files.
+   * @param {Object} response - The Express HTTP response object.
+   * @returns {Promise<Object>} The HTTP response with status 200 on success, or 404/500 on error.
    */
   async update(request, response) {
     try {

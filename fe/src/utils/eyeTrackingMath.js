@@ -119,3 +119,19 @@ export function shuffleArray(array) {
   }
   return newArray;
 }
+
+export function adaptiveEMA(current, previous, alphaMin = 0.1, alphaMax = 0.9, distanceThreshold = 0.15) {
+  if (!previous) return current;
+
+  const dx = current.x - previous.x;
+  const dy = current.y - previous.y;
+  const distance = Math.hypot(dx, dy);
+
+  let alpha = alphaMin + ((distance / distanceThreshold) * (alphaMax - alphaMin));
+  alpha = clamp(alpha, alphaMin, alphaMax);
+
+  return {
+    x: previous.x + alpha * dx,
+    y: previous.y + alpha * dy,
+  };
+}

@@ -10,13 +10,17 @@ const schema = z.object({
 
 /**
  * Controller responsible for handling user registration (sign-up).
+ * Validates the registration data and manages the creation of new user accounts.
  */
 class SignUpController {
   /**
    * Handles the sign-up request.
+   * Validates the request body against a Zod schema, then delegates the user creation
+   * logic to the SignUpUseCase.
+   *
    * @param {Object} request - The HTTP request object.
-   * @param {Object} request.body - The request body containing name, email, and password.
-   * @returns {Promise<Object>} An object containing the HTTP status code and response body.
+   * @param {Object} request.body - The request body containing the new user's name, email, and password.
+   * @returns {Promise<Object>} An object containing the HTTP status code (201, 400, or 409) and response body.
    */
   async handle({ body }) {
     try {

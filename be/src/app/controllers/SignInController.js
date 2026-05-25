@@ -10,13 +10,17 @@ const schema = z.object({
 
 /**
  * Controller responsible for handling user authentication (sign-in).
+ * Validates user credentials and provides authentication tokens upon success.
  */
 class SignInController {
   /**
    * Handles the sign-in request.
+   * Validates the request body against a Zod schema, then delegates the authentication
+   * logic to the SignInUseCase.
+   *
    * @param {Object} request - The HTTP request object.
-   * @param {Object} request.body - The request body containing email and password.
-   * @returns {Promise<Object>} An object containing the HTTP status code and response body.
+   * @param {Object} request.body - The request body containing the user's email and password.
+   * @returns {Promise<Object>} An object containing the HTTP status code (200, 400, or 401) and response body.
    */
   async handle({ body }) {
     try {
