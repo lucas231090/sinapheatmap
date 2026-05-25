@@ -6,9 +6,13 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const defaultApiBaseUrl = "http://localhost:3333";
+const apiBaseUrl = process.env.VITE_API_BASE_URL || defaultApiBaseUrl;
+
 if (!process.env.VITE_API_BASE_URL) {
-  console.error("ERRO: VITE_API_BASE_URL não está definida nas variáveis de ambiente!");
-  process.exit(1);
+  console.warn(
+    `VITE_API_BASE_URL não definida. Usando fallback local ${defaultApiBaseUrl} para o build.`,
+  );
 }
 
 function normalizeTarget(rawTarget) {
@@ -25,7 +29,7 @@ function normalizeTarget(rawTarget) {
   return `http://${target}`;
 }
 
-const apiTarget = normalizeTarget(process.env.VITE_API_BASE_URL);
+const apiTarget = normalizeTarget(apiBaseUrl);
 
 // https://vite.dev/config/
 export default defineConfig({
