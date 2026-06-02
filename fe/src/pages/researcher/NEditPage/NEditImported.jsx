@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useReducer, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import ImageIcon from "@mui/icons-material/Image";
@@ -19,73 +19,32 @@ import Textarea from "@/components/general/Textarea";
 import Button from "@/components/general/Button";
 import FileUpload from "@/components/general/FileUpload";
 
-export default function NEditImported({ experiment, onCancel }) {
-  const navigate = useNavigate();
-  const { notifyError, notifySuccess } = useNotifications();
-
-  const [name, setName] = useState(experiment.basic.name || "");
-  const [description, setDescription] = useState(
-    experiment.basic.description || "",
-  );
-  const [mediaFile, setMediaFile] = useState(null);
-  const [mediaPreview, setMediaPreview] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-
-  const originalMediaUrl = useMemo(() => {
-    // If it has old media format, it was normalized
-    if (experiment.pieces && experiment.pieces.length > 0) {
-      return experiment.pieces[0].mediaUrl
-        ? getPublicMediaUrl(experiment.pieces[0].mediaUrl)
-        : "";
-    }
-    return "";
-  }, [experiment]);
-
-  const mediaKind = useMemo(() => {
-    if (!mediaFile) {
-      return experiment.pieces?.[0]?.previewKind || "image";
-    }
-    return mediaFile.type.startsWith("video/") ? "video" : "image";
-  }, [mediaFile, experiment]);
-
-  const handleMediaChange = async (event) => {
-    const selectedFile = event.target.files?.[0] || null;
-    setMediaFile(selectedFile);
-    setErrorMessage("");
-
-    if (!selectedFile) {
-      setMediaPreview("");
-      return;
-    }
-
-    try {
-      const previewUrl = await fileToDataUrl(selectedFile);
-      setMediaPreview(previewUrl);
-    } catch (mediaError) {
-      console.error("Edit imported page media read error:", mediaError);
-      setMediaPreview("");
-      setErrorMessage("Não foi possível preparar a pré-visualização da mídia.");
-    }
-  };
-
-  const handleSubmit = async (event) => {
+function useEditImportedSubmit({
+  experiment,
+  name,
+  description,
+  media,
+  dispatchForm,
+  navigate,
+  notifyError,
+  notifySuccess,
+}) {
+  return async (event) => {
     event.preventDefault();
-    setErrorMessage("");
 
     if (!name.trim()) {
-      setErrorMessage("Informe o nome do experimento.");
+      dispatchForm({ type: "SET_ERROR", payload: "Informe o nome do experimento." });
       return;
     }
 
-    setIsSubmitting(true);
+    dispatchForm({ type: "SUBMIT_START" });
 
     try {
       const formData = new FormData();
       formData.append("filename", name.trim());
       formData.append("description", description.trim());
-      if (mediaFile) {
-        formData.append("mediaFile", mediaFile);
+      if (media.file) {
+        formData.append("mediaFile", media.file);
       }
 
       // Resolve record id from multiple possible locations to be robust
@@ -105,7 +64,7 @@ export default function NEditImported({ experiment, onCancel }) {
         recordId,
         name: name.trim(),
         description: description.trim(),
-        hasMediaFile: Boolean(mediaFile),
+        hasMediaFile: Boolean(media.file),
       });
 
       // log FormData keys for diagnosis (can't log values directly reliably)
@@ -164,12 +123,12 @@ export default function NEditImported({ experiment, onCancel }) {
         };
 
         // If a new media file was selected, upload it first and attach metadata
-        if (mediaFile) {
+        if (media.file) {
           try {
             console.debug(
               "NEditImported: uploading media file before updating experiment",
             );
-            const uploaded = await uploadExperimentMedia(mediaFile);
+            const uploaded = await uploadExperimentMedia(media.file);
             console.debug(
               "NEditImported: uploadExperimentMedia response",
               uploaded,
@@ -192,25 +151,25 @@ export default function NEditImported({ experiment, onCancel }) {
                 id: "peca-importada-1",
                 sampleId: "amostra-importada-1",
                 sourceType: "file",
-                sourceLabel: mediaFile.name,
+                sourceLabel: media.file.name,
                 sourceUrl: uploadedUrl,
-                fileName: mediaFile.name,
-                mimeType: mediaFile.type,
+                fileName: media.file.name,
+                mimeType: media.file.type,
                 previewUrl: uploadedUrl,
                 mediaPath: uploadedPath,
-                previewKind: mediaFile.type.startsWith("video/")
+                previewKind: media.file.type.startsWith("video/")
                   ? "video"
                   : "image",
               });
             } else {
               const p = { ...experimentToSend.pieces[0] };
-              p.sourceLabel = mediaFile.name;
+              p.sourceLabel = media.file.name;
               p.sourceUrl = uploadedUrl;
-              p.fileName = mediaFile.name;
-              p.mimeType = mediaFile.type;
+              p.fileName = media.file.name;
+              p.mimeType = media.file.type;
               p.previewUrl = uploadedUrl;
               p.mediaPath = uploadedPath;
-              p.previewKind = mediaFile.type.startsWith("video/")
+              p.previewKind = media.file.type.startsWith("video/")
                 ? "video"
                 : "image";
               experimentToSend.pieces[0] = p;
@@ -251,6 +210,7 @@ export default function NEditImported({ experiment, onCancel }) {
       }
 
       notifySuccess("Experimento atualizado com sucesso.");
+      dispatchForm({ type: "SUBMIT_SUCCESS" });
       navigate("/home");
     } catch (submitError) {
       console.error("NEditImported submit error:", submitError);
@@ -260,12 +220,91 @@ export default function NEditImported({ experiment, onCancel }) {
           ? submitError.message
           : "Não foi possível atualizar o teste.",
       );
-      setErrorMessage(message);
+      dispatchForm({ type: "SUBMIT_FAILURE", payload: message });
       notifyError(message);
-    } finally {
-      setIsSubmitting(false);
     }
   };
+}
+
+export default function NEditImported({ experiment, onCancel }) {
+  const navigate = useNavigate();
+  const { notifyError, notifySuccess } = useNotifications();
+
+  const [formState, dispatchForm] = useReducer(
+    (state, action) => {
+      switch (action.type) {
+        case "SET_FIELD":
+          return { ...state, [action.field]: action.value, errorMessage: "" };
+        case "SET_MEDIA":
+          return { ...state, media: action.value, errorMessage: "" };
+        case "SET_ERROR":
+          return { ...state, errorMessage: action.payload };
+        case "SUBMIT_START":
+          return { ...state, isSubmitting: true, errorMessage: "" };
+        case "SUBMIT_SUCCESS":
+          return { ...state, isSubmitting: false, errorMessage: "" };
+        case "SUBMIT_FAILURE":
+          return { ...state, isSubmitting: false, errorMessage: action.payload };
+        default:
+          return state;
+      }
+    },
+    {
+      name: experiment.basic.name || "",
+      description: experiment.basic.description || "",
+      media: { file: null, preview: "" },
+      isSubmitting: false,
+      errorMessage: "",
+    }
+  );
+
+  const { name, description, media, isSubmitting, errorMessage } = formState;
+
+  const originalMediaUrl = useMemo(() => {
+    // If it has old media format, it was normalized
+    if (experiment.pieces && experiment.pieces.length > 0) {
+      return experiment.pieces[0].mediaUrl
+        ? getPublicMediaUrl(experiment.pieces[0].mediaUrl)
+        : "";
+    }
+    return "";
+  }, [experiment]);
+
+  const mediaKind = useMemo(() => {
+    if (!media.file) {
+      return experiment.pieces?.[0]?.previewKind || "image";
+    }
+    return media.file.type.startsWith("video/") ? "video" : "image";
+  }, [media.file, experiment]);
+
+  const handleMediaChange = async (event) => {
+    const selectedFile = event.target.files?.[0] || null;
+
+    if (!selectedFile) {
+      dispatchForm({ type: "SET_MEDIA", value: { file: null, preview: "" } });
+      return;
+    }
+
+    try {
+      const previewUrl = await fileToDataUrl(selectedFile);
+      dispatchForm({ type: "SET_MEDIA", value: { file: selectedFile, preview: previewUrl } });
+    } catch (mediaError) {
+      console.error("Edit imported page media read error:", mediaError);
+      dispatchForm({ type: "SET_MEDIA", value: { file: selectedFile, preview: "" } });
+      dispatchForm({ type: "SET_ERROR", payload: "Não foi possível preparar a pré-visualização da mídia." });
+    }
+  };
+
+  const handleSubmit = useEditImportedSubmit({
+    experiment,
+    name,
+    description,
+    media,
+    dispatchForm,
+    navigate,
+    notifyError,
+    notifySuccess,
+  });
 
   return (
     <Card
@@ -274,25 +313,27 @@ export default function NEditImported({ experiment, onCancel }) {
       className="flex flex-col gap-5 w-full"
     >
       <div className="grid gap-4 md:grid-cols-1">
-        <label className="block">
+        <label className="block" htmlFor="edit-name">
           <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">
             Nome do experimento
           </span>
           <Input
+            id="edit-name"
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(event) => dispatchForm({ type: "SET_FIELD", field: "name", value: event.target.value })}
             placeholder="Ex.: Heatmap da leitura"
           />
         </label>
       </div>
 
-      <label className="block">
+      <label className="block" htmlFor="edit-desc">
         <span className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">
           Descrição
         </span>
         <Textarea
+          id="edit-desc"
           value={description}
-          onChange={(event) => setDescription(event.target.value)}
+          onChange={(event) => dispatchForm({ type: "SET_FIELD", field: "description", value: event.target.value })}
           rows={4}
           className="rounded-3xl focus:ring-2 focus:ring-sinapgreen-100"
           placeholder="Opcional: detalhes do teste importado"
@@ -306,7 +347,7 @@ export default function NEditImported({ experiment, onCancel }) {
           title="Alterar imagem ou vídeo de apoio"
           subtitle="Selecione um novo arquivo caso deseje alterar a mídia atual."
           fileName={
-            mediaFile?.name || (originalMediaUrl ? "Manter mídia atual" : null)
+            media.file?.name || (originalMediaUrl ? "Manter mídia atual" : null)
           }
           icon={mediaKind === "video" ? <VideocamIcon /> : <ImageIcon />}
         />
@@ -318,17 +359,20 @@ export default function NEditImported({ experiment, onCancel }) {
         </div>
       ) : null}
 
-      {mediaPreview || originalMediaUrl ? (
+      {media.preview || originalMediaUrl ? (
         <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-sinapgreen-500">
           {mediaKind === "video" ? (
             <video
-              src={mediaPreview || originalMediaUrl}
+              src={media.preview || originalMediaUrl}
               controls
+              aria-label="Pré-visualização do vídeo"
               className="h-72 w-full object-contain"
-            />
+            >
+              <track kind="captions" />
+            </video>
           ) : (
             <img
-              src={mediaPreview || originalMediaUrl}
+              src={media.preview || originalMediaUrl}
               alt="Pré-visualização da mídia"
               className="h-72 w-full object-contain"
             />

@@ -56,7 +56,7 @@ export function isValidCpf(value) {
   return firstDigit === digits[9] && secondDigit === digits[10];
 }
 
-export function normalizeComparableText(value) {
+function normalizeComparableText(value) {
   return String(value || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")

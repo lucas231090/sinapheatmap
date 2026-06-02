@@ -23,7 +23,7 @@ function NEditPage() {
   if (wizard.isLoading) {
     return (
       <section className="mx-auto w-full max-w-5xl rounded-[2rem] bg-white p-6 text-center text-sm font-semibold text-slate-600 shadow-[0_18px_50px_rgba(0,0,0,0.16)]">
-        Carregando dados do experimento...
+        Carregando dados do experimento&hellip;
       </section>
     );
   }

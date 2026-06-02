@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useRef } from "react";
 import { createEyeTrackingSession } from "@/services/eyetrackingService";
 
 export default function NTestStepResult({
@@ -6,19 +6,28 @@ export default function NTestStepResult({
   participantInfo,
   sessionData,
 }) {
-  const [status, setStatus] = useState("saving"); // saving | success | error
+  const [status, setStatus] = useReducer((state, action) => action, "saving"); // saving | success | error
+
+  const submitDataRef = useRef({ experimentId, participantInfo, sessionData });
+  submitDataRef.current = { experimentId, participantInfo, sessionData };
 
   useEffect(() => {
     async function submit() {
       try {
+        const {
+          experimentId: currentExpId,
+          participantInfo: currentPartInfo,
+          sessionData: currentSessData,
+        } = submitDataRef.current;
+
         const payload = {
           sessao_id: crypto.randomUUID(),
-          experimento_id: experimentId,
+          experimento_id: currentExpId,
           participante: {
-            nome: participantInfo.nome || "",
-            cpf: participantInfo.cpf || "",
+            nome: currentPartInfo.nome || "",
+            cpf: currentPartInfo.cpf || "",
           },
-          amostras: sessionData,
+          amostras: currentSessData,
         };
 
         await createEyeTrackingSession(payload);
@@ -29,14 +38,14 @@ export default function NTestStepResult({
       }
     }
     submit();
-  }, [experimentId, participantInfo, sessionData]);
+  }, []);
 
   return (
     <div className="flex h-screen w-full items-center justify-center p-8 text-center text-white">
       {status === "saving" && (
         <div className="rounded-[2rem] border border-white/15 bg-slate-950/35 px-8 py-6 shadow-2xl backdrop-blur-md">
           <h2 className="text-2xl font-bold animate-pulse">
-            Salvando seus resultados...
+            Salvando seus resultados&hellip;
           </h2>
         </div>
       )}
@@ -52,7 +61,7 @@ export default function NTestStepResult({
       )}
 
       {status === "success" && (
-        <div className="animate-fade-in-up rounded-[2rem] border border-white/15 bg-slate-950/35 px-8 py-8 shadow-2xl backdrop-blur-md">
+        <div className="animate-fade-in-up rounded-[2rem] border border-white/15 bg-slate-950/35 p-8 shadow-2xl backdrop-blur-md">
           <h1 className="mb-4 text-5xl font-black text-sinapgreen-200">
             MUITO OBRIGADO POR PARTICIPAR!
           </h1>

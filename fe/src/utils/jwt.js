@@ -1,4 +1,4 @@
-export function parseJwt(token) {
+function parseJwt(token) {
   if (!token || typeof token !== "string") {
     return null;
   }

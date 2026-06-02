@@ -9,6 +9,8 @@ import MovieOutlinedIcon from "@mui/icons-material/MovieOutlined";
 import CircularProgress from "@mui/material/CircularProgress";
 import NPageHeader from "@/components/general/NPageHeader";
 
+const normalizeMediaUrl = (value) => getPublicMediaUrl(value || "");
+
 function NHeatmapPage() {
   const { id } = useParams();
   const [forceVideoHeatmap, setForceVideoHeatmap] = useState(false);
@@ -34,8 +36,9 @@ function NHeatmapPage() {
   if (isLoading) {
     return (
       <div className="flex h-[80vh] flex-col items-center justify-center bg-white text-black">
-        <CircularProgress color="inherit" />
-        <p className="mt-4 text-lg">Carregando dados do heatmap...</p>
+        <div className="flex h-[50vh] flex-col items-center justify-center">
+          <p className="mt-4 text-lg">Carregando dados do heatmap&hellip;</p>
+        </div>
       </div>
     );
   }
@@ -67,8 +70,6 @@ function NHeatmapPage() {
   const availablePieces = isOldImported
     ? pieces
     : pieces.filter((p) => p.sampleId === selectedSampleId);
-
-  const normalizeMediaUrl = (value) => getPublicMediaUrl(value || "");
 
   let mediaUrl = "";
   if (activePiece?.previewUrl) {
@@ -102,10 +103,11 @@ function NHeatmapPage() {
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1.15fr)_minmax(0,1.2fr)_auto] lg:items-end">
           {!isOldImported && samples.length > 0 && (
             <div className="min-w-0">
-              <label className="mb-2 block text-sm font-semibold text-black">
+              <label className="mb-2 block text-sm font-semibold text-black" htmlFor="select-sample">
                 Selecione a Amostra
               </label>
               <select
+                id="select-sample"
                 value={selectedSampleId}
                 onChange={(e) => setSelectedSampleId(e.target.value)}
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-black outline-none transition focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-500/20"
@@ -121,10 +123,11 @@ function NHeatmapPage() {
 
           {(availablePieces.length > 0 || isOldImported) && (
             <div className="min-w-0">
-              <label className="mb-2 block text-sm font-semibold text-black">
+              <label className="mb-2 block text-sm font-semibold text-black" htmlFor="select-piece">
                 Selecione a Peça (Mídia)
               </label>
               <select
+                id="select-piece"
                 value={selectedPieceId}
                 onChange={(e) => setSelectedPieceId(e.target.value)}
                 className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-black outline-none transition focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-500/20"
@@ -144,10 +147,11 @@ function NHeatmapPage() {
           )}
 
           <div className="min-w-0">
-            <label className="mb-2 block text-sm font-semibold text-black">
+            <label className="mb-2 block text-sm font-semibold text-black" htmlFor="select-session">
               Selecione o Participante (Sessão)
             </label>
             <select
+              id="select-session"
               value={selectedSessionId}
               onChange={(e) => setSelectedSessionId(e.target.value)}
               className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-black outline-none transition focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-500/20"

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useReducer } from "react";
 import {
   getExperimentById,
   getExperimentSessions,
@@ -60,25 +60,56 @@ const medianNumber = (values, fallback = 0) => {
 };
 
 export const useHeatmapData = (experimentId) => {
-  const [experiment, setExperiment] = useState(null);
-  const [sessions, setSessions] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loadState, dispatchLoad] = useReducer(
+    (state, action) => {
+      switch (action.type) {
+        case "START_LOAD":
+          return { isLoading: true, error: null, experiment: null, sessions: [] };
+        case "LOAD_SUCCESS":
+          return {
+            isLoading: false,
+            error: null,
+            experiment: action.payload.experiment,
+            sessions: action.payload.sessions,
+          };
+        case "LOAD_FAILURE":
+          return { isLoading: false, error: action.payload, experiment: null, sessions: [] };
+        default:
+          return state;
+      }
+    },
+    { isLoading: true, error: null, experiment: null, sessions: [] }
+  );
+
+  const { isLoading, error, experiment, sessions } = loadState;
 
   const [selectedSampleId, setSelectedSampleId] = useState("");
   const [selectedPieceId, setSelectedPieceId] = useState("");
   const [selectedSessionId, setSelectedSessionId] = useState("all");
 
-  const [coords, setCoords] = useState([]);
-  const [radiusScale, setRadiusScale] = useState(1);
-  const [canvasSize, setCanvasSize] = useState({ width: 1280, height: 720 });
-  const [captureFps, setCaptureFps] = useState(60);
-  const [timelineDurationMs, setTimelineDurationMs] = useState(0);
+  const activeSampleId = selectedSampleId || (experiment?.jsonData?.samples?.[0]?.id || "");
+
+  const activePieceId = useMemo(() => {
+    if (!experiment) return "";
+    const isOldImported = Array.isArray(experiment.jsonData);
+    if (isOldImported) {
+      return "old-media";
+    }
+    const allPieces = experiment.jsonData?.pieces || [];
+    if (selectedPieceId) {
+      const piece = allPieces.find((p) => p.id === selectedPieceId);
+      if (piece && piece.sampleId === activeSampleId) {
+        return selectedPieceId;
+      }
+    }
+    const piecesForSample = allPieces.filter((p) => p.sampleId === activeSampleId);
+    return piecesForSample[0]?.id || allPieces[0]?.id || "";
+  }, [selectedPieceId, experiment, activeSampleId]);
+
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
   });
-  const [activePiece, setActivePiece] = useState(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -89,102 +120,71 @@ export const useHeatmapData = (experimentId) => {
     };
 
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
 
   const fetchData = useCallback(async () => {
+    if (!experimentId) return;
+    dispatchLoad({ type: "START_LOAD" });
     try {
-      setIsLoading(true);
       const expData = await getExperimentById(experimentId);
-      setExperiment(expData);
 
       const isOldImported = Array.isArray(expData.jsonData);
+      let sessionsData = [];
 
       if (isOldImported) {
-        const mappedSessions = expData.jsonData.map((item, idx) => ({
+        sessionsData = expData.jsonData.map((item, idx) => ({
           sessao_id: `imported-${idx}`,
           participante: {
             nome: item.Nome || item.nome || `Importado ${idx + 1}`,
           },
           ...item,
         }));
-        setSessions(mappedSessions);
       } else {
         const sessData = await getExperimentSessions(experimentId);
-        setSessions(sessData || []);
+        sessionsData = sessData || [];
       }
 
-      const allSamples = expData.jsonData?.samples || [];
-      if (!isOldImported && allSamples.length > 0) {
-        setSelectedSampleId(allSamples[0].id);
-      }
+      dispatchLoad({
+        type: "LOAD_SUCCESS",
+        payload: { experiment: expData, sessions: sessionsData },
+      });
 
-      let allPieces = expData.jsonData?.pieces || [];
-      if (isOldImported) {
-        allPieces = [
-          {
-            id: "old-media",
-            name: expData.filename,
-            mediaUrl: expData.mediaPath?.replace("/app/uploads/media/", ""),
-            previewKind: expData.mediaType === 1 ? "video" : "image",
-          },
-        ];
-      }
-
-      if (allPieces.length > 0) {
-        const piecesForSample =
-          allSamples.length > 0
-            ? allPieces.filter((piece) => piece.sampleId === allSamples[0].id)
-            : allPieces;
-
-        if (piecesForSample.length > 0) {
-          setSelectedPieceId(piecesForSample[0].id);
-        } else {
-          setSelectedPieceId(allPieces[0].id);
-        }
-      }
     } catch (err) {
       console.error(err);
-      setError("Erro ao buscar dados do heatmap");
-    } finally {
-      setIsLoading(false);
+      dispatchLoad({ type: "LOAD_FAILURE", payload: "Erro ao buscar dados do heatmap" });
     }
   }, [experimentId]);
 
   useEffect(() => {
-    if (experimentId) {
-      fetchData();
+    fetchData();
+  }, [fetchData]);
+
+  const handleSetSelectedSampleId = useCallback((sampleId) => {
+    setSelectedSampleId(sampleId);
+    setSelectedPieceId("");
+  }, []);
+
+  const derivedHeatmapData = useMemo(() => {
+    if (!experiment || !activePieceId) {
+      return {
+        activePiece: null,
+        coords: [],
+        radiusScale: 1,
+        canvasSize: { width: 1280, height: 720 },
+        captureFps: 60,
+        timelineDurationMs: 0,
+      };
     }
-  }, [experimentId, fetchData]);
-
-  useEffect(() => {
-    if (!experiment) return;
-
-    const isOldImported = Array.isArray(experiment.jsonData);
-    if (isOldImported) return;
-
-    const allPieces = experiment.jsonData?.pieces || [];
-    const piecesForSample = allPieces.filter(
-      (piece) => piece.sampleId === selectedSampleId,
-    );
-
-    if (
-      piecesForSample.length > 0 &&
-      !piecesForSample.find((piece) => piece.id === selectedPieceId)
-    ) {
-      setSelectedPieceId(piecesForSample[0].id);
-    }
-  }, [selectedSampleId, selectedPieceId, experiment]);
-
-  useEffect(() => {
-    if (!experiment || !selectedPieceId) return;
 
     let piece = (experiment.jsonData?.pieces || []).find(
-      (candidate) => candidate.id === selectedPieceId,
+      (candidate) => candidate.id === activePieceId,
     );
 
     const isOldImported = Array.isArray(experiment.jsonData);
-    if (isOldImported && selectedPieceId === "old-media") {
+    if (isOldImported && activePieceId === "old-media") {
       piece = {
         id: "old-media",
         name: experiment.filename,
@@ -193,11 +193,15 @@ export const useHeatmapData = (experimentId) => {
       };
     }
 
-    setActivePiece(piece);
-
     if (!piece) {
-      setCoords([]);
-      return;
+      return {
+        activePiece: null,
+        coords: [],
+        radiusScale: 1,
+        canvasSize: { width: 1280, height: 720 },
+        captureFps: 60,
+        timelineDurationMs: 0,
+      };
     }
 
     let combinedCoords = [];
@@ -231,13 +235,13 @@ export const useHeatmapData = (experimentId) => {
 
       sessionsToUse.forEach((session) => {
         const matchingSamples = (session.amostras || []).filter((amostra) => {
-          if (!selectedSampleId) return true;
-          return matchesSelectedId(amostra, selectedSampleId);
+          if (!activeSampleId) return true;
+          return matchesSelectedId(amostra, activeSampleId);
         });
 
         matchingSamples.forEach((amostra) => {
           const pieceData = (amostra.pecas || []).find((candidate) =>
-            matchesSelectedId(candidate, selectedPieceId),
+            matchesSelectedId(candidate, activePieceId),
           );
 
           if (!pieceData || !pieceData.dados_eyetracking) return;
@@ -255,14 +259,25 @@ export const useHeatmapData = (experimentId) => {
             const fallbackTimestamp = index * (1000 / 60);
             const timestamp = Number(coord.timestamp);
 
-            const scaledPoint =
-              coord.x <= 1 && coord.y <= 1 && coord.x >= 0 && coord.y >= 0
-                ? {
-                    ...coord,
-                    x: coord.x * screenWidth,
-                    y: coord.y * screenHeight,
-                  }
-                : { ...coord };
+            let finalX = coord.x;
+            let finalY = coord.y;
+
+            if (typeof coord.normalized_x === "number" && typeof coord.normalized_y === "number") {
+              finalX = coord.normalized_x * screenWidth;
+              finalY = coord.normalized_y * screenHeight;
+            } else if (coord.x <= 1 && coord.y <= 1 && coord.x >= 0 && coord.y >= 0) {
+              finalX = coord.x * screenWidth;
+              finalY = coord.y * screenHeight;
+            } else if (coord.screen_width && coord.screen_height) {
+              finalX = (coord.x / coord.screen_width) * screenWidth;
+              finalY = (coord.y / coord.screen_height) * screenHeight;
+            }
+
+            const scaledPoint = {
+              ...coord,
+              x: finalX,
+              y: finalY,
+            };
 
             return {
               ...scaledPoint,
@@ -328,21 +343,32 @@ export const useHeatmapData = (experimentId) => {
     );
     const scaledCoords = scaleCoordinates(validCoords, scale);
 
-    setRadiusScale(scale);
-    setCanvasSize(newCanvasSize);
-    setCoords(scaledCoords);
-    setCaptureFps(estimatedCaptureFps);
-    setTimelineDurationMs(
-      timelineOffset || validCoords[validCoords.length - 1]?.timestamp || 0,
-    );
+    return {
+      activePiece: piece,
+      coords: scaledCoords,
+      radiusScale: scale,
+      canvasSize: newCanvasSize,
+      captureFps: estimatedCaptureFps,
+      timelineDurationMs:
+        timelineOffset || validCoords[validCoords.length - 1]?.timestamp || 0,
+    };
   }, [
     experiment,
     sessions,
-    selectedSampleId,
-    selectedPieceId,
+    activePieceId,
+    activeSampleId,
     selectedSessionId,
     windowSize,
   ]);
+
+  const {
+    activePiece,
+    coords,
+    radiusScale,
+    canvasSize,
+    captureFps,
+    timelineDurationMs,
+  } = derivedHeatmapData;
 
   return {
     experiment,
@@ -350,9 +376,9 @@ export const useHeatmapData = (experimentId) => {
     isLoading,
     error,
     activePiece,
-    selectedSampleId,
-    setSelectedSampleId,
-    selectedPieceId,
+    selectedSampleId: activeSampleId,
+    setSelectedSampleId: handleSetSelectedSampleId,
+    selectedPieceId: activePieceId,
     setSelectedPieceId,
     selectedSessionId,
     setSelectedSessionId,

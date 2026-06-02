@@ -1,8 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useReducer } from "react";
 
 import { useNotifications } from "@/hooks/useNotifications";
 import { getApiErrorMessage } from "@/services/api";
 import { getExperiments } from "@/services/eyetrackingService";
+
+const dateTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
+  dateStyle: "short",
+  timeStyle: "short",
+});
 
 function formatDateTime(value) {
   if (!value) {
@@ -15,10 +20,7 @@ function formatDateTime(value) {
     return "-";
   }
 
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
+  return dateTimeFormatter.format(date);
 }
 
 function normalizeExperiment(record) {
@@ -68,13 +70,26 @@ function normalizeExperiment(record) {
 
 export function useNHomePage() {
   const { notifyError } = useNotifications();
-  const [experiments, setExperiments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loadState, dispatchLoad] = useReducer(
+    (state, action) => {
+      switch (action.type) {
+        case "START_LOAD":
+          return { ...state, isLoading: true, error: "" };
+        case "LOAD_SUCCESS":
+          return { isLoading: false, error: "", experiments: action.payload };
+        case "LOAD_FAILURE":
+          return { isLoading: false, error: action.payload, experiments: [] };
+        default:
+          return state;
+      }
+    },
+    { isLoading: true, error: "", experiments: [] },
+  );
+
+  const { isLoading, error, experiments } = loadState;
 
   const loadExperiments = useCallback(async () => {
-    setIsLoading(true);
-    setError("");
+    dispatchLoad({ type: "START_LOAD" });
 
     try {
       const response = await getExperiments();
@@ -82,17 +97,14 @@ export function useNHomePage() {
         ? response.map(normalizeExperiment)
         : [];
 
-      setExperiments(normalizedList);
+      dispatchLoad({ type: "LOAD_SUCCESS", payload: normalizedList });
     } catch (loadError) {
       const message = getApiErrorMessage(
         loadError,
         "Não foi possível carregar os testes.",
       );
-      setError(message);
+      dispatchLoad({ type: "LOAD_FAILURE", payload: message });
       notifyError(message);
-      setExperiments([]);
-    } finally {
-      setIsLoading(false);
     }
   }, [notifyError]);
 

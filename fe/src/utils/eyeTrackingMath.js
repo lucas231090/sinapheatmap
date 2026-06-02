@@ -1,15 +1,38 @@
+// ─── Calibration Points ───────────────────────────────────────────────────────
+// 13 points ordered: corners first (hardest to predict), then edges, then inner
+// quadrants, then center. Uses 0.05/0.95 instead of 0.1/0.9 so the training
+// data actually reaches the screen edges — avoids risky linear extrapolation.
 export const CALIBRATION_POINTS = [
-  { x: 0.1, y: 0.1 },
-  { x: 0.5, y: 0.1 },
-  { x: 0.9, y: 0.1 },
-  { x: 0.1, y: 0.5 },
-  { x: 0.5, y: 0.5 },
-  { x: 0.9, y: 0.5 },
-  { x: 0.1, y: 0.9 },
-  { x: 0.5, y: 0.9 },
-  { x: 0.9, y: 0.9 },
+  { x: 0.05, y: 0.05 }, // top-left  corner
+  { x: 0.95, y: 0.05 }, // top-right corner
+  { x: 0.95, y: 0.95 }, // bottom-right corner
+  { x: 0.05, y: 0.95 }, // bottom-left corner
+  { x: 0.5, y: 0.05 }, // top edge
+  { x: 0.95, y: 0.5 }, // right edge
+  { x: 0.5, y: 0.95 }, // bottom edge
+  { x: 0.05, y: 0.5 }, // left edge
+  { x: 0.25, y: 0.25 }, // inner top-left
+  { x: 0.75, y: 0.25 }, // inner top-right
+  { x: 0.75, y: 0.75 }, // inner bottom-right
+  { x: 0.25, y: 0.75 }, // inner bottom-left
+  { x: 0.5, y: 0.5 }, // center
 ];
 
+// ─── Blink Detection Constants ────────────────────────────────────────────────
+// Shared with useEyeTracking so thresholds are tuned in a single place.
+export const EAR_THRESHOLDS = {
+  // Only collect calibration frames above this — ensures clean iris positions.
+  OPEN: 0.26,
+  // Transition to BLINKING state below this (also used for velocity detection).
+  PRE_BLINK: 0.22,
+  // Eye is definitively shut below this (used to confirm BLINKING state).
+  CLOSED: 0.16,
+};
+
+// Frames to hold the frozen gaze after the eye re-opens (stabilisation period).
+export const BLINK_RECOVERY_FRAMES = 5;
+
+// ─── Math Utilities ───────────────────────────────────────────────────────────
 export const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
 
 export function solveLinearSystem(A, b) {
@@ -73,7 +96,7 @@ export function ransacLinear(samples, getTargetLabel, options = {}) {
   const numFeatures = samples[0].features.length;
   let best = { coeffs: null, inliers: [] };
   const n = samples.length;
-  let fallback = ridgeRegression(samples, getTargetLabel);
+  const fallback = ridgeRegression(samples, getTargetLabel);
   if (n < numFeatures) return fallback;
 
   for (let it = 0; it < iterations; it++) {
@@ -87,8 +110,7 @@ export function ransacLinear(samples, getTargetLabel, options = {}) {
     for (let i = 0; i < n; i++) {
       const y = getTargetLabel(samples[i]);
       const pred = dot(candidate, samples[i].features);
-      const residual = Math.abs(pred - y);
-      if (residual <= threshold) inliers.push(samples[i]);
+      if (Math.abs(pred - y) <= threshold) inliers.push(samples[i]);
     }
     if (inliers.length > best.inliers.length) {
       const refined = ridgeRegression(inliers, getTargetLabel) || candidate;
@@ -120,16 +142,19 @@ export function shuffleArray(array) {
   return newArray;
 }
 
-export function adaptiveEMA(current, previous, alphaMin = 0.1, alphaMax = 0.9, distanceThreshold = 0.15) {
+export function adaptiveEMA(
+  current,
+  previous,
+  alphaMin = 0.1,
+  alphaMax = 0.9,
+  distanceThreshold = 0.15,
+) {
   if (!previous) return current;
-
   const dx = current.x - previous.x;
   const dy = current.y - previous.y;
   const distance = Math.hypot(dx, dy);
-
-  let alpha = alphaMin + ((distance / distanceThreshold) * (alphaMax - alphaMin));
+  let alpha = alphaMin + (distance / distanceThreshold) * (alphaMax - alphaMin);
   alpha = clamp(alpha, alphaMin, alphaMax);
-
   return {
     x: previous.x + alpha * dx,
     y: previous.y + alpha * dy,

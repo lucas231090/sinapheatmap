@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useReducer, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { useCreateExperimentWizard } from "@/hooks/useCreateExperimentWizard";
@@ -28,21 +28,34 @@ export function useEditExperimentWizard() {
     validateBeforeSubmit,
   } = wizard;
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
-  const [initialExperiment, setInitialExperiment] = useState(null);
-  const [initialParticipantsText, setInitialParticipantsText] = useState("");
-  const [createdAt, setCreatedAt] = useState("");
+  const [loadState, dispatchLoad] = useReducer(
+    (state, action) => {
+      switch (action.type) {
+        case "START_LOAD":
+          return { isLoading: true, error: "" };
+        case "LOAD_SUCCESS":
+          return { isLoading: false, error: "" };
+        case "LOAD_FAILURE":
+          return { isLoading: false, error: action.payload };
+        default:
+          return state;
+      }
+    },
+    { isLoading: true, error: "" },
+  );
+
+  const { isLoading, error: loadError } = loadState;
+  const initialExperimentRef = useRef(null);
+  const initialParticipantsTextRef = useRef("");
+  const createdAtRef = useRef("");
 
   const loadExperiment = useCallback(async () => {
     if (!id) {
-      setLoadError("Id do experimento nao encontrado.");
-      setIsLoading(false);
+      dispatchLoad({ type: "LOAD_FAILURE", payload: "Id do experimento nao encontrado." });
       return;
     }
 
-    setIsLoading(true);
-    setLoadError("");
+    dispatchLoad({ type: "START_LOAD" });
 
     try {
       const response = await getExperimentById(id);
@@ -51,19 +64,18 @@ export function useEditExperimentWizard() {
         normalized.experiment.participants,
       );
 
-      setInitialExperiment(normalized.experiment);
-      setInitialParticipantsText(participantsText);
-      setCreatedAt(normalized.createdAt);
+      initialExperimentRef.current = normalized.experiment;
+      initialParticipantsTextRef.current = participantsText;
+      createdAtRef.current = normalized.createdAt;
       hydrateWizard(normalized.experiment, { participantsText });
+      dispatchLoad({ type: "LOAD_SUCCESS" });
     } catch (error) {
       const message = getApiErrorMessage(
         error,
         "Nao foi possivel carregar o experimento.",
       );
-      setLoadError(message);
+      dispatchLoad({ type: "LOAD_FAILURE", payload: message });
       notifyError(message);
-    } finally {
-      setIsLoading(false);
     }
   }, [hydrateWizard, id, notifyError]);
 
@@ -72,15 +84,15 @@ export function useEditExperimentWizard() {
   }, [loadExperiment]);
 
   const resetToLoaded = useCallback(() => {
-    if (!initialExperiment) {
+    if (!initialExperimentRef.current) {
       resetWizard();
       return;
     }
 
-    hydrateWizard(initialExperiment, {
-      participantsText: initialParticipantsText,
+    hydrateWizard(initialExperimentRef.current, {
+      participantsText: initialParticipantsTextRef.current,
     });
-  }, [hydrateWizard, initialExperiment, initialParticipantsText, resetWizard]);
+  }, [hydrateWizard, resetWizard]);
 
   const saveExperimentRequest = useCallback(async () => {
     if (!validateBeforeSubmit()) {
@@ -98,7 +110,9 @@ export function useEditExperimentWizard() {
     setSubmissionError("");
 
     try {
-      const payload = buildExperimentPayload(experiment, { createdAt });
+      const payload = buildExperimentPayload(experiment, {
+        createdAt: createdAtRef.current,
+      });
       const response = await updateExperiment(id, payload);
       const updatedExperiment = response?.data?.data || response?.data;
       const status = response?.status || (response?.status === 0 ? 0 : null);
@@ -125,7 +139,6 @@ export function useEditExperimentWizard() {
       setIsSubmitting(false);
     }
   }, [
-    createdAt,
     experiment,
     id,
     navigate,

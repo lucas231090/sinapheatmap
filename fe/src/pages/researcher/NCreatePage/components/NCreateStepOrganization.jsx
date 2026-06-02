@@ -44,10 +44,11 @@ export default function NCreateStepOrganization({
             title="ORGANIZAR AMOSTRAS"
             description="Ative a randomização para embaralhar a sequência ao iniciar o teste."
           />
-          <label className="flex items-center gap-3 rounded-full bg-white px-4 py-3 text-sm font-semibold shadow-sm">
+          <label className="flex items-center gap-3 rounded-full bg-white px-4 py-3 text-sm font-semibold shadow-sm" htmlFor="org-rand-samples">
             <input
+              id="org-rand-samples"
               type="checkbox"
-              className="h-4 w-4 accent-sinapgreen-500"
+              className="size-4 accent-sinapgreen-500"
               checked={organization.randomizeSamples}
               onChange={(event) =>
                 onOrganizationFieldChange(
@@ -81,7 +82,7 @@ export default function NCreateStepOrganization({
                     pieces.filter((piece) => piece.sampleId === sample.id)
                       .length
                   } peça(s)`}
-                  thumbnail={<div className="h-10 w-10 rounded-xl bg-white" />}
+                  thumbnail={<div className="size-10 rounded-xl bg-white" />}
                   selected={sample.id === selectedOrganizationSampleId}
                   onClick={() => onSelectOrganizationSample(sample.id)}
                   onMoveLeft={() => onSampleMove(sample.id, -1)}
@@ -101,10 +102,11 @@ export default function NCreateStepOrganization({
             title="ORGANIZAR PEÇAS"
             description="Escolha a amostra para organizar apenas as peças que pertencem a ela."
           />
-          <label className="flex items-center gap-3 rounded-full bg-white px-4 py-3 text-sm font-semibold shadow-sm">
+          <label className="flex items-center gap-3 rounded-full bg-white px-4 py-3 text-sm font-semibold shadow-sm" htmlFor="org-rand-pieces">
             <input
+              id="org-rand-pieces"
               type="checkbox"
-              className="h-4 w-4 accent-sinapgreen-500"
+              className="size-4 accent-sinapgreen-500"
               checked={organization.randomizePieces}
               onChange={(event) =>
                 onOrganizationFieldChange(
@@ -154,7 +156,7 @@ export default function NCreateStepOrganization({
                     piece.sourceType === "url" ? "URL" : "Arquivo"
                   }`}
                   badge={piece.sourceType === "url" ? "URL" : "arquivo"}
-                  thumbnail={<div className="h-10 w-10 rounded-xl bg-white" />}
+                  thumbnail={<div className="size-10 rounded-xl bg-white" />}
                   onMoveLeft={() => onPieceMove(piece.id, -1)}
                   onMoveRight={() => onPieceMove(piece.id, 1)}
                   controlsDisabled={organization.randomizePieces}

@@ -1,6 +1,4 @@
-import { forwardRef } from "react";
-
-const Input = forwardRef(({ className = "", error, ...props }, ref) => {
+const Input = ({ className = "", error, ref, ...props }) => {
   return (
     <div className="w-full">
       <input
@@ -13,7 +11,6 @@ const Input = forwardRef(({ className = "", error, ...props }, ref) => {
       {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
     </div>
   );
-});
+};
 
-Input.displayName = "Input";
 export default Input;

@@ -20,7 +20,7 @@ function NSignUpPage() {
   });
   const [errors, setErrors] = useState({});
 
-  const handleChange = (event) => {
+  const handleInputChange = (event) => {
     const { name, value } = event.target;
     setFormData((previous) => ({ ...previous, [name]: value }));
 
@@ -71,7 +71,7 @@ function NSignUpPage() {
               name="name"
               type="text"
               value={formData.name}
-              onChange={handleChange}
+              onChange={handleInputChange}
               error={errors.name}
             />
           </div>
@@ -83,7 +83,7 @@ function NSignUpPage() {
               name="email"
               type="email"
               value={formData.email}
-              onChange={handleChange}
+              onChange={handleInputChange}
               autoComplete="email"
               error={errors.email}
             />
@@ -96,7 +96,7 @@ function NSignUpPage() {
               name="password"
               type="password"
               value={formData.password}
-              onChange={handleChange}
+              onChange={handleInputChange}
               autoComplete="new-password"
               error={errors.password}
             />
@@ -109,7 +109,7 @@ function NSignUpPage() {
               name="confirmPassword"
               type="password"
               value={formData.confirmPassword}
-              onChange={handleChange}
+              onChange={handleInputChange}
               autoComplete="new-password"
               error={errors.confirmPassword}
             />

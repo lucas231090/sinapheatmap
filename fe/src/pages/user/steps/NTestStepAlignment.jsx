@@ -8,24 +8,26 @@ export default function NTestStepAlignment({
   faceValid,
   onNext,
 }) {
-  const [timeValid, setTimeValid] = useState(0);
-  const displayVideoRef = useRef(null); // Ref apenas para mostrar o rosto na UI
+  const [rawTimeValid, setRawTimeValid] = useState(0);
+  const prevFaceValid = useRef(faceValid);
 
-  // Conecta o stream da câmera ao vídeo de exibição local
+  if (faceValid !== prevFaceValid.current) {
+    prevFaceValid.current = faceValid;
+    setRawTimeValid(0);
+  }
+
+  const timeValid = faceValid ? rawTimeValid : 0;
+  const displayVideoRef = useRef(null);
+
   useEffect(() => {
     if (displayVideoRef.current && stream) {
       displayVideoRef.current.srcObject = stream;
     }
   }, [stream]);
 
-  // Conta o tempo que o rosto está válido para liberar o botão
   useEffect(() => {
-    let timer;
-    if (faceValid) {
-      timer = setInterval(() => setTimeValid((t) => t + 1), 1000);
-    } else {
-      setTimeValid(0);
-    }
+    if (!faceValid) return;
+    const timer = setInterval(() => setRawTimeValid((t) => t + 1), 1000);
     return () => clearInterval(timer);
   }, [faceValid]);
 
@@ -45,10 +47,13 @@ export default function NTestStepAlignment({
               autoPlay
               playsInline
               muted
+              aria-label="Exibição da câmera"
               className={`h-full w-full object-cover scale-x-[-1] transition-opacity duration-300 ${
                 cameraActive ? "opacity-100" : "opacity-0"
               }`}
-            />
+            >
+              <track kind="captions" />
+            </video>
 
             {!cameraActive && (
               <div className="absolute inset-0 flex items-center justify-center px-6 text-sm text-slate-300">
@@ -71,6 +76,7 @@ export default function NTestStepAlignment({
 
           {!cameraActive ? (
             <button
+              type="button"
               onClick={startCamera}
               disabled={!mpLoaded}
               className="rounded-full bg-sinapgreen-500 px-6 py-3 font-bold text-black disabled:opacity-50"
@@ -82,8 +88,9 @@ export default function NTestStepAlignment({
 
         {timeValid > 2 && (
           <button
+            type="button"
             onClick={onNext}
-            className="mt-2 rounded-full bg-green-500 px-8 py-4 font-bold text-white animate-bounce"
+            className="mt-2 rounded-full bg-green-500 px-8 py-4 font-bold text-white transition-transform ease-out hover:scale-105"
           >
             Posição Perfeita! Continuar
           </button>

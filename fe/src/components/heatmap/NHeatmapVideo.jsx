@@ -15,10 +15,6 @@ const NHeatmapVideo = ({
   const playerRef = useRef(null);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
 
-  // Estados da mídia
-  const [resolvedMediaUrl, setResolvedMediaUrl] = useState("");
-  const [isLoadingMedia, setIsLoadingMedia] = useState(true);
-
   // FPS travado em 60 para bater exatamente com a taxa de atualização da webcam
   const FPS = 60;
 
@@ -31,9 +27,11 @@ const NHeatmapVideo = ({
     const value = Number(captureFps);
     if (Number.isFinite(value) && value > 0) return Math.round(value);
 
-    const timestamps = (coords || [])
-      .map((coord) => Number(coord?.timestamp))
-      .filter((timestamp) => Number.isFinite(timestamp));
+    const timestamps = (coords || []).reduce((acc, coord) => {
+      const timestamp = Number(coord?.timestamp);
+      if (Number.isFinite(timestamp)) acc.push(timestamp);
+      return acc;
+    }, []);
 
     if (timestamps.length < 2) return FPS;
 
@@ -84,22 +82,7 @@ const NHeatmapVideo = ({
     captureFps: estimatedCaptureFps,
   };
 
-  // Carregamento da Mídia (mesmo do código anterior)
-  useEffect(() => {
-    if (!mediaUrl) {
-      setResolvedMediaUrl("");
-      setIsLoadingMedia(false);
-      return;
-    }
-    if (mediaUrl.startsWith("blob:") || mediaUrl.startsWith("data:")) {
-      setResolvedMediaUrl(mediaUrl);
-      setIsLoadingMedia(false);
-      return;
-    }
-    setIsLoadingMedia(true);
-    setResolvedMediaUrl(mediaUrl);
-    setIsLoadingMedia(false);
-  }, [mediaUrl]);
+  const resolvedMediaUrl = mediaUrl || "";
 
   const handleSpeedChange = (e) => {
     setPlaybackSpeed(parseFloat(e.target.value));
@@ -111,11 +94,12 @@ const NHeatmapVideo = ({
   return (
     <div className="flex w-full flex-col items-center">
       <div className="mb-4 flex w-full max-w-4xl flex-wrap items-center justify-center gap-4 rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm text-black">
-        <label className="flex items-center gap-2 text-black">
+        <label className="flex items-center gap-2 text-black" htmlFor="select-speed">
           <SpeedIcon fontSize="small" />
           <span className="text-sm font-semibold">Velocidade:</span>
         </label>
         <select
+          id="select-speed"
           value={playbackSpeed}
           onChange={handleSpeedChange}
           className="rounded-2xl border border-slate-200 bg-white p-2 text-black outline-none focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-500/20"
@@ -130,7 +114,7 @@ const NHeatmapVideo = ({
           <span className="text-sm text-slate-600">
             Coleta estimada: {estimatedCaptureFps} fps
           </span>
-          {coords.length === 0 && !isLoadingMedia && (
+          {coords.length === 0 && (
             <span className="text-sm text-amber-600">
               Nenhum dado de rastreio para este vídeo
             </span>
@@ -139,13 +123,7 @@ const NHeatmapVideo = ({
       </div>
 
       <div className="flex w-full max-w-[1280px] flex-col items-center rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
-        {isLoadingMedia ? (
-          <div className="flex flex-col items-center p-10 text-black animate-pulse">
-            <h3 className="mb-4 text-xl text-slate-700">
-              Carregando visualização...
-            </h3>
-          </div>
-        ) : heatmapData.coords && heatmapData.coords.length > 0 ? (
+        {heatmapData.coords && heatmapData.coords.length > 0 ? (
           <Player
             ref={playerRef}
             component={HeatmapComposition}
@@ -172,8 +150,8 @@ const NHeatmapVideo = ({
             acknowledgeRemotionLicense
           />
         ) : (
-          <div className="flex flex-col items-center p-10 text-black">
-            <h3 className="text-xl mb-4">Aguardando dados...</h3>
+          <div className="flex flex-col items-center justify-center h-full text-white bg-slate-950">
+            <h3 className="text-xl mb-4">Aguardando dados&hellip;</h3>
           </div>
         )}
       </div>

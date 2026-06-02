@@ -3,6 +3,39 @@ import { useCurrentFrame, useVideoConfig, AbsoluteFill, Video } from "remotion";
 import h337 from "@mars3d/heatmap.js";
 import { interpolateCoordinates } from "@/utils/heatmapUtils";
 
+const BackgroundMedia = ({ img, type, durationInFrames }) => {
+  if (img && type === 1) {
+    return (
+      <Video
+        src={img}
+        startFrom={0}
+        endAt={durationInFrames}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "contain",
+          backgroundColor: "#020617",
+        }}
+      />
+    );
+  }
+  if (img) {
+    return (
+      <img
+        src={img}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "contain",
+          backgroundColor: "#020617",
+        }}
+        alt="bg"
+      />
+    );
+  }
+  return null;
+};
+
 export const HeatmapComposition = ({ heatmapData, img, type }) => {
   const frame = useCurrentFrame();
   const { durationInFrames, fps } = useVideoConfig(); // Pega o FPS configurado (60)
@@ -11,7 +44,7 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
   const heatmapInstanceRef = useRef(null);
   const gazeCanvasRef = useRef(null);
 
-  const [canvasSize, setCanvasSize] = useState({ width: 1280, height: 720 });
+  const canvasSize = heatmapData.canvasSize || { width: 1280, height: 720 };
   const [heatmapInitialized, setHeatmapInitialized] = useState(false);
 
   // MATEMÁTICA DO TEMPO REAL
@@ -19,18 +52,24 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
   // INTERPOLAÇÃO (Executada uma vez no vídeo todo)
   const interpolatedCoords = useMemo(
     () => interpolateCoordinates(heatmapData.coords),
-    [heatmapData.coords]
+    [heatmapData.coords],
   );
 
   const totalPoints = interpolatedCoords.length;
-  const expectedDurationMs =
-    Number(heatmapData.durationMs) > 0
+  const expectedDurationMs = useMemo(() => {
+    return Number(heatmapData.durationMs) > 0
       ? Number(heatmapData.durationMs)
       : Number(heatmapData.exposureSeconds) > 0
-      ? Number(heatmapData.exposureSeconds) * 1000
-      : totalPoints > 0
-      ? interpolatedCoords[totalPoints - 1]?.timestamp || 0
-      : 0;
+        ? Number(heatmapData.exposureSeconds) * 1000
+        : totalPoints > 0
+          ? interpolatedCoords[totalPoints - 1]?.timestamp || 0
+          : 0;
+  }, [
+    heatmapData.durationMs,
+    heatmapData.exposureSeconds,
+    totalPoints,
+    interpolatedCoords,
+  ]);
 
   // Encontra o último ponto interpolado que ocorreu ANTES ou NO MOMENTO do tempo atual
   let latestIdx =
@@ -48,10 +87,6 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
   // A visualização está completa quando passamos do tempo do último ponto + 1 segundo folga
   const isComplete =
     expectedDurationMs > 0 && currentTimeMs > expectedDurationMs + 1000;
-
-  useEffect(() => {
-    if (heatmapData.canvasSize) setCanvasSize(heatmapData.canvasSize);
-  }, [heatmapData.canvasSize]);
 
   // Inicializa o Canvas do Heatmap (h337)
   useEffect(() => {
@@ -73,7 +108,7 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
         heatmapInstanceRef.current = heatmapInstance;
 
         if (totalPoints > 0) {
-          const dynamicMax = Math.max(300, Math.min(3000, totalPoints * 3));
+          const dynamicMax = Math.max(200, Math.min(50, totalPoints * 3));
           heatmapInstanceRef.current.setData({
             max: dynamicMax,
             data: [interpolatedCoords[0]],
@@ -91,7 +126,13 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
       clearTimeout(timer);
       document.querySelectorAll(".heatmap-canvas").forEach((e) => e.remove());
     };
-  }, [containerRef, heatmapData.coords, heatmapData.radiusScale, totalPoints]);
+  }, [
+    containerRef,
+    heatmapData.coords,
+    heatmapData.radiusScale,
+    totalPoints,
+    interpolatedCoords,
+  ]);
 
   // Atualiza os dados do Heatmap conforme o tempo avança
   useEffect(() => {
@@ -100,10 +141,10 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
       heatmapInitialized &&
       currentCoords.length > 0
     ) {
-      const dynamicMax = Math.max(300, Math.min(3000, totalPoints * 3));
-      heatmapInstanceRef.current.setData({ 
-        max: dynamicMax, 
-        data: currentCoords 
+      const dynamicMax = Math.max(200, Math.min(50, totalPoints * 3));
+      heatmapInstanceRef.current.setData({
+        max: dynamicMax,
+        data: currentCoords,
       });
     }
   }, [currentCoords, heatmapInitialized, totalPoints]);
@@ -159,7 +200,7 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
   // Renderização final (Feedback de Conclusão)
   if (isComplete) {
     return (
-      <AbsoluteFill style={{ backgroundColor: "#000" }}>
+      <AbsoluteFill style={{ backgroundColor: "#020617" }}>
         <div
           ref={containerRef}
           style={{
@@ -169,46 +210,13 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
             margin: "0 auto",
           }}
         >
-          {img && type === 1 ? (
-            <Video
-              src={img}
-              startFrom={0}
-              endAt={durationInFrames}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "contain",
-                backgroundColor: "#000",
-              }}
-            />
-          ) : img ? (
-            <img
-              src={img}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "contain",
-                backgroundColor: "#000",
-              }}
-              alt="bg"
-            />
-          ) : null}
+          <BackgroundMedia
+            img={img}
+            type={type}
+            durationInFrames={durationInFrames}
+          />
 
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              padding: "20px",
-              backgroundColor: "rgba(0, 0, 0, 0.7)",
-              color: "white",
-              borderRadius: "10px",
-              fontSize: "24px",
-              textAlign: "center",
-              zIndex: 30,
-            }}
-          >
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-5 bg-black/70 text-white rounded-lg text-2xl text-center z-30">
             <strong>Vídeo completo!</strong>
             <br />
             {`Visualização de ${totalPoints} pontos concluída.`}
@@ -219,7 +227,7 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
   }
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#000" }}>
+    <AbsoluteFill style={{ backgroundColor: "#020617" }}>
       <div
         ref={containerRef}
         style={{
@@ -229,30 +237,11 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
           margin: "0 auto",
         }}
       >
-        {img && type === 1 ? (
-          <Video
-            src={img}
-            startFrom={0}
-            endAt={durationInFrames}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-              backgroundColor: "#000",
-            }}
-          />
-        ) : img ? (
-          <img
-            src={img}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-              backgroundColor: "#000",
-            }}
-            alt="bg"
-          />
-        ) : null}
+        <BackgroundMedia
+          img={img}
+          type={type}
+          durationInFrames={durationInFrames}
+        />
 
         <canvas
           ref={gazeCanvasRef}
@@ -269,37 +258,14 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
         />
 
         {!heatmapInitialized && (
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              padding: "10px",
-              backgroundColor: "rgba(0, 0, 0, 0.5)",
-              color: "white",
-              borderRadius: "5px",
-              zIndex: 20,
-            }}
-          >
-            Inicializando heatmap...
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2.5 bg-black/50 text-white rounded z-20">
+            <div className="text-center text-white">
+              Inicializando heatmap&hellip;
+            </div>
           </div>
         )}
 
-        <div
-          style={{
-            position: "absolute",
-            bottom: "20px",
-            right: "20px",
-            padding: "5px 10px",
-            backgroundColor: "rgba(0,0,0,0.5)",
-            color: "white",
-            borderRadius: "4px",
-            fontSize: "14px",
-            fontFamily: "monospace",
-            zIndex: 20,
-          }}
-        >
+        <div className="absolute bottom-5 right-5 px-2.5 py-1 text-sm font-mono bg-black/50 text-white rounded z-20">
           <span>
             Tempo: {(currentTimeMs / 1000).toFixed(1)}s | Frame: {frame} |
             Pontos: {currentCoords.length} / {totalPoints}

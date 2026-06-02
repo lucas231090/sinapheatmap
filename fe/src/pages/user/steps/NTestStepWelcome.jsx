@@ -108,6 +108,7 @@ export default function NTestStepWelcome({ experiment, onNext }) {
             {askNome && (
               <input
                 type="text"
+                aria-label="Seu nome completo"
                 placeholder="Seu nome completo"
                 required
                 className="rounded-2xl border border-slate-200 p-3 outline-none transition focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-100"
@@ -118,6 +119,7 @@ export default function NTestStepWelcome({ experiment, onNext }) {
             {askCpf && (
               <input
                 type="text"
+                aria-label="Seu CPF"
                 placeholder="Seu CPF"
                 required
                 inputMode="numeric"

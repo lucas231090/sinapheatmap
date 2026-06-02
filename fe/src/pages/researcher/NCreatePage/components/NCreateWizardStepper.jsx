@@ -17,7 +17,7 @@ export default function NCreateWizardStepper({ activeStep, labels }) {
                 : "border-slate-200 bg-white text-slate-400"
             }`}
           >
-            <span className="mr-3 inline-flex h-7 w-7 items-center justify-center rounded-full bg-sinapgreen-500 text-xs font-black text-black">
+            <span className="mr-3 inline-flex size-7 items-center justify-center rounded-full bg-sinapgreen-500 text-xs font-black text-black">
               {stepNumber}
             </span>
             {label}

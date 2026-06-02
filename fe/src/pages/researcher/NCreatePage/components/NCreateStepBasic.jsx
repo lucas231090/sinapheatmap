@@ -54,11 +54,12 @@ export default function NCreateStepBasic({
           placeholder="Descreva o objetivo, público e contexto do teste."
         />
 
-        <div className="flex flex-col space-y-4">
-          <label className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+        <div className="flex flex-col gap-y-4">
+          <label className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4" htmlFor="basic-show-desc">
             <input
+              id="basic-show-desc"
               type="checkbox"
-              className="mt-1 h-4 w-4 accent-sinapgreen-500"
+              className="mt-1 size-4 accent-sinapgreen-500"
               checked={basic.showDescriptionOnTest}
               onChange={(event) =>
                 onFieldChange("showDescriptionOnTest", event.target.checked)
@@ -74,10 +75,11 @@ export default function NCreateStepBasic({
             </span>
           </label>
 
-          <label className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+          <label className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4" htmlFor="basic-allow-mult">
             <input
+              id="basic-allow-mult"
               type="checkbox"
-              className="mt-1 h-4 w-4 accent-sinapgreen-500"
+              className="mt-1 size-4 accent-sinapgreen-500"
               checked={basic.allowMultipleSessions}
               onChange={(event) =>
                 onFieldChange("allowMultipleSessions", event.target.checked)

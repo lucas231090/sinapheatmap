@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useReducer } from "react";
 import { useParams } from "react-router-dom";
 import { getPublicExperimentById } from "@/services/eyetrackingService";
 import { useEyeTracking } from "@/hooks/useEyeTracking";
@@ -11,11 +11,28 @@ import NTestStepCalibration from "./steps/NTestStepCalibration";
 import NTestStepRunner from "./steps/NTestStepRunner";
 import NTestStepResult from "./steps/NTestStepResult";
 
+const experimentLoadReducer = (state, action) => {
+  switch (action.type) {
+    case "FETCH_START":
+      return { loading: true, error: "", experiment: null };
+    case "FETCH_SUCCESS":
+      return { loading: false, error: "", experiment: action.payload };
+    case "FETCH_FAILURE":
+      return { loading: false, error: action.payload, experiment: null };
+    default:
+      return state;
+  }
+};
+
 export default function NTestPage() {
   const { id } = useParams();
-  const [experiment, setExperiment] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loadState, dispatchLoad] = useReducer(experimentLoadReducer, {
+    loading: true,
+    error: "",
+    experiment: null,
+  });
+
+  const { experiment, loading, error } = loadState;
 
   // Estado do Fluxo
   const [currentStep, setCurrentStep] = useState("WELCOME");
@@ -38,19 +55,22 @@ export default function NTestPage() {
     addCalibrationPoint,
     finalizeCalibration,
     getCurrentGaze,
+    clearFrameBuffer,
   } = useEyeTracking(videoRef);
 
   // Busca os dados do experimento
   useEffect(() => {
     async function fetchTest() {
+      dispatchLoad({ type: "FETCH_START" });
       try {
         const data = await getPublicExperimentById(id);
-        setExperiment(data);
+        dispatchLoad({ type: "FETCH_SUCCESS", payload: data });
       } catch (err) {
         console.error("Erro ao buscar experimento:", err);
-        setError("Não foi possível carregar este teste ou ele está inativo.");
-      } finally {
-        setLoading(false);
+        dispatchLoad({
+          type: "FETCH_FAILURE",
+          payload: "Não foi possível carregar este teste ou ele está inativo.",
+        });
       }
     }
     fetchTest();
@@ -72,7 +92,9 @@ export default function NTestPage() {
 
   if (loading)
     return (
-      <div className="p-10 text-center text-white">Carregando teste...</div>
+      <div className="p-10 text-center text-white">
+        Carregando teste&hellip;
+      </div>
     );
   if (error)
     return (
@@ -87,6 +109,8 @@ export default function NTestPage() {
         autoPlay
         playsInline
         muted
+        aria-hidden="true"
+        tabIndex={-1}
         style={{
           position: "absolute",
           width: "1px",
@@ -95,7 +119,9 @@ export default function NTestPage() {
           pointerEvents: "none",
           zIndex: -10,
         }}
-      />
+      >
+        <track kind="captions" />
+      </video>
 
       <div className="relative flex-1 overflow-hidden">
         {/* Roteador de Etapas */}
@@ -128,7 +154,8 @@ export default function NTestPage() {
           <NTestStepCalibration
             faceValid={faceValid}
             addCalibrationPoint={addCalibrationPoint}
-            onFinishCalibration={handleFinalizeCalibration}
+            clearFrameBuffer={clearFrameBuffer}
+            onFinishCalibration={handleFinalizeCalibration} // AGORA SIM!
           />
         )}
 

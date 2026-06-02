@@ -125,38 +125,50 @@ export function RowCard({
   return (
     <div
       {...draggableProps}
-      role={onClick ? "button" : undefined}
-      tabIndex={onClick ? 0 : undefined}
-      onClick={onClick}
-      onKeyDown={
-        onClick
-          ? (event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                onClick();
-              }
-            }
-          : undefined
-      }
       className={`flex items-center gap-3 rounded-3xl border bg-sinapgreen-500 p-3 text-black shadow-sm transition ${
         selected ? "border-black/40 ring-2 ring-black/20" : "border-cyan-100"
-      } ${onClick ? "cursor-pointer" : ""} ${className}`}
+      } ${className}`}
     >
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-black shadow-inner">
-        {thumbnail}
-      </div>
-      <div className="min-w-0 flex-1 space-y-0.5">
-        <p className="truncate text-sm font-semibold">{title}</p>
-        {subtitle ? (
-          <p className="truncate text-xs text-black/70">{subtitle}</p>
-        ) : null}
-        {badge ? (
-          <span className="inline-flex rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-black">
-            {badge}
-          </span>
-        ) : null}
-      </div>
-      <div className="flex items-center gap-1">
+      {onClick ? (
+        <button
+          type="button"
+          onClick={onClick}
+          className="flex flex-1 items-center gap-3 text-left bg-transparent border-0 p-0 outline-none cursor-pointer min-w-0"
+        >
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white text-black shadow-inner">
+            {thumbnail}
+          </div>
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <p className="truncate text-sm font-semibold">{title}</p>
+            {subtitle ? (
+              <p className="truncate text-xs text-black/70">{subtitle}</p>
+            ) : null}
+            {badge ? (
+              <span className="inline-flex rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-black">
+                {badge}
+              </span>
+            ) : null}
+          </div>
+        </button>
+      ) : (
+        <div className="flex flex-1 items-center gap-3 min-w-0">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-white text-black shadow-inner">
+            {thumbnail}
+          </div>
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <p className="truncate text-sm font-semibold">{title}</p>
+            {subtitle ? (
+              <p className="truncate text-xs text-black/70">{subtitle}</p>
+            ) : null}
+            {badge ? (
+              <span className="inline-flex rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-black">
+                {badge}
+              </span>
+            ) : null}
+          </div>
+        </div>
+      )}
+      <div className="flex items-center gap-1 shrink-0">
         <button
           type="button"
           onClick={(event) => {

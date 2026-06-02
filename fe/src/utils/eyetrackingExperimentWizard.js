@@ -1,10 +1,10 @@
 import { formatCpf, isValidCpf } from "@/utils/cpf";
 
-export function createId() {
+function createId() {
   return crypto.randomUUID();
 }
 
-export function createEmptyBasicData() {
+function createEmptyBasicData() {
   return {
     name: "",
     startDate: "",
@@ -15,14 +15,14 @@ export function createEmptyBasicData() {
   };
 }
 
-export function createEmptyIdentificationData() {
+function createEmptyIdentificationData() {
   return {
     required: true,
     mode: "nome",
   };
 }
 
-export function createEmptyOrganizationData() {
+function createEmptyOrganizationData() {
   return {
     randomizeSamples: false,
     randomizePieces: false,
@@ -37,7 +37,7 @@ export function createEmptyParticipant() {
   };
 }
 
-export function createEmptySample() {
+function createEmptySample() {
   return {
     id: createId(),
     name: "",
@@ -45,7 +45,7 @@ export function createEmptySample() {
   };
 }
 
-export function createEmptyPiece(sampleId = "") {
+function createEmptyPiece(sampleId = "") {
   return {
     id: createId(),
     sampleId,
@@ -95,25 +95,23 @@ export function moveItem(list, fromIndex, toIndex) {
 export function parseParticipantRows(text) {
   return text
     .split(/\n+/)
-    .map((line) => line.replace(/;+$/g, "").trim())
-    .filter(Boolean)
-    .map((line) => {
-      const parts = line
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean);
+    .flatMap((rawLine) => {
+      const line = rawLine.replace(/;+$/g, "").trim();
+      if (!line) return [];
 
-      if (!parts[0]) {
-        return null;
-      }
+      const parts = line.split(",").flatMap((item) => {
+        const trimmed = item.trim();
+        return trimmed ? [trimmed] : [];
+      });
 
-      return {
+      if (!parts[0]) return [];
+
+      return [{
         id: createId(),
         name: parts[0] || "",
         cpf: parts[1] ? formatCpf(parts[1]) : "",
-      };
-    })
-    .filter(Boolean);
+      }];
+    });
 }
 
 export function hasInvalidParticipantCpf(participants = []) {
@@ -123,7 +121,7 @@ export function hasInvalidParticipantCpf(participants = []) {
   });
 }
 
-export function sampleHasPieces(sampleId, pieces) {
+function sampleHasPieces(sampleId, pieces) {
   return pieces.some((piece) => piece.sampleId === sampleId);
 }
 
@@ -170,16 +168,15 @@ export function isVideoSource({
 
 export function buildParticipantsText(participants = []) {
   return participants
-    .map((participant) => {
+    .flatMap((participant) => {
       const name = participant?.name?.trim() || "";
       const cpf = participant?.cpf?.trim() ? formatCpf(participant.cpf) : "";
       if (!name && !cpf) {
-        return "";
+        return [];
       }
 
-      return cpf ? `${name}, ${cpf}` : name;
+      return [cpf ? `${name}, ${cpf}` : name];
     })
-    .filter(Boolean)
     .join("\n");
 }
 
@@ -285,9 +282,13 @@ export function buildExperimentPayload(experiment, options = {}) {
         ...experiment.organization,
         sampleOrder: experiment.samples.map((sample) => sample.id),
         pieceOrderBySample: experiment.samples.reduce((accumulator, sample) => {
-          accumulator[sample.id] = serializablePieces
-            .filter((piece) => piece.sampleId === sample.id)
-            .map((piece) => piece.id);
+          const pieceIds = [];
+          for (const piece of serializablePieces) {
+            if (piece.sampleId === sample.id) {
+              pieceIds.push(piece.id);
+            }
+          }
+          accumulator[sample.id] = pieceIds;
           return accumulator;
         }, {}),
       },

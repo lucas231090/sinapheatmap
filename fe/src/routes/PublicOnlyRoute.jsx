@@ -7,7 +7,7 @@ export function PublicOnlyRoute() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   if (!hasHydrated || isLoading) {
-    return <div>Carregando...</div>;
+    return <div>Carregando&hellip;</div>;
   }
 
   if (isAuthenticated) {

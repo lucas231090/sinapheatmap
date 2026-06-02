@@ -1,4 +1,3 @@
-import { forwardRef } from "react";
 import { Link } from "react-router-dom";
 
 const variants = {
@@ -19,49 +18,44 @@ const sizes = {
   icon: "h-10 w-10 p-0",
 };
 
-const Button = forwardRef(
-  (
-    {
-      variant = "primary",
-      size = "md",
-      className = "",
-      children,
-      asLink = false,
-      to,
-      disabled,
-      type = "button",
-      ...props
-    },
-    ref,
-  ) => {
-    const baseClasses =
-      "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-not-allowed disabled:opacity-50";
-    const variantClasses = variants[variant] || variants.primary;
-    const sizeClasses = sizes[size] || sizes.md;
+const Button = ({
+  variant = "primary",
+  size = "md",
+  className = "",
+  children,
+  asLink = false,
+  to,
+  disabled,
+  type = "button",
+  ref,
+  ...props
+}) => {
+  const baseClasses =
+    "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-not-allowed disabled:opacity-50";
+  const variantClasses = variants[variant] || variants.primary;
+  const sizeClasses = sizes[size] || sizes.md;
 
-    const combinedClasses = `${baseClasses} ${variantClasses} ${sizeClasses} ${className}`;
+  const combinedClasses = `${baseClasses} ${variantClasses} ${sizeClasses} ${className}`;
 
-    if (asLink) {
-      return (
-        <Link to={to} className={combinedClasses} ref={ref} {...props}>
-          {children}
-        </Link>
-      );
-    }
-
+  if (asLink) {
     return (
-      <button
-        ref={ref}
-        type={type}
-        disabled={disabled}
-        className={combinedClasses}
-        {...props}
-      >
+      <Link to={to} className={combinedClasses} ref={ref} {...props}>
         {children}
-      </button>
+      </Link>
     );
-  },
-);
+  }
 
-Button.displayName = "Button";
+  return (
+    <button
+      ref={ref}
+      type={type}
+      disabled={disabled}
+      className={combinedClasses}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+};
+
 export default Button;

@@ -332,7 +332,11 @@ export function useCreateExperimentWizard() {
 
   const savePieceDraft = useCallback(
     (shouldCreateNew = false) => {
-      if (!pieceDraft.sampleId) {
+      const resolvedSampleId = (pieceDraft.sampleId && experiment.samples.some((s) => s.id === pieceDraft.sampleId))
+        ? pieceDraft.sampleId
+        : (experiment.samples[0]?.id || "");
+
+      if (!resolvedSampleId) {
         notifyError("Selecione uma amostra para vincular a peça.");
         return null;
       }
@@ -355,7 +359,7 @@ export function useCreateExperimentWizard() {
       const pieceId = selectedPieceId || pieceDraft.id || crypto.randomUUID();
       const normalizedPiece = {
         id: pieceId,
-        sampleId: pieceDraft.sampleId,
+        sampleId: resolvedSampleId,
         sourceType: pieceDraft.sourceType,
         sourceLabel,
         sourceUrl: pieceDraft.sourceUrl.trim(),
@@ -390,14 +394,14 @@ export function useCreateExperimentWizard() {
 
       if (shouldCreateNew) {
         setSelectedPieceId(null);
-        setPieceDraft(createEmptyPieceDraft(pieceDraft.sampleId));
+        setPieceDraft(createEmptyPieceDraft(resolvedSampleId));
       } else {
         setPieceDraft(normalizedPiece);
       }
 
       return pieceId;
     },
-    [notifyError, pieceDraft, selectedPieceId],
+    [experiment.samples, notifyError, pieceDraft, selectedPieceId],
   );
 
   const deletePiece = useCallback(

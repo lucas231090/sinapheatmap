@@ -18,14 +18,14 @@ vi.mock("@/utils/heatmapUtils", async () => ({
 vi.mock("react-zoom-pan-pinch", async () => {
   const React = require("react");
   return {
-    TransformWrapper: React.forwardRef(({ children }, ref) => {
+    TransformWrapper: ({ children, ref }) => {
       React.useImperativeHandle(ref, () => ({
         zoomIn: vi.fn(),
         zoomOut: vi.fn(),
         resetTransform: vi.fn(),
       }));
       return <div>{children}</div>;
-    }),
+    },
     TransformComponent: ({ children }) => <div>{children}</div>,
   };
 });

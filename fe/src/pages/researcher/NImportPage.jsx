@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useReducer } from "react";
 import { useNavigate } from "react-router-dom";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DescriptionIcon from "@mui/icons-material/Description";
@@ -23,97 +23,113 @@ function NImportPage() {
   const navigate = useNavigate();
   const { notifyError, notifySuccess } = useNotifications();
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [mediaFile, setMediaFile] = useState(null);
-  const [csvFile, setCsvFile] = useState(null);
-  const [mediaPreview, setMediaPreview] = useState("");
-  const [, setCsvSummary] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [formState, dispatchForm] = useReducer(
+    (state, action) => {
+      switch (action.type) {
+        case "SET_FIELD":
+          return { ...state, [action.field]: action.value, errorMessage: "" };
+        case "SET_MEDIA":
+          return { ...state, media: action.value, errorMessage: "" };
+        case "SET_ERROR":
+          return { ...state, errorMessage: action.payload };
+        case "SUBMIT_START":
+          return { ...state, isSubmitting: true, errorMessage: "" };
+        case "SUBMIT_SUCCESS":
+          return { ...state, isSubmitting: false, errorMessage: "" };
+        case "SUBMIT_FAILURE":
+          return { ...state, isSubmitting: false, errorMessage: action.payload };
+        default:
+          return state;
+      }
+    },
+    {
+      name: "",
+      description: "",
+      media: { file: null, preview: "" },
+      csvFile: null,
+      isSubmitting: false,
+      errorMessage: "",
+    }
+  );
+
+  const { name, description, media, csvFile, isSubmitting, errorMessage } = formState;
 
   const mediaKind = useMemo(() => {
-    if (!mediaFile) {
+    if (!media.file) {
       return "image";
     }
 
-    return mediaFile.type.startsWith("video/") ? "video" : "image";
-  }, [mediaFile]);
+    return media.file.type.startsWith("video/") ? "video" : "image";
+  }, [media.file]);
 
   const handleCsvChange = async (event) => {
     const selectedFile = event.target.files?.[0] || null;
-    setCsvFile(selectedFile);
-    setErrorMessage("");
+    dispatchForm({ type: "SET_FIELD", field: "csvFile", value: selectedFile });
 
     if (!selectedFile) {
-      setCsvSummary(null);
       return;
     }
 
     try {
       const text = await selectedFile.text();
-      const preview = buildImportedSessionsFromCsv(text);
-      setCsvSummary(preview);
+      buildImportedSessionsFromCsv(text);
     } catch (csvError) {
       console.error("Import page CSV parse error:", csvError);
-      setCsvSummary(null);
-      setErrorMessage("Não foi possível ler o CSV selecionado.");
+      dispatchForm({ type: "SET_ERROR", payload: "Não foi possível ler o CSV selecionado." });
     }
   };
 
   const handleMediaChange = async (event) => {
     const selectedFile = event.target.files?.[0] || null;
-    setMediaFile(selectedFile);
-    setErrorMessage("");
 
     if (!selectedFile) {
-      setMediaPreview("");
+      dispatchForm({ type: "SET_MEDIA", value: { file: null, preview: "" } });
       return;
     }
 
     try {
       const previewUrl = await fileToDataUrl(selectedFile);
-      setMediaPreview(previewUrl);
+      dispatchForm({ type: "SET_MEDIA", value: { file: selectedFile, preview: previewUrl } });
     } catch (mediaError) {
       console.error("Import page media read error:", mediaError);
-      setMediaPreview("");
-      setErrorMessage("Não foi possível preparar a pré-visualização da mídia.");
+      dispatchForm({ type: "SET_MEDIA", value: { file: selectedFile, preview: "" } });
+      dispatchForm({ type: "SET_ERROR", payload: "Não foi possível preparar a pré-visualização da mídia." });
     }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setErrorMessage("");
 
     if (!name.trim()) {
-      setErrorMessage("Informe o nome do experimento.");
+      dispatchForm({ type: "SET_ERROR", payload: "Informe o nome do experimento." });
       return;
     }
 
     if (!csvFile) {
-      setErrorMessage("Selecione o arquivo CSV para importar.");
+      dispatchForm({ type: "SET_ERROR", payload: "Selecione o arquivo CSV para importar." });
       return;
     }
 
-    if (!mediaFile) {
-      setErrorMessage("Selecione a imagem ou vídeo de apoio.");
+    if (!media.file) {
+      dispatchForm({ type: "SET_ERROR", payload: "Selecione a imagem ou vídeo de apoio." });
       return;
     }
 
-    setIsSubmitting(true);
+    dispatchForm({ type: "SUBMIT_START" });
 
     try {
       const formData = new FormData();
       formData.append("filename", name.trim());
       formData.append("description", description.trim());
       formData.append("csvFile", csvFile);
-      formData.append("mediaFile", mediaFile);
+      formData.append("mediaFile", media.file);
 
       const response = await importHeatmap(formData);
       const createdExperiment = response?.data?.data || response?.data || {};
       const createdId = createdExperiment?._id || createdExperiment?.id;
 
       notifySuccess("Experimento importado com sucesso.");
+      dispatchForm({ type: "SUBMIT_SUCCESS" });
 
       if (createdId) {
         navigate(`/heatmap/${createdId}`);
@@ -128,10 +144,8 @@ function NImportPage() {
           ? submitError.message
           : "Não foi possível importar o teste.",
       );
-      setErrorMessage(message);
+      dispatchForm({ type: "SUBMIT_FAILURE", payload: message });
       notifyError(message);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -145,25 +159,27 @@ function NImportPage() {
       <div className="gap-6 ">
         <Card as="form" onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="grid gap-4 md:grid-cols-1">
-            <label className="block flex flex-col gap-2">
+            <label className="block flex flex-col gap-2" htmlFor="import-name">
               <span className=" block text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Nome do experimento
               </span>
               <Input
+                id="import-name"
                 value={name}
-                onChange={(event) => setName(event.target.value)}
+                onChange={(event) => dispatchForm({ type: "SET_FIELD", field: "name", value: event.target.value })}
                 placeholder="Ex.: Heatmap da leitura"
               />
             </label>
           </div>
 
-          <label className="flex flex-col gap-2 block">
+          <label className="flex flex-col gap-2 block" htmlFor="import-desc">
             <span className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
               Descrição
             </span>
             <Textarea
+              id="import-desc"
               value={description}
-              onChange={(event) => setDescription(event.target.value)}
+              onChange={(event) => dispatchForm({ type: "SET_FIELD", field: "description", value: event.target.value })}
               rows={4}
               className="rounded-3xl focus:ring-2 focus:ring-sinapgreen-100"
               placeholder="Opcional: detalhes do teste importado"
@@ -185,7 +201,7 @@ function NImportPage() {
               onChange={handleMediaChange}
               title="Imagem ou vídeo de apoio"
               subtitle="Use a mídia que será exibida como fundo do heatmap."
-              fileName={mediaFile?.name}
+              fileName={media.file?.name}
               icon={mediaKind === "video" ? <VideocamIcon /> : <ImageIcon />}
             />
           </div>
@@ -196,17 +212,20 @@ function NImportPage() {
             </div>
           ) : null}
 
-          {mediaPreview ? (
+          {media.preview ? (
             <div className="overflow-hidden rounded-[1.75rem] border border-slate-200 bg-sinapgreen-500">
               {mediaKind === "video" ? (
                 <video
-                  src={mediaPreview}
+                  src={media.preview}
                   controls
+                  aria-label="Pré-visualização do vídeo"
                   className="h-72 w-full object-contain"
-                />
+                >
+                  <track kind="captions" />
+                </video>
               ) : (
                 <img
-                  src={mediaPreview}
+                  src={media.preview}
                   alt="Pré-visualização da mídia"
                   className="h-72 w-full object-contain"
                 />

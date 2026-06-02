@@ -74,7 +74,7 @@ const NHeatmapStatic = ({
               onChange={(e) => setHeatmapVisible(e.target.checked)}
               className="peer sr-only"
             />
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-current transition group-hover:scale-105 peer-checked:text-black">
+            <span className="flex size-10 items-center justify-center rounded-xl border border-transparent text-current transition group-hover:scale-105 peer-checked:text-black">
               {heatmapVisible ? (
                 <VisibilityIcon fontSize="small" />
               ) : (
@@ -98,7 +98,7 @@ const NHeatmapStatic = ({
               onChange={(e) => setCanvasVisible(e.target.checked)}
               className="peer sr-only"
             />
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-transparent text-current transition group-hover:scale-105 peer-checked:text-black">
+            <span className="flex size-10 items-center justify-center rounded-xl border border-transparent text-current transition group-hover:scale-105 peer-checked:text-black">
               <CircleOutlinedIcon fontSize="small" />
             </span>
             <span className="sr-only">Mostrar bolhas e gaze</span>

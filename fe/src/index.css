@@ -104,6 +104,18 @@
 }
 
 .nlayout-bubble {
+  left: var(--bubble-left);
+  top: var(--bubble-top);
+  width: var(--bubble-size);
+  height: var(--bubble-size);
+  background-color: var(--bubble-bg);
+  opacity: var(--bubble-opacity);
+  animation-duration: var(--bubble-dur);
+  animation-delay: var(--bubble-del);
+  transform: translate3d(0, 0, 0) scale(var(--bubble-scale));
+  filter: var(--bubble-blur);
+  transform-origin: center;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.08);
   animation-name: nlayout-bubble-rise;
   animation-timing-function: linear;
   animation-iteration-count: infinite;

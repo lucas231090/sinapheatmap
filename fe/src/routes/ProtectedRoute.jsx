@@ -7,7 +7,7 @@ export function ProtectedRoute({ allowedRoles }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
 
-  if (!hasHydrated || isLoading) return <div>Carregando...</div>;
+  if (!hasHydrated || isLoading) return <div>Carregando&hellip;</div>;
 
   // 1. Não está logado? Vai para o login
   if (!isAuthenticated || !user) {

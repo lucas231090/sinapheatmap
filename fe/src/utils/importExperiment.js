@@ -45,13 +45,18 @@ const splitLine = (line, delimiter) => {
 
 const detectDelimiter = (line = "") => {
   const candidates = [";", ",", "\t", "|"];
+  let bestDelimiter = candidates[0];
+  let maxCount = -1;
 
-  return candidates
-    .map((delimiter) => ({
-      delimiter,
-      count: line.split(delimiter).length,
-    }))
-    .sort((left, right) => right.count - left.count)[0].delimiter;
+  for (const delimiter of candidates) {
+    const count = line.split(delimiter).length;
+    if (count > maxCount) {
+      maxCount = count;
+      bestDelimiter = delimiter;
+    }
+  }
+
+  return bestDelimiter;
 };
 
 const aliasLookup = (row, aliases) => {
@@ -89,10 +94,10 @@ export const parseDelimitedCsv = (text) => {
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n");
 
-  const lines = normalizedText
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+  const lines = normalizedText.split("\n").flatMap((line) => {
+    const trimmed = line.trim();
+    return trimmed ? [trimmed] : [];
+  });
 
   if (!lines.length) {
     return { headers: [], rows: [], delimiter: ";" };

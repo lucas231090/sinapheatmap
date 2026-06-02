@@ -35,28 +35,26 @@ export default function NUserLayout() {
         className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
         aria-hidden="true"
       >
-        {bubbles.map((bubble) => (
-          <span
-            key={bubble.id}
-            className="nlayout-bubble absolute rounded-full"
-            style={{
-              left: `${bubble.left}%`,
-              top: `calc(100% + ${bubble.startOffset}px)`,
-              width: `${bubble.size}px`,
-              height: `${bubble.size}px`,
-              backgroundColor: bubble.color,
-              opacity: bubble.opacity,
-              animationDuration: `${bubble.duration}s`,
-              animationDelay: `${bubble.delay}s`,
-              transform: "translate3d(0, 0, 0) scale(var(--bubble-scale))",
-              "--bubble-scale": bubble.scale,
-              "--bubble-opacity": bubble.opacity,
-              boxShadow: "0 0 20px rgba(255, 255, 255, 0.08)",
-              filter: bubble.blur ? `blur(${bubble.blur}px)` : "none",
-              transformOrigin: "center",
-            }}
-          />
-        ))}
+        {bubbles.map((bubble) => {
+          const bubbleStyle = {
+            "--bubble-left": `${bubble.left}%`,
+            "--bubble-top": `calc(100% + ${bubble.startOffset}px)`,
+            "--bubble-size": `${bubble.size}px`,
+            "--bubble-bg": bubble.color,
+            "--bubble-opacity": bubble.opacity,
+            "--bubble-dur": `${bubble.duration}s`,
+            "--bubble-del": `${bubble.delay}s`,
+            "--bubble-scale": bubble.scale,
+            "--bubble-blur": bubble.blur ? `blur(${bubble.blur}px)` : "none",
+          };
+          return (
+            <span
+              key={bubble.id}
+              className="nlayout-bubble absolute rounded-full"
+              style={bubbleStyle}
+            />
+          );
+        })}
       </div>
       <main className="relative z-10 flex flex-1 overflow-hidden ">
         <Outlet />

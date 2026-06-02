@@ -24,7 +24,7 @@ function NSignInPage() {
     }
   }, [hasHydrated, isAuthenticated, navigate]);
 
-  const handleChange = (event) => {
+  const handleInputChange = (event) => {
     const { name, value } = event.target;
     setFormData((previous) => ({ ...previous, [name]: value }));
 
@@ -70,7 +70,7 @@ function NSignInPage() {
               name="email"
               type="email"
               value={formData.email}
-              onChange={handleChange}
+              onChange={handleInputChange}
               autoComplete="email"
               error={errors.email}
             />
@@ -83,7 +83,7 @@ function NSignInPage() {
               name="password"
               type="password"
               value={formData.password}
-              onChange={handleChange}
+              onChange={handleInputChange}
               autoComplete="current-password"
               error={errors.password}
             />

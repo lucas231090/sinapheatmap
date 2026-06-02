@@ -11,8 +11,9 @@ export default function NTestStepTutorial({ onNext }) {
         </p>
 
         {/* Container do Vídeo Tutorial */}
-        <div className="w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl mb-8 border border-slate-700">
+        <div className="w-full aspect-video bg-slate-950 rounded-xl overflow-hidden shadow-2xl mb-8 border border-slate-700">
           <video src={Tutorial} controls className="w-full h-full object-cover">
+            <track kind="captions" />
             Seu navegador não suporta o elemento de vídeo.
           </video>
         </div>
@@ -30,6 +31,7 @@ export default function NTestStepTutorial({ onNext }) {
         </div>
 
         <button
+          type="button"
           onClick={onNext}
           className="px-8 py-4 bg-sinapgreen-500 text-black font-bold text-lg rounded-full hover:bg-sinapgreen-800 transition shadow-[0_0_15px_rgba(0,200,230,0.4)]"
         >
