@@ -93,8 +93,11 @@ const NHeatmapVideo = ({
 
   return (
     <div className="flex w-full flex-col items-center">
-      <div className="mb-4 flex w-full max-w-4xl flex-wrap items-center justify-center gap-4 rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm text-black">
-        <label className="flex items-center gap-2 text-black" htmlFor="select-speed">
+      <div className="mb-4 flex w-full max-w-4xl flex-wrap items-center justify-center gap-4 rounded-[2rem] border border-slate-200 bg-white dark:bg-slate-800 p-4 shadow-sm text-black dark:text-white">
+        <label
+          className="flex items-center gap-2 text-black dark:text-white"
+          htmlFor="select-speed"
+        >
           <SpeedIcon fontSize="small" />
           <span className="text-sm font-semibold">Velocidade:</span>
         </label>
@@ -102,7 +105,7 @@ const NHeatmapVideo = ({
           id="select-speed"
           value={playbackSpeed}
           onChange={handleSpeedChange}
-          className="rounded-2xl border border-slate-200 bg-white p-2 text-black outline-none focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-500/20"
+          className="rounded-2xl border border-slate-200 bg-white dark:bg-slate-800 p-2 text-black dark:text-white outline-none focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-500/20"
         >
           <option value="0.5">0.5x</option>
           <option value="1">1x (Normal)</option>
@@ -111,18 +114,18 @@ const NHeatmapVideo = ({
           <option value="4">4x</option>
         </select>
         <div className="ml-auto flex items-center gap-2">
-          <span className="text-sm text-slate-600">
+          <span className="text-sm text-slate-600 dark:text-slate-400">
             Coleta estimada: {estimatedCaptureFps} fps
           </span>
           {coords.length === 0 && (
-            <span className="text-sm text-amber-600">
+            <span className="text-sm text-amber-600 dark:text-amber-400">
               Nenhum dado de rastreio para este vídeo
             </span>
           )}
         </div>
       </div>
 
-      <div className="flex w-full max-w-[1280px] flex-col items-center rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex w-full max-w-[1280px] flex-col items-center rounded-[1.5rem] border border-slate-200 bg-white dark:bg-slate-800 p-4 shadow-sm">
         {heatmapData.coords && heatmapData.coords.length > 0 ? (
           <Player
             ref={playerRef}
@@ -150,7 +153,7 @@ const NHeatmapVideo = ({
             acknowledgeRemotionLicense
           />
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-white bg-slate-950">
+          <div className="flex flex-col items-center justify-center h-full text-white bg-slate-950 dark:bg-slate-700 rounded-2xl p-6">
             <h3 className="text-xl mb-4">Aguardando dados&hellip;</h3>
           </div>
         )}

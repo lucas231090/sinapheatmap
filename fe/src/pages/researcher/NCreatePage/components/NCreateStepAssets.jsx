@@ -54,9 +54,10 @@ export default function NCreateStepAssets({
     pieceDraft.sourceType === "file" && Boolean(pieceDraft.sourceLabel);
   const fileLabel = pieceDraft.fileName || pieceDraft.sourceLabel;
 
-  const activeSampleId = (pieceDraft.sampleId && samples.some((s) => s.id === pieceDraft.sampleId))
-    ? pieceDraft.sampleId
-    : (samples[0]?.id || "");
+  const activeSampleId =
+    pieceDraft.sampleId && samples.some((s) => s.id === pieceDraft.sampleId)
+      ? pieceDraft.sampleId
+      : samples[0]?.id || "";
 
   return (
     <div className="space-y-8">
@@ -250,17 +251,17 @@ function PiecesPanel({
           />
 
           {hasFile ? (
-            <div className="flex flex-col gap-2 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex flex-col gap-2 rounded-3xl border border-slate-200 bg-white dark:bg-slate-700 p-4 shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-black">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800 text-black dark:text-white">
                     <PreviewIcon kind={pieceDraft.previewKind} />
                   </div>
                   <div className="space-y-1">
-                    <p className="text-sm font-semibold text-black">
+                    <p className="text-sm font-semibold text-black dark:text-white">
                       Arquivo adicionado
                     </p>
-                    <p className="text-xs text-slate-600">
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
                       {fileLabel || "Arquivo selecionado"}
                     </p>
                   </div>
@@ -323,7 +324,7 @@ function PiecesPanel({
             />
 
             <label className="block space-y-2">
-              <span className="text-sm font-semibold uppercase tracking-[0.2em] text-black">
+              <span className="text-sm font-semibold uppercase tracking-[0.2em] text-black dark:text-white">
                 Amostra
               </span>
               <select
@@ -331,7 +332,7 @@ function PiecesPanel({
                 onChange={(event) =>
                   onPieceDraftChange("sampleId", event.target.value)
                 }
-                className="w-full rounded-2xl border border-black/15 bg-slate-100 px-4 py-3 text-sm text-black shadow-sm transition focus:border-sinapgreen-500 focus:bg-white focus:outline-none"
+                className="w-full rounded-2xl border border-black/15 bg-slate-100 dark:bg-slate-800 px-4 py-3 text-sm text-black dark:text-white shadow-sm transition focus:border-sinapgreen-500 focus:bg-white dark:focus:bg-slate-700 focus:outline-none"
               >
                 {samples.map((sample) => (
                   <option key={sample.id} value={sample.id}>
@@ -342,7 +343,7 @@ function PiecesPanel({
             </label>
 
             <label className="block space-y-2 sm:col-span-2">
-              <span className="text-sm font-semibold uppercase tracking-[0.2em] text-black">
+              <span className="text-sm font-semibold uppercase tracking-[0.2em] text-black dark:text-white">
                 Exibição da Imagem
               </span>
               <select
@@ -350,7 +351,7 @@ function PiecesPanel({
                 onChange={(event) =>
                   onPieceDraftChange("imageDisplayMode", event.target.value)
                 }
-                className="w-full rounded-2xl border border-black/15 bg-slate-100 px-4 py-3 text-sm text-black shadow-sm transition focus:border-sinapgreen-500 focus:bg-white focus:outline-none"
+                className="w-full rounded-2xl border border-black/15 bg-slate-100 dark:bg-slate-800 px-4 py-3 text-sm text-black dark:text-white shadow-sm transition focus:border-sinapgreen-500 focus:bg-white dark:focus:bg-slate-700 focus:outline-none"
               >
                 <option value="original">
                   Tamanho Original (redimensiona mantendo a proporção)
@@ -379,13 +380,15 @@ function PiecesPanel({
             {pieces.length ? (
               pieces.map((piece) => {
                 const sampleName =
-                  samples.find((sample) => sample.id === piece.sampleId)?.name ||
-                  "Amostra vinculada";
+                  samples.find((sample) => sample.id === piece.sampleId)
+                    ?.name || "Amostra vinculada";
 
                 return (
                   <RowCard
                     key={piece.id}
-                    title={piece.sourceLabel || piece.fileName || "Peça sem nome"}
+                    title={
+                      piece.sourceLabel || piece.fileName || "Peça sem nome"
+                    }
                     subtitle={`${sampleName} • ${piece.exposureSeconds}s`}
                     badge={piece.sourceType === "url" ? "URL" : "arquivo"}
                     thumbnail={<PreviewIcon kind={piece.previewKind} />}
@@ -399,7 +402,7 @@ function PiecesPanel({
                 );
               })
             ) : (
-              <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
+              <div className="rounded-3xl border border-dashed border-slate-300 bg-white dark:bg-slate-800 p-6 text-sm text-slate-500 dark:text-slate-400">
                 Nenhuma peça criada ainda.
               </div>
             )}

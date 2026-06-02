@@ -58,13 +58,13 @@ const NHeatmapStatic = ({
 
   return (
     <div className="flex w-full flex-col items-center ">
-      <div className="mb-4 flex w-full flex-col gap-4 rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm lg:flex-row">
+      <div className="mb-4 flex w-full flex-col gap-4 rounded-[2rem] border border-slate-200 bg-white dark:bg-slate-800 p-4 shadow-sm lg:flex-row">
         <aside className="flex flex-row  gap-3 lg:w-24 lg:flex-col lg:gap-4 flex-wrap sm:flex-nowrap ">
           <label
             className={`w-full lg:w-auto lg:h-full group flex cursor-pointer items-center justify-center rounded-2xl border p-3 transition ${
               heatmapVisible
                 ? "border-sinapgreen-500 bg-sinapgreen-500 text-black shadow-sm"
-                : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50"
+                : "border-slate-200 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
             }`}
             title={heatmapVisible ? "Ocultar heatmap" : "Mostrar heatmap"}
           >
@@ -88,7 +88,7 @@ const NHeatmapStatic = ({
             className={`w-full lg:w-auto lg:h-full group flex cursor-pointer items-center justify-center rounded-2xl border p-3 transition ${
               canvasVisible
                 ? "border-sinapgreen-500 bg-sinapgreen-500 text-black shadow-sm"
-                : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50"
+                : "border-slate-200 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
             }`}
             title={canvasVisible ? "Ocultar bolhas" : "Mostrar bolhas"}
           >
@@ -111,7 +111,7 @@ const NHeatmapStatic = ({
                 transformComponentRef.current.zoomIn();
               }
             }}
-            className="w-full lg:w-auto lg:h-full flex items-center justify-center rounded-2xl border border-slate-200 bg-white p-3 text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+            className="w-full lg:w-auto lg:h-full flex items-center justify-center rounded-2xl border border-slate-200 bg-white dark:bg-slate-800 p-3 text-slate-700 dark:text-slate-300 transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
             title="Aumentar zoom"
             aria-label="Aumentar zoom"
           >
@@ -125,7 +125,7 @@ const NHeatmapStatic = ({
                 transformComponentRef.current.zoomOut();
               }
             }}
-            className="w-full lg:w-auto lg:h-full flex items-center justify-center rounded-2xl border border-slate-200 bg-white p-3 text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+            className="w-full lg:w-auto lg:h-full flex items-center justify-center rounded-2xl border border-slate-200 bg-white dark:bg-slate-800  p-3 text-slate-700 dark:text-slate-300 transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
             title="Reduzir zoom"
             aria-label="Reduzir zoom"
           >
@@ -139,7 +139,7 @@ const NHeatmapStatic = ({
                 transformComponentRef.current.resetTransform();
               }
             }}
-            className="w-full lg:w-auto lg:h-full flex items-center justify-center rounded-2xl border border-slate-200 bg-white p-3 text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+            className="w-full lg:w-auto lg:h-full flex items-center justify-center rounded-2xl border border-slate-200 bg-white dark:bg-slate-800  p-3 text-slate-700 dark:text-slate-300 transition hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
             title="Resetar zoom"
             aria-label="Resetar zoom"
           >
@@ -161,7 +161,7 @@ const NHeatmapStatic = ({
           className="flex min-w-0 flex-1 justify-center"
           ref={fitContainerRef}
         >
-          <div className="flex w-full max-w-[1280px] flex-col items-center overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex w-full max-w-[1280px] flex-col items-center overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white dark:bg-slate-800 p-4 shadow-sm">
             <TransformWrapper
               key={`${experimentId}-${canvasSize.width}-${canvasSize.height}-${fitScale}`}
               ref={transformComponentRef}

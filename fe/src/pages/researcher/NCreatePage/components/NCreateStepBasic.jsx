@@ -55,7 +55,10 @@ export default function NCreateStepBasic({
         />
 
         <div className="flex flex-col gap-y-4">
-          <label className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4" htmlFor="basic-show-desc">
+          <label
+            className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 dark:bg-slate-800 p-4"
+            htmlFor="basic-show-desc"
+          >
             <input
               id="basic-show-desc"
               type="checkbox"
@@ -66,16 +69,19 @@ export default function NCreateStepBasic({
               }
             />
             <span className="space-y-1">
-              <span className="block text-sm font-semibold text-black">
+              <span className="block text-sm font-semibold text-black dark:text-white">
                 Mostrar a descrição no teste
               </span>
-              <span className="block text-sm text-slate-600">
+              <span className="block text-sm text-slate-600 dark:text-slate-400">
                 A descrição ficará visível para o participante.
               </span>
             </span>
           </label>
 
-          <label className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4" htmlFor="basic-allow-mult">
+          <label
+            className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 dark:bg-slate-800 p-4"
+            htmlFor="basic-allow-mult"
+          >
             <input
               id="basic-allow-mult"
               type="checkbox"
@@ -86,10 +92,10 @@ export default function NCreateStepBasic({
               }
             />
             <span className="space-y-1">
-              <span className="block text-sm font-semibold text-black">
+              <span className="block text-sm font-semibold text-black dark:text-white">
                 Possibilitar múltiplas testagens numa mesma sessão
               </span>
-              <span className="block text-sm text-slate-600">
+              <span className="block text-sm text-slate-600 dark:text-slate-400">
                 Um mesmo usuário testar várias vezes.
               </span>
             </span>

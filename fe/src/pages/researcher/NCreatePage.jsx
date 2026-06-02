@@ -18,7 +18,7 @@ function NCreatePage() {
   const wizard = useCreateExperimentWizard();
 
   return (
-    <div className=" text-black">
+    <div>
       <div className="mx-auto flex w-full flex-col gap-10">
         <NPageHeader
           title="CRIAR EXPERIMENTO"
@@ -31,7 +31,7 @@ function NCreatePage() {
         />
 
         {wizard.submissionError ? (
-          <div className="rounded-[1.5rem] border border-red-200 bg-white px-4 py-3 text-sm font-medium text-red-700 shadow-sm">
+          <div className="rounded-[1.5rem] border border-red-200 bg-white dark:bg-slate-800 px-4 py-3 text-sm font-medium text-red-700 shadow-sm">
             {wizard.submissionError}
           </div>
         ) : null}

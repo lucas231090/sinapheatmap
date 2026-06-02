@@ -35,7 +35,7 @@ function NHeatmapPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-[80vh] flex-col items-center justify-center bg-white text-black">
+      <div className="flex h-[80vh] flex-col items-center justify-center bg-white dark:bg-slate-800 text-black dark:text-white">
         <div className="flex h-[50vh] flex-col items-center justify-center">
           <p className="mt-4 text-lg">Carregando dados do heatmap&hellip;</p>
         </div>
@@ -45,9 +45,9 @@ function NHeatmapPage() {
 
   if (error || !experiment) {
     return (
-      <div className="flex flex-col items-center justify-center bg-white pt-20 text-center text-black">
+      <div className="flex flex-col items-center justify-center bg-white dark:bg-slate-800 pt-20 text-center text-black dark:text-white">
         <h2 className="text-2xl font-bold text-red-600">Erro</h2>
-        <p className="mt-2 text-black/80">
+        <p className="mt-2 text-black/80 dark:text-slate-400">
           {error || "Experimento não encontrado"}
         </p>
         <Link
@@ -87,7 +87,7 @@ function NHeatmapPage() {
   const isVideo = activePiece?.previewKind === "video" || forceVideoHeatmap;
 
   return (
-    <div className="flex w-full flex-col gap-10 text-black">
+    <div className="flex w-full flex-col gap-10 text-black dark:text-white">
       <NPageHeader
         title={`Heatmap: ${
           experiment.jsonData?.basic?.name ||
@@ -99,18 +99,21 @@ function NHeatmapPage() {
         }
       />
 
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="rounded-[2rem] border border-slate-200 bg-white dark:bg-slate-800 p-5 shadow-sm">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1.15fr)_minmax(0,1.2fr)_auto] lg:items-end">
           {!isOldImported && samples.length > 0 && (
             <div className="min-w-0">
-              <label className="mb-2 block text-sm font-semibold text-black" htmlFor="select-sample">
+              <label
+                className="mb-2 block text-sm font-semibold text-black dark:text-white"
+                htmlFor="select-sample"
+              >
                 Selecione a Amostra
               </label>
               <select
                 id="select-sample"
                 value={selectedSampleId}
                 onChange={(e) => setSelectedSampleId(e.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-black outline-none transition focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-500/20"
+                className="w-full rounded-2xl border border-slate-200 bg-white dark:bg-slate-800 px-4 py-3 text-black dark:text-white outline-none transition focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-500/20"
               >
                 {samples.map((s, index) => (
                   <option key={s.id} value={s.id}>
@@ -123,14 +126,17 @@ function NHeatmapPage() {
 
           {(availablePieces.length > 0 || isOldImported) && (
             <div className="min-w-0">
-              <label className="mb-2 block text-sm font-semibold text-black" htmlFor="select-piece">
+              <label
+                className="mb-2 block text-sm font-semibold text-black dark:text-white"
+                htmlFor="select-piece"
+              >
                 Selecione a Peça (Mídia)
               </label>
               <select
                 id="select-piece"
                 value={selectedPieceId}
                 onChange={(e) => setSelectedPieceId(e.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-black outline-none transition focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-500/20"
+                className="w-full rounded-2xl border border-slate-200 bg-white dark:bg-slate-800 px-4 py-3 text-black dark:text-white outline-none transition focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-500/20"
               >
                 {isOldImported ? (
                   <option value="old-media">Mídia Importada</option>
@@ -147,14 +153,17 @@ function NHeatmapPage() {
           )}
 
           <div className="min-w-0">
-            <label className="mb-2 block text-sm font-semibold text-black" htmlFor="select-session">
+            <label
+              className="mb-2 block text-sm font-semibold text-black dark:text-white"
+              htmlFor="select-session"
+            >
               Selecione o Participante (Sessão)
             </label>
             <select
               id="select-session"
               value={selectedSessionId}
               onChange={(e) => setSelectedSessionId(e.target.value)}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-black outline-none transition focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-500/20"
+              className="w-full rounded-2xl border border-slate-200 bg-white dark:bg-slate-800 px-4 py-3 text-black dark:text-white outline-none transition focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-500/20"
             >
               <option value="all">Todos os Participantes Agrupados</option>
               {sessions.map((s) => {
@@ -197,7 +206,7 @@ function NHeatmapPage() {
 
       <div className="flex w-full flex-col items-center justify-center">
         {!activePiece ? (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-8 text-center text-black">
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white dark:bg-slate-800 px-6 py-8 text-center text-black dark:text-white">
             <p className="font-semibold text-black/80">
               Nenhuma peça disponível para este teste.
             </p>

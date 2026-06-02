@@ -157,7 +157,12 @@ const tableQueryReducer = (state, action) => {
     case "SET_SEARCH_TERM":
       return { ...state, searchTerm: action.payload, currentPage: 1 };
     case "SET_STATUS_FILTER":
-      return { ...state, statusFilter: action.payload, statusMenuOpen: false, currentPage: 1 };
+      return {
+        ...state,
+        statusFilter: action.payload,
+        statusMenuOpen: false,
+        currentPage: 1,
+      };
     case "SET_STATUS_MENU_OPEN":
       return { ...state, statusMenuOpen: action.payload };
     case "SET_SORT":
@@ -184,11 +189,17 @@ const tableQueryReducer = (state, action) => {
   }
 };
 
-function SortableHeader({ columnKey, label, sortKey, sortDirection, onSort, alignClass = "" }) {
+function SortableHeader({
+  columnKey,
+  label,
+  sortKey,
+  sortDirection,
+  onSort,
+  alignClass = "",
+}) {
   const isActive = sortKey === columnKey && Boolean(sortDirection);
   const icon =
-    sortKey !== columnKey || !sortDirection ? null : sortDirection ===
-      "asc" ? (
+    sortKey !== columnKey || !sortDirection ? null : sortDirection === "asc" ? (
       <ArrowUpwardIcon fontSize="inherit" />
     ) : (
       <ArrowDownwardIcon fontSize="inherit" />
@@ -198,15 +209,17 @@ function SortableHeader({ columnKey, label, sortKey, sortDirection, onSort, alig
     <button
       type="button"
       onClick={() => onSort(columnKey)}
-      className={`inline-flex items-center gap-1 text-left transition hover:text-black ${alignClass} ${
-        isActive ? "text-black" : "text-slate-700"
+      className={`inline-flex items-center gap-1 text-left transition hover:text-black dark:hover:text-white ${alignClass} ${
+        isActive
+          ? "text-black dark:text-white"
+          : "text-slate-700 dark:text-slate-300"
       }`}
       title={
         sortKey === columnKey && sortDirection === "asc"
           ? `${label}: crescente`
           : sortKey === columnKey && sortDirection === "desc"
-          ? `${label}: decrescente`
-          : `${label}: sem ordenação`
+            ? `${label}: decrescente`
+            : `${label}: sem ordenação`
       }
       aria-label={`Ordenar por ${label}`}
     >
@@ -283,12 +296,12 @@ function useExperimentsTable(experiments) {
         statusFilter === "all"
           ? true
           : statusFilter === "active"
-          ? experiment.active && !experiment.isImported
-          : statusFilter === "inactive"
-          ? !experiment.active && !experiment.isImported
-          : statusFilter === "imported"
-          ? experiment.isImported
-          : true;
+            ? experiment.active && !experiment.isImported
+            : statusFilter === "inactive"
+              ? !experiment.active && !experiment.isImported
+              : statusFilter === "imported"
+                ? experiment.isImported
+                : true;
 
       return matchesSearch && matchesStatus;
     });
@@ -347,7 +360,10 @@ function useExperimentsTable(experiments) {
   };
 
   const goToPage = (pageNumber) => {
-    dispatch({ type: "SET_PAGE", payload: Math.min(Math.max(pageNumber, 1), totalPages) });
+    dispatch({
+      type: "SET_PAGE",
+      payload: Math.min(Math.max(pageNumber, 1), totalPages),
+    });
   };
 
   const paginationPages = useMemo(() => {
@@ -409,30 +425,41 @@ function NExperimentsTableToolbar({
       ?.label || "Todos";
 
   return (
-    <div className="mt-5 grid gap-4 rounded-[1.5rem] bg-slate-50 p-4 xl:grid-cols-[minmax(0,1fr)_max-content]">
-      <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-        <SearchIcon className="text-slate-500" fontSize="small" />
+    <div className="mt-5 grid gap-4 rounded-[1.5rem] bg-slate-50 dark:bg-gray-700 p-4 xl:grid-cols-[minmax(0,1fr)_max-content]">
+      <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white dark:bg-gray-800 px-4 py-3 shadow-sm">
+        <SearchIcon
+          className="text-slate-500 dark:text-slate-400"
+          fontSize="small"
+        />
         <input
           type="search"
           value={searchTerm}
           onChange={handleSearchChange}
           placeholder="Buscar por nome, descrição, data ou participantes"
-          className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+          className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 text-black dark:text-white"
         />
       </label>
 
       <div ref={statusMenuRef} className="relative">
-        <div className="flex items-stretch overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div className="flex items-stretch overflow-hidden rounded-2xl border border-slate-200 bg-white dark:bg-gray-800 shadow-sm">
           <div className="flex flex-1 items-center gap-3 px-4 py-3 pointer-events-none">
-            <FilterAltIcon className="text-slate-500" fontSize="small" />
-            <span className="text-sm font-medium text-black">
+            <FilterAltIcon
+              className="text-slate-500 dark:text-slate-400"
+              fontSize="small"
+            />
+            <span className="text-sm font-medium text-black dark:text-white">
               {currentStatusLabel}
             </span>
           </div>
           <button
             type="button"
-            onClick={() => dispatch({ type: "SET_STATUS_MENU_OPEN", payload: !statusMenuOpen })}
-            className="inline-flex items-center justify-center border-l border-slate-200 px-4 text-black transition hover:bg-slate-50"
+            onClick={() =>
+              dispatch({
+                type: "SET_STATUS_MENU_OPEN",
+                payload: !statusMenuOpen,
+              })
+            }
+            className="inline-flex items-center justify-center border-l border-slate-200 px-4 text-black dark:text-white transition hover:bg-slate-50"
             title="Abrir filtro"
             aria-label="Abrir filtro"
           >
@@ -441,7 +468,7 @@ function NExperimentsTableToolbar({
         </div>
 
         {statusMenuOpen ? (
-          <div className="absolute right-0 z-20 mt-2 w-full min-w-48 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(0,0,0,0.16)]">
+          <div className="absolute right-0 z-20 mt-2 w-full min-w-48 overflow-hidden rounded-2xl border border-slate-200 bg-white dark:bg-gray-800 shadow-[0_18px_50px_rgba(0,0,0,0.16)]">
             {STATUS_FILTER_OPTIONS.map((option) => (
               <button
                 key={option.value}
@@ -449,8 +476,8 @@ function NExperimentsTableToolbar({
                 onClick={() => chooseStatusFilter(option.value)}
                 className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition hover:bg-slate-50 ${
                   statusFilter === option.value
-                    ? "font-semibold text-black"
-                    : "text-slate-700"
+                    ? "font-semibold text-black dark:text-white"
+                    : "text-slate-700 dark:text-slate-300"
                 }`}
               >
                 <span>{option.label}</span>
@@ -462,12 +489,14 @@ function NExperimentsTableToolbar({
           </div>
         ) : null}
       </div>
-      <p>
+      <p className="flex items-center text-sm text-slate-600 dark:text-slate-400">
         Mostrando {startItem} - {endItem} de {sortedExperiments.length} teste
         {sortedExperiments.length === 1 ? "" : "s"}
       </p>
       <div className="flex flex-wrap items-center gap-3">
-        <p>Máximo de {pageSize} itens por página</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Máximo de {pageSize} itens por página
+        </p>
         <button
           type="button"
           onClick={resetFilters}
@@ -489,7 +518,7 @@ function NExperimentsTablePagination({
 }) {
   return (
     <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-sm text-slate-600">
+      <p className="text-sm text-slate-600 dark:text-slate-400">
         Página {safeCurrentPage} de {totalPages}
       </p>
 
@@ -498,7 +527,7 @@ function NExperimentsTablePagination({
           type="button"
           onClick={() => goToPage(safeCurrentPage - 1)}
           disabled={safeCurrentPage === 1 || isLoading}
-          className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-black shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-semibold text-black dark:text-white shadow-sm transition hover:bg-slate-50 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <ChevronLeftIcon fontSize="small" />
           Anterior
@@ -523,7 +552,7 @@ function NExperimentsTablePagination({
           type="button"
           onClick={() => goToPage(safeCurrentPage + 1)}
           disabled={safeCurrentPage === totalPages || isLoading}
-          className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-black shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-semibold text-black dark:text-white shadow-sm transition hover:bg-slate-50 dark:hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Próxima
           <ChevronRightIcon fontSize="small" />
@@ -609,9 +638,8 @@ export default function NExperimentsTable({
     setBusyExperimentId(experiment.id);
 
     try {
-      const { deleteExperiment } = await import(
-        "@/services/eyetrackingService"
-      );
+      const { deleteExperiment } =
+        await import("@/services/eyetrackingService");
       await deleteExperiment(experiment.id);
       if (typeof onRefresh === "function") {
         await onRefresh();
@@ -625,13 +653,13 @@ export default function NExperimentsTable({
   };
 
   return (
-    <section className="rounded-[2rem] bg-white p-4 shadow-[0_18px_50px_rgba(0,0,0,0.16)] sm:p-6 lg:p-8">
+    <section className="rounded-[2rem] bg-white dark:bg-slate-800 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.16)] sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.35em] text-sinapgreen-800">
+          <p className="text-xs font-bold uppercase tracking-[0.35em] text-sinapgreen-900 dark:text-sinapgreen-500">
             Testes criados
           </p>
-          <h2 className="mt-2 text-2xl font-black uppercase tracking-tight text-black sm:text-3xl">
+          <h2 className="mt-2 text-2xl font-black uppercase tracking-tight text-black dark:text-white sm:text-3xl">
             Tabela de experimentos
           </h2>
         </div>
@@ -674,7 +702,7 @@ export default function NExperimentsTable({
       <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-100 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-700">
+            <thead className="bg-slate-100 dark:bg-gray-700 text-left text-xs font-bold uppercase tracking-[0.25em] text-slate-700 dark:text-slate-300">
               <tr>
                 <th className="px-4 py-3">
                   <SortableHeader
@@ -733,7 +761,7 @@ export default function NExperimentsTable({
                 <th className="px-4 py-3 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 bg-white">
+            <tbody className="divide-y divide-slate-200 bg-white dark:bg-slate-800">
               {isLoading ? (
                 <tr>
                   <td className="px-4 py-6 text-sm text-slate-500" colSpan={7}>
@@ -784,18 +812,29 @@ function ExperimentRow({
   onDelete,
 }) {
   const statusMeta = getStatusMeta(experiment);
-  const copyTitle = copiedExperimentId === experiment.id ? "Link copiado" : "Copiar link";
+  const copyTitle =
+    copiedExperimentId === experiment.id ? "Link copiado" : "Copiar link";
   const isBusy = busyExperimentId === experiment.id;
 
   return (
-    <tr className="align-top text-sm text-black">
+    <tr className="align-top text-sm text-black dark:text-white">
       <td className="px-4 py-4 font-semibold">{experiment.name}</td>
-      <td className="px-4 py-4 text-slate-600">{experiment.description || "-"}</td>
-      <td className="px-4 py-4 text-slate-600">{experiment.startDate || "-"}</td>
-      <td className="px-4 py-4 text-slate-600">{experiment.endDate || "-"}</td>
-      <td className="px-4 py-4 text-slate-600">{experiment.participantsCount ?? 0}</td>
+      <td className="px-4 py-4 text-slate-600 dark:text-slate-400">
+        {experiment.description || "-"}
+      </td>
+      <td className="px-4 py-4 text-slate-600 dark:text-slate-400">
+        {experiment.startDate || "-"}
+      </td>
+      <td className="px-4 py-4 text-slate-600 dark:text-slate-400">
+        {experiment.endDate || "-"}
+      </td>
+      <td className="px-4 py-4 text-slate-600 dark:text-slate-400 ">
+        {experiment.participantsCount ?? 0}
+      </td>
       <td className="px-4 py-4">
-        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusMeta.className}`}>
+        <span
+          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusMeta.className}`}
+        >
           {statusMeta.label}
         </span>
       </td>
@@ -803,29 +842,53 @@ function ExperimentRow({
         <div className="flex flex-wrap justify-end gap-2">
           {!experiment.isImported ? (
             <>
-              <ActionButton title={copyTitle} onClick={() => onCopyLink(experiment.id)}>
-                {copiedExperimentId === experiment.id ? <CheckIcon fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
+              <ActionButton
+                title={copyTitle}
+                onClick={() => onCopyLink(experiment.id)}
+              >
+                {copiedExperimentId === experiment.id ? (
+                  <CheckIcon fontSize="small" />
+                ) : (
+                  <ContentCopyIcon fontSize="small" />
+                )}
               </ActionButton>
 
               <ActionButton
                 title={experiment.active ? "Desativar" : "Ativar"}
                 onClick={() => onToggleStatus(experiment)}
                 disabled={isBusy}
-                className={experiment.active ? "text-emerald-700 hover:text-emerald-800" : "text-red-600 hover:text-red-700"}
+                className={
+                  experiment.active
+                    ? "text-emerald-700 dark:text-emerald-600 hover:text-emerald-800 dark:hover:text-emerald-500"
+                    : "text-red-600 dark:text-red-500 hover:text-red-700 dark:hover:text-red-400"
+                }
               >
                 <PowerSettingsNewIcon fontSize="small" />
               </ActionButton>
             </>
           ) : null}
-          <ActionLink title="Ver resultados" to={`/heatmap/${experiment.id}`} className="text-blue-600 hover:text-blue-700">
+          <ActionLink
+            title="Ver resultados"
+            to={`/heatmap/${experiment.id}`}
+            className="text-blue-600 hover:text-blue-700"
+          >
             <VisibilityOutlinedIcon fontSize="small" />
           </ActionLink>
 
-          <ActionLink title="Editar" to={`/edit/${experiment.id}`} className="text-sinapgreen-700 hover:text-sinapgreen-800">
+          <ActionLink
+            title="Editar"
+            to={`/edit/${experiment.id}`}
+            className="text-sinapgreen-700 hover:text-sinapgreen-800"
+          >
             <EditOutlinedIcon fontSize="small" />
           </ActionLink>
 
-          <ActionButton title="Deletar" onClick={() => onDelete(experiment)} disabled={isBusy} className="text-red-600 hover:text-red-700">
+          <ActionButton
+            title="Deletar"
+            onClick={() => onDelete(experiment)}
+            disabled={isBusy}
+            className="text-red-600 hover:text-red-700"
+          >
             <DeleteOutlineIcon fontSize="small" />
           </ActionButton>
         </div>

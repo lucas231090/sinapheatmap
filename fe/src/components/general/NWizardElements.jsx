@@ -36,12 +36,12 @@ export function ActionButton({
 export function InputField({ label, className = "", ...props }) {
   return (
     <label className="block space-y-2 ">
-      <span className="text-sm font-semibold uppercase tracking-[0.2em] text-black">
+      <span className="text-sm font-semibold uppercase tracking-[0.2em] text-black dark:text-white">
         {label}
       </span>
       <input
         {...props}
-        className={`w-full rounded-2xl border border-black/15 bg-slate-100 px-4 py-3 text-sm text-black placeholder:text-slate-500 shadow-sm transition focus:border-sinapgreen-500 focus:bg-white focus:outline-none ${className}`}
+        className={`w-full rounded-2xl border border-black/15 bg-slate-100 dark:bg-slate-800 px-4 py-3 text-sm text-black dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 shadow-sm transition focus:border-sinapgreen-500 focus:bg-white dark:focus:bg-slate-700 focus:outline-none dark:active:bg-slate-700 ${className} `}
       />
     </label>
   );
@@ -50,12 +50,12 @@ export function InputField({ label, className = "", ...props }) {
 export function TextAreaField({ label, className = "", ...props }) {
   return (
     <label className="block space-y-2">
-      <span className="text-sm font-semibold uppercase tracking-[0.2em] text-black">
+      <span className="text-sm font-semibold uppercase tracking-[0.2em] text-black dark:text-white">
         {label}
       </span>
       <textarea
         {...props}
-        className={`min-h-[140px] w-full rounded-2xl border border-black/15 bg-slate-100 px-4 py-3 text-sm text-black placeholder:text-slate-500 shadow-sm transition focus:border-sinapgreen-500 focus:bg-white focus:outline-none ${className}`}
+        className={`min-h-[140px] w-full rounded-2xl border border-black/15 bg-slate-100 dark:bg-slate-800 px-4 py-3 text-sm text-black dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 shadow-sm transition focus:border-sinapgreen-500 focus:bg-white dark:focus:bg-slate-700 focus:outline-none dark:active:bg-slate-700 ${className}`}
       />
     </label>
   );
@@ -65,13 +65,15 @@ export function SectionTitle({ kicker, title, description }) {
   return (
     <div className="space-y-1">
       {kicker ? (
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sinapgreen-800">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sinapgreen-900 dark:text-sinapgreen-500">
           {kicker}
         </p>
       ) : null}
-      <h2 className="text-xl font-semibold text-black sm:text-2xl">{title}</h2>
+      <h2 className="text-xl font-semibold text-black dark:text-white sm:text-2xl">
+        {title}
+      </h2>
       {description ? (
-        <p className="max-w-3xl text-sm text-slate-600 sm:text-base">
+        <p className="max-w-3xl text-sm text-slate-600 dark:text-slate-400 sm:text-base">
           {description}
         </p>
       ) : null}
@@ -82,7 +84,7 @@ export function SectionTitle({ kicker, title, description }) {
 export function CardPanel({ children, className = "" }) {
   return (
     <section
-      className={`rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5 ${className}`}
+      className={`rounded-[1.75rem] border border-slate-200 bg-slate-50 dark:bg-slate-800 p-5 ${className}`}
     >
       {children}
     </section>

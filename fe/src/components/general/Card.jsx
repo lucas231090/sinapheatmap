@@ -1,4 +1,10 @@
-const Card = ({ as: Component = "div", className = "", children, ref, ...props }) => {
+const Card = ({
+  as: Component = "div",
+  className = "",
+  children,
+  ref,
+  ...props
+}) => {
   return (
     <Component
       ref={ref}

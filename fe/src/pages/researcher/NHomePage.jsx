@@ -15,13 +15,13 @@ function NHomePage() {
     <section className="flex flex-col gap-10">
       <Card>
         <div className="max-w-3xl">
-          <p className="text-xs font-bold uppercase tracking-[0.35em] text-sinapgreen-800">
+          <p className="text-xs font-bold uppercase tracking-[0.35em] text-sinapgreen-900 dark:text-sinapgreen-500">
             Painel do pesquisador
           </p>
-          <h1 className="mt-3 text-3xl font-black uppercase tracking-tight text-black sm:text-4xl lg:text-5xl">
+          <h1 className="mt-3 text-3xl font-black uppercase tracking-tight text-black dark:text-white sm:text-4xl lg:text-5xl">
             Página inicial
           </h1>
-          <p className="mt-4 text-sm text-slate-600 sm:text-base">
+          <p className="mt-4 text-sm text-slate-600 dark:text-slate-400 sm:text-base">
             Acompanhe os testes criados, crie novos experimentos e importe dados
             sem sair da visão geral.
           </p>

@@ -15,13 +15,13 @@ import { formatCpf } from "@/utils/cpf";
 
 function ParticipantTable({ participants, onChange, onAddRow, onRemoveRow }) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-      <div className="grid grid-cols-[1.4fr_1fr_auto] border-b border-slate-200 bg-sinapgreen-500 px-4 py-3 text-xs font-bold uppercase tracking-[0.25em] text-slate-900">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:bg-slate-800">
+      <div className="grid grid-cols-[1.4fr_1fr_auto] border-b border-slate-200 bg-sinapgreen-500 px-4 py-3 text-xs font-bold uppercase tracking-[0.25em] text-slate-900 dark:text-sinapgreen-50">
         <span>Nome</span>
         <span>CPF</span>
         <span className="text-right">Ações</span>
       </div>
-      <div className="max-h-[320px] divide-y divide-slate-200 overflow-auto">
+      <div className="max-h-[320px] divide-y divide-slate-200 dark:divide-slate-600 overflow-auto">
         {participants.length ? (
           participants.map((participant) => (
             <div
@@ -35,7 +35,7 @@ function ParticipantTable({ participants, onChange, onAddRow, onRemoveRow }) {
                 }
                 placeholder="Nome"
                 aria-label="Nome do participante"
-                className="w-full rounded-2xl border border-black/15 bg-slate-100 px-3 py-2 text-sm text-black placeholder:text-slate-500 focus:border-sinapgreen-500 focus:outline-none"
+                className="w-full rounded-2xl border border-black/15 bg-slate-100 px-3 py-2 text-sm text-black placeholder:text-slate-500 focus:border-sinapgreen-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:placeholder:text-slate-400"
               />
               <input
                 value={participant.cpf}
@@ -45,26 +45,26 @@ function ParticipantTable({ participants, onChange, onAddRow, onRemoveRow }) {
                 placeholder="CPF"
                 inputMode="numeric"
                 aria-label="CPF do participante"
-                className="w-full rounded-2xl border border-black/15 bg-slate-100 px-3 py-2 text-sm text-black placeholder:text-slate-500 focus:border-sinapgreen-500 focus:outline-none"
+                className="w-full rounded-2xl border border-black/15 bg-slate-100 px-3 py-2 text-sm text-black placeholder:text-slate-500 focus:border-sinapgreen-500 focus:outline-none dark:bg-slate-700 dark:text-white dark:placeholder:text-slate-400"
               />
               <button
                 type="button"
                 aria-label="Remover participante"
                 onClick={() => onRemoveRow(participant.id)}
-                className="rounded-full bg-slate-100 p-2 text-black transition hover:bg-red-50"
+                className="rounded-full bg-slate-100 dark:bg-slate-700 p-2 text-black dark:text-white transition hover:bg-red-50 hover:text-red-700"
               >
                 <DeleteOutlineIcon fontSize="small" />
               </button>
             </div>
           ))
         ) : (
-          <div className="px-4 py-6 text-sm text-slate-500">
+          <div className="px-4 py-6 text-sm text-slate-500 dark:text-slate-400">
             Nenhum participante cadastrado ainda. Use o botão abaixo para criar
             a primeira linha.
           </div>
         )}
       </div>
-      <div className="border-t border-slate-200 bg-slate-50 px-4 py-3">
+      <div className="border-t border-slate-200 bg-slate-50 dark:bg-slate-800 px-4 py-3">
         <ActionButton
           icon={<AddCircleOutlineIcon />}
           variant="ghost"
@@ -100,7 +100,7 @@ export default function NCreateStepIdentification({
       />
 
       <CardPanel className="flex flex-row items-center justify-between gap-6">
-        <label className="flex items-start gap-3">
+        <label className="flex items-start gap-3 ">
           <input
             type="checkbox"
             className="mt-1 size-4 accent-sinapgreen-500"
@@ -110,10 +110,10 @@ export default function NCreateStepIdentification({
             }
           />
           <span className="space-y-1">
-            <span className="block text-sm font-semibold text-black">
+            <span className="block text-sm font-semibold text-black dark:text-white">
               O usuário precisa se identificar?
             </span>
-            <span className="block text-sm text-slate-600">
+            <span className="block text-sm text-slate-600 dark:text-slate-400">
               Ative essa opção para exigir dados de identificação antes de
               iniciar o teste.
             </span>

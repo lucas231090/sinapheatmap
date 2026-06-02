@@ -44,7 +44,10 @@ export default function NCreateStepOrganization({
             title="ORGANIZAR AMOSTRAS"
             description="Ative a randomização para embaralhar a sequência ao iniciar o teste."
           />
-          <label className="flex items-center gap-3 rounded-full bg-white px-4 py-3 text-sm font-semibold shadow-sm" htmlFor="org-rand-samples">
+          <label
+            className="flex items-center gap-3 rounded-full bg-white dark:bg-slate-700 px-4 py-3 text-sm font-semibold shadow-sm"
+            htmlFor="org-rand-samples"
+          >
             <input
               id="org-rand-samples"
               type="checkbox"
@@ -61,13 +64,13 @@ export default function NCreateStepOrganization({
           </label>
         </div>
 
-        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-[0.3em] text-slate-500">
+        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">
           <span>Primeiro</span>
           <span>Último</span>
         </div>
 
         {organization.randomizeSamples ? (
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
+          <div className="rounded-3xl border border-dashed border-slate-300 bg-white dark:bg-slate-700 p-6 text-sm text-slate-500">
             A randomização de amostras está ativa. A organização manual foi
             bloqueada.
           </div>
@@ -102,7 +105,10 @@ export default function NCreateStepOrganization({
             title="ORGANIZAR PEÇAS"
             description="Escolha a amostra para organizar apenas as peças que pertencem a ela."
           />
-          <label className="flex items-center gap-3 rounded-full bg-white px-4 py-3 text-sm font-semibold shadow-sm" htmlFor="org-rand-pieces">
+          <label
+            className="flex items-center gap-3 rounded-full bg-white dark:bg-slate-700 px-4 py-3 text-sm font-semibold shadow-sm"
+            htmlFor="org-rand-pieces"
+          >
             <input
               id="org-rand-pieces"
               type="checkbox"
@@ -136,13 +142,13 @@ export default function NCreateStepOrganization({
           ))}
         </div>
 
-        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-[0.3em] text-slate-500">
+        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">
           <span>Primeiro</span>
           <span>Último</span>
         </div>
 
         {organization.randomizePieces ? (
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
+          <div className="rounded-3xl border border-dashed border-slate-300 bg-white dark:bg-slate-700 p-6 text-sm text-slate-500">
             A randomização de peças está ativa. A organização manual foi
             bloqueada.
           </div>
@@ -165,7 +171,7 @@ export default function NCreateStepOrganization({
             ))}
           </div>
         ) : (
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-6 text-sm text-slate-500">
+          <div className="rounded-3xl border border-dashed border-slate-300 bg-white dark:bg-slate-700 p-6 text-sm text-slate-500 dark:text-slate-400">
             Selecione uma amostra com peças para organizá-las.
           </div>
         )}
