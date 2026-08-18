@@ -60,20 +60,28 @@ export default function NTestPage() {
 
   // Busca os dados do experimento
   useEffect(() => {
+    let active = true;
     async function fetchTest() {
       dispatchLoad({ type: "FETCH_START" });
       try {
         const data = await getPublicExperimentById(id);
-        dispatchLoad({ type: "FETCH_SUCCESS", payload: data });
+        if (active) {
+          dispatchLoad({ type: "FETCH_SUCCESS", payload: data });
+        }
       } catch (err) {
         console.error("Erro ao buscar experimento:", err);
-        dispatchLoad({
-          type: "FETCH_FAILURE",
-          payload: "Não foi possível carregar este teste ou ele está inativo.",
-        });
+        if (active) {
+          dispatchLoad({
+            type: "FETCH_FAILURE",
+            payload: "Não foi possível carregar este teste ou ele está inativo.",
+          });
+        }
       }
     }
     fetchTest();
+    return () => {
+      active = false;
+    };
   }, [id]);
 
   const handleFinalizeCalibration = () => {

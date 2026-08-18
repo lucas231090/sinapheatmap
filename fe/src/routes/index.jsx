@@ -21,6 +21,7 @@ import { PublicOnlyRoute } from "./PublicOnlyRoute";
 export const appRoutes = createBrowserRouter([
   {
     element: <NUserLayout />,
+    errorElement: <NNotFoundPage />,
     children: [
       { path: "/", element: <NSignInPage /> },
       { path: "/login", element: <NSignInPage /> },
@@ -33,6 +34,7 @@ export const appRoutes = createBrowserRouter([
 
   {
     element: <NLayout />,
+    errorElement: <NNotFoundPage />,
     children: [
       // --- ROTAS EXCLUSIVAS: RESEARCHER + ADMIN ---
       {

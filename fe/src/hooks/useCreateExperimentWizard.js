@@ -269,6 +269,7 @@ export function useCreateExperimentWizard() {
         return;
       }
 
+      // eslint-disable-next-line react-doctor/no-create-object-url-without-revoke
       const localPreviewUrl = URL.createObjectURL(selectedFile);
 
       (async () => {

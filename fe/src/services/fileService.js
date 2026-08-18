@@ -89,6 +89,7 @@ export const getFileMedia = async (mediaName) => {
 
     // Criar blob a partir do ArrayBuffer
     const blob = new Blob([response.data], { type: contentType });
+    // eslint-disable-next-line react-doctor/no-create-object-url-without-revoke
     const blobUrl = URL.createObjectURL(blob);
 
     return blobUrl;

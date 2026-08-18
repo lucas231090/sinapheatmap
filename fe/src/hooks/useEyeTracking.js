@@ -38,11 +38,10 @@ export function useEyeTracking(videoRef) {
   const [mediaStream, setMediaStream] = useState(null);
 
   // ─── Estado do MediaPipe (external store p/ useSyncExternalStore) ──────────
-  const mediaPipeStoreRef = useRef(null);
-  if (!mediaPipeStoreRef.current) {
+  const [mediaPipeStore] = useState(() => {
     let loaded = false;
     const listeners = new Set();
-    mediaPipeStoreRef.current = {
+    return {
       subscribe(listener) {
         listeners.add(listener);
         return () => listeners.delete(listener);
@@ -58,12 +57,12 @@ export function useEyeTracking(videoRef) {
         listeners.forEach((l) => l());
       },
     };
-  }
+  });
 
   const mpLoaded = useSyncExternalStore(
-    mediaPipeStoreRef.current.subscribe,
-    mediaPipeStoreRef.current.getSnapshot,
-    mediaPipeStoreRef.current.getServerSnapshot,
+    mediaPipeStore.subscribe,
+    mediaPipeStore.getSnapshot,
+    mediaPipeStore.getServerSnapshot,
   );
 
   // ─── Refs de controle ─────────────────────────────────────────────────────
@@ -226,13 +225,13 @@ export function useEyeTracking(videoRef) {
             numFaces: 1,
           },
         );
-        mediaPipeStoreRef.current.setLoaded(true);
+        mediaPipeStore.setLoaded(true);
       } catch (err) {
         console.error("Erro ao carregar MediaPipe:", err);
       }
     }
     initMediaPipe();
-  }, []);
+  }, [mediaPipeStore]);
 
   // ─── Loop de predição ─────────────────────────────────────────────────────
   const startPredictionLoop = useCallback(() => {

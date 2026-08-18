@@ -9,10 +9,10 @@ export default function NTestStepAlignment({
   onNext,
 }) {
   const [rawTimeValid, setRawTimeValid] = useState(0);
-  const prevFaceValid = useRef(faceValid);
+  const [prevFaceValid, setPrevFaceValid] = useState(faceValid);
 
-  if (faceValid !== prevFaceValid.current) {
-    prevFaceValid.current = faceValid;
+  if (faceValid !== prevFaceValid) {
+    setPrevFaceValid(faceValid);
     setRawTimeValid(0);
   }
 

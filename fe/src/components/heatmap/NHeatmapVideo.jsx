@@ -9,6 +9,146 @@ import CircleOutlinedIcon from "@mui/icons-material/CircleOutlined";
 import AdjustIcon from "@mui/icons-material/Adjust";
 import DownloadIcon from "@mui/icons-material/Download";
 
+const NHeatmapVideoControls = ({
+  heatmapVisible,
+  setHeatmapVisible,
+  bubblesVisible,
+  setBubblesVisible,
+  gazePlotVisible,
+  setGazePlotVisible,
+  playbackSpeed,
+  handleSpeedChange,
+  estimatedCaptureFps,
+  coordsLength,
+  handleDownloadVideo,
+  isRecording,
+  hasNormalizedCoords,
+}) => (
+  <div className="mb-4 flex w-full flex-col gap-4 rounded-[2rem] border border-slate-200 bg-white dark:bg-slate-800 p-4 shadow-sm lg:flex-row">
+    {/* Visualization toggles */}
+    <aside className="flex flex-row gap-3 lg:w-auto lg:flex-row lg:gap-3 flex-wrap sm:flex-nowrap">
+      <label
+        className={`group flex cursor-pointer items-center justify-center rounded-2xl border p-3 transition ${
+          heatmapVisible
+            ? "border-sinapgreen-500 bg-sinapgreen-500 text-black shadow-sm"
+            : "border-slate-200 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+        }`}
+        title={heatmapVisible ? "Ocultar heatmap" : "Mostrar heatmap"}
+      >
+        <input
+          type="checkbox"
+          checked={heatmapVisible}
+          onChange={(e) => setHeatmapVisible(e.target.checked)}
+          className="peer sr-only"
+        />
+        <span className="flex size-8 items-center justify-center rounded-xl text-current transition group-hover:scale-105 peer-checked:text-black">
+          {heatmapVisible ? (
+            <VisibilityIcon fontSize="small" />
+          ) : (
+            <VisibilityOffIcon fontSize="small" />
+          )}
+        </span>
+      </label>
+
+      <label
+        className={`group flex cursor-pointer items-center justify-center rounded-2xl border p-3 transition ${
+          bubblesVisible
+            ? "border-sinapgreen-500 bg-sinapgreen-500 text-black shadow-sm"
+            : "border-slate-200 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+        }`}
+        title={bubblesVisible ? "Ocultar bolhas" : "Mostrar bolhas"}
+      >
+        <input
+          type="checkbox"
+          checked={bubblesVisible}
+          onChange={(e) => setBubblesVisible(e.target.checked)}
+          className="peer sr-only"
+        />
+        <span className="flex size-8 items-center justify-center rounded-xl text-current transition group-hover:scale-105 peer-checked:text-black">
+          <CircleOutlinedIcon fontSize="small" />
+        </span>
+      </label>
+
+      <label
+        className={`group flex cursor-pointer items-center justify-center rounded-2xl border p-3 transition ${
+          gazePlotVisible
+            ? "border-sinapgreen-500 bg-sinapgreen-500 text-black shadow-sm"
+            : "border-slate-200 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+        }`}
+        title={gazePlotVisible ? "Ocultar fixações" : "Mostrar fixações"}
+      >
+        <input
+          type="checkbox"
+          checked={gazePlotVisible}
+          onChange={(e) => setGazePlotVisible(e.target.checked)}
+          className="peer sr-only"
+        />
+        <span className="flex size-8 items-center justify-center rounded-xl text-current transition group-hover:scale-105 peer-checked:text-black">
+          <AdjustIcon fontSize="small" />
+        </span>
+      </label>
+
+      {/* Divider */}
+      <div className="hidden lg:block w-px bg-slate-200 dark:bg-slate-600 self-stretch" />
+    </aside>
+
+    {/* Speed + info */}
+    <div className="flex flex-1 flex-wrap items-center justify-center gap-4 text-black dark:text-white">
+      <label
+        className="flex items-center gap-2 text-black dark:text-white"
+        htmlFor="select-speed"
+      >
+        <SpeedIcon fontSize="small" />
+        <span className="text-sm font-semibold">Velocidade:</span>
+      </label>
+      <select
+        id="select-speed"
+        value={playbackSpeed}
+        onChange={handleSpeedChange}
+        className="rounded-2xl border border-slate-200 bg-white dark:bg-slate-800 p-2 text-black dark:text-white outline-none focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-500/20"
+      >
+        <option value="0.5">0.5x</option>
+        <option value="1">1x (Normal)</option>
+        <option value="1.5">1.5x</option>
+        <option value="2">2x</option>
+        <option value="4">4x</option>
+      </select>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-slate-600 dark:text-slate-400">
+          Coleta estimada: {estimatedCaptureFps} fps
+        </span>
+        {coordsLength === 0 && (
+          <span className="text-sm text-amber-600 dark:text-amber-400">
+            Nenhum dado de rastreio para este vídeo
+          </span>
+        )}
+      </div>
+    </div>
+
+    {/* Download button */}
+    <button
+      type="button"
+      onClick={handleDownloadVideo}
+      disabled={isRecording || !hasNormalizedCoords}
+      className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 font-semibold transition ${
+        isRecording
+          ? "border-amber-400 bg-amber-400/20 text-amber-600 dark:text-amber-300 cursor-wait"
+          : "border-sinapgreen-500 bg-sinapgreen-500 text-black hover:bg-sinapgreen-600"
+      }`}
+      title={isRecording ? "Gravando..." : "Baixar vídeo"}
+    >
+      <DownloadIcon fontSize="small" />
+      {isRecording ? (
+        <span className="text-sm">Gerando...</span>
+      ) : (
+        <span className="text-sm hidden sm:inline">Baixar</span>
+      )}
+    </button>
+  </div>
+);
+
+
+
 const NHeatmapVideo = ({
   coords,
   coordsBySession,
@@ -173,128 +313,21 @@ const NHeatmapVideo = ({
 
   return (
     <div className="flex w-full flex-col items-center">
-      {/* Controls bar */}
-      <div className="mb-4 flex w-full flex-col gap-4 rounded-[2rem] border border-slate-200 bg-white dark:bg-slate-800 p-4 shadow-sm lg:flex-row">
-        {/* Visualization toggles */}
-        <aside className="flex flex-row gap-3 lg:w-auto lg:flex-row lg:gap-3 flex-wrap sm:flex-nowrap">
-          <label
-            className={`group flex cursor-pointer items-center justify-center rounded-2xl border p-3 transition ${
-              heatmapVisible
-                ? "border-sinapgreen-500 bg-sinapgreen-500 text-black shadow-sm"
-                : "border-slate-200 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
-            }`}
-            title={heatmapVisible ? "Ocultar heatmap" : "Mostrar heatmap"}
-          >
-            <input
-              type="checkbox"
-              checked={heatmapVisible}
-              onChange={(e) => setHeatmapVisible(e.target.checked)}
-              className="peer sr-only"
-            />
-            <span className="flex size-8 items-center justify-center rounded-xl text-current transition group-hover:scale-105 peer-checked:text-black">
-              {heatmapVisible ? (
-                <VisibilityIcon fontSize="small" />
-              ) : (
-                <VisibilityOffIcon fontSize="small" />
-              )}
-            </span>
-          </label>
-
-          <label
-            className={`group flex cursor-pointer items-center justify-center rounded-2xl border p-3 transition ${
-              bubblesVisible
-                ? "border-sinapgreen-500 bg-sinapgreen-500 text-black shadow-sm"
-                : "border-slate-200 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
-            }`}
-            title={bubblesVisible ? "Ocultar bolhas" : "Mostrar bolhas"}
-          >
-            <input
-              type="checkbox"
-              checked={bubblesVisible}
-              onChange={(e) => setBubblesVisible(e.target.checked)}
-              className="peer sr-only"
-            />
-            <span className="flex size-8 items-center justify-center rounded-xl text-current transition group-hover:scale-105 peer-checked:text-black">
-              <CircleOutlinedIcon fontSize="small" />
-            </span>
-          </label>
-
-          <label
-            className={`group flex cursor-pointer items-center justify-center rounded-2xl border p-3 transition ${
-              gazePlotVisible
-                ? "border-sinapgreen-500 bg-sinapgreen-500 text-black shadow-sm"
-                : "border-slate-200 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
-            }`}
-            title={gazePlotVisible ? "Ocultar fixações" : "Mostrar fixações"}
-          >
-            <input
-              type="checkbox"
-              checked={gazePlotVisible}
-              onChange={(e) => setGazePlotVisible(e.target.checked)}
-              className="peer sr-only"
-            />
-            <span className="flex size-8 items-center justify-center rounded-xl text-current transition group-hover:scale-105 peer-checked:text-black">
-              <AdjustIcon fontSize="small" />
-            </span>
-          </label>
-
-          {/* Divider */}
-          <div className="hidden lg:block w-px bg-slate-200 dark:bg-slate-600 self-stretch" />
-        </aside>
-
-        {/* Speed + info */}
-        <div className="flex flex-1 flex-wrap items-center justify-center gap-4 text-black dark:text-white">
-          <label
-            className="flex items-center gap-2 text-black dark:text-white"
-            htmlFor="select-speed"
-          >
-            <SpeedIcon fontSize="small" />
-            <span className="text-sm font-semibold">Velocidade:</span>
-          </label>
-          <select
-            id="select-speed"
-            value={playbackSpeed}
-            onChange={handleSpeedChange}
-            className="rounded-2xl border border-slate-200 bg-white dark:bg-slate-800 p-2 text-black dark:text-white outline-none focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-500/20"
-          >
-            <option value="0.5">0.5x</option>
-            <option value="1">1x (Normal)</option>
-            <option value="1.5">1.5x</option>
-            <option value="2">2x</option>
-            <option value="4">4x</option>
-          </select>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-600 dark:text-slate-400">
-              Coleta estimada: {estimatedCaptureFps} fps
-            </span>
-            {coords.length === 0 && (
-              <span className="text-sm text-amber-600 dark:text-amber-400">
-                Nenhum dado de rastreio para este vídeo
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Download button */}
-        <button
-          type="button"
-          onClick={handleDownloadVideo}
-          disabled={isRecording || !normalizedCoords.length}
-          className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-3 font-semibold transition ${
-            isRecording
-              ? "border-amber-400 bg-amber-400/20 text-amber-600 dark:text-amber-300 cursor-wait"
-              : "border-sinapgreen-500 bg-sinapgreen-500 text-black hover:bg-sinapgreen-600"
-          }`}
-          title={isRecording ? "Gravando..." : "Baixar vídeo"}
-        >
-          <DownloadIcon fontSize="small" />
-          {isRecording ? (
-            <span className="text-sm">Gerando...</span>
-          ) : (
-            <span className="text-sm hidden sm:inline">Baixar</span>
-          )}
-        </button>
-      </div>
+      <NHeatmapVideoControls
+        heatmapVisible={heatmapVisible}
+        setHeatmapVisible={setHeatmapVisible}
+        bubblesVisible={bubblesVisible}
+        setBubblesVisible={setBubblesVisible}
+        gazePlotVisible={gazePlotVisible}
+        setGazePlotVisible={setGazePlotVisible}
+        playbackSpeed={playbackSpeed}
+        handleSpeedChange={handleSpeedChange}
+        estimatedCaptureFps={estimatedCaptureFps}
+        coordsLength={coords.length}
+        handleDownloadVideo={handleDownloadVideo}
+        isRecording={isRecording}
+        hasNormalizedCoords={normalizedCoords.length > 0}
+      />
 
       {/* Player */}
       <div

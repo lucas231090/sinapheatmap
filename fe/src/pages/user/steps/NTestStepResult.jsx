@@ -12,16 +12,10 @@ export default function NTestStepResult({
 }) {
   const [status, setStatus] = useReducer((state, action) => action, "saving"); // saving | success | error
 
-  // Gera o sessao_id UMA ÚNICA VEZ na montagem do componente.
-  // Isso garante que, mesmo com React StrictMode (double-mount),
-  // o ID seja o mesmo em ambas as execuções.
-  const sessionIdRef = useRef(crypto.randomUUID());
+  const [sessionId] = useState(() => crypto.randomUUID());
 
   // Flag de idempotência: impede submit duplicado em StrictMode
   const hasSubmittedRef = useRef(false);
-
-  const submitDataRef = useRef({ experimentId, participantInfo, sessionData });
-  submitDataRef.current = { experimentId, participantInfo, sessionData };
 
   useEffect(() => {
     // Se já submeteu, não submete novamente (proteção contra StrictMode)
@@ -37,25 +31,19 @@ export default function NTestStepResult({
 
     async function submit() {
       try {
-        const {
-          experimentId: currentExpId,
-          participantInfo: currentPartInfo,
-          sessionData: currentSessData,
-        } = submitDataRef.current;
-
         const payload = {
-          sessao_id: sessionIdRef.current,
-          experimento_id: currentExpId,
+          sessao_id: sessionId,
+          experimento_id: experimentId,
           participante: {
-            nome: currentPartInfo.nome || "",
-            cpf: currentPartInfo.cpf || "",
+            nome: participantInfo.nome || "",
+            cpf: participantInfo.cpf || "",
           },
-          amostras: currentSessData,
+          amostras: sessionData,
         };
 
         hasSubmittedRef.current = true;
-        if (currentSessData) {
-          submittedSessionsCache.add(currentSessData);
+        if (sessionData) {
+          submittedSessionsCache.add(sessionData);
         }
         await createEyeTrackingSession(payload);
 
@@ -74,7 +62,7 @@ export default function NTestStepResult({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [experimentId, participantInfo, sessionData, sessionId]);
 
   return (
     <div className="flex h-screen w-full items-center justify-center p-8 text-center text-white">

@@ -83,7 +83,7 @@ export default function NTestStepCalibration({
         {/* Barra de progresso */}
         <div className="mx-auto h-1.5 max-w-xs overflow-hidden rounded-full bg-white/10">
           <div
-            className="h-full rounded-full bg-blue-500 transition-all duration-500"
+            className="h-full rounded-full bg-blue-500 transition-[width] duration-500"
             style={{ width: `${progressPct}%` }}
           />
         </div>
