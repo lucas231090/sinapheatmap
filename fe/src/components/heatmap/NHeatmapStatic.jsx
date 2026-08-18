@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import HeatmapRenderer from "./HeatmapRenderer";
 import BubbleCanvas from "./BubbleCanvas";
+import GazePlot from "./GazePlot";
 import { downloadHeatMapImage } from "@/utils/heatmapUtils";
 import DownloadIcon from "@mui/icons-material/Download";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
@@ -10,23 +11,28 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import CircleOutlinedIcon from "@mui/icons-material/CircleOutlined";
+import AdjustIcon from "@mui/icons-material/Adjust";
 
 const NHeatmapStatic = ({
   experimentId,
   coords,
+  coordsBySession,
   canvasSize,
   radiusScale,
   mediaUrl,
+  selectedSessionId,
 }) => {
   const transformComponentRef = useRef(null);
   const fitContainerRef = useRef(null);
   const canvasRef = useRef(null);
   const heatmapCanvasRef = useRef(null);
   const imgRef = useRef(null);
+  const gazePlotImgRef = useRef(null);
 
   const [fitScale, setFitScale] = useState(1);
   const [heatmapVisible, setHeatmapVisible] = useState(true);
   const [canvasVisible, setCanvasVisible] = useState(false);
+  const [gazePlotVisible, setGazePlotVisible] = useState(false);
 
   useEffect(() => {
     if (!fitContainerRef.current) return;
@@ -102,6 +108,26 @@ const NHeatmapStatic = ({
               <CircleOutlinedIcon fontSize="small" />
             </span>
             <span className="sr-only">Mostrar bolhas e gaze</span>
+          </label>
+
+          <label
+            className={`w-full lg:w-auto lg:h-full group flex cursor-pointer items-center justify-center rounded-2xl border p-3 transition ${
+              gazePlotVisible
+                ? "border-sinapgreen-500 bg-sinapgreen-500 text-black shadow-sm"
+                : "border-slate-200 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+            }`}
+            title={gazePlotVisible ? "Ocultar fixações" : "Mostrar fixações"}
+          >
+            <input
+              type="checkbox"
+              checked={gazePlotVisible}
+              onChange={(e) => setGazePlotVisible(e.target.checked)}
+              className="peer sr-only"
+            />
+            <span className="flex size-10 items-center justify-center rounded-xl border border-transparent text-current transition group-hover:scale-105 peer-checked:text-black">
+              <AdjustIcon fontSize="small" />
+            </span>
+            <span className="sr-only">Mostrar fixações (gaze plot)</span>
           </label>
 
           <button
@@ -200,7 +226,28 @@ const NHeatmapStatic = ({
                       canvasRef={canvasRef}
                       canvasSize={canvasSize}
                       coords={coords}
+                      coordsBySession={coordsBySession}
                       transformComponentRef={transformComponentRef}
+                      selectedSessionId={selectedSessionId}
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      visibility: gazePlotVisible ? "visible" : "hidden",
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                    }}
+                  >
+                    <GazePlot
+                      canvasSize={canvasSize}
+                      coords={coords}
+                      coordsBySession={coordsBySession}
+                      transformComponentRef={transformComponentRef}
+                      selectedSessionId={selectedSessionId}
+                      mediaUrl={!heatmapVisible ? mediaUrl : null}
+                      imgRef={gazePlotImgRef}
                     />
                   </div>
                 </div>

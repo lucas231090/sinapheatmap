@@ -9,6 +9,7 @@ import {
   scaleCoordinates,
   calculateResponsiveScale,
   calculateCanvasSize,
+  SESSION_COLORS,
 } from "@/utils/heatmapUtils";
 
 const estimateCaptureFps = (coords = []) => {
@@ -205,8 +206,10 @@ export const useHeatmapData = (experimentId) => {
     }
 
     let combinedCoords = [];
+    const perSessionCoords = [];
     const captureFpsCandidates = [];
-    let timelineOffset = 0;
+    let maxTimelineDurationMs = 0;
+    let sessionColorIndex = 0;
 
     if (isOldImported) {
       const sessionsToUse =
@@ -217,12 +220,32 @@ export const useHeatmapData = (experimentId) => {
             );
 
       sessionsToUse.forEach((session) => {
+        let sessionCoords = [];
         if (session.coordinates && Array.isArray(session.coordinates)) {
-          combinedCoords = combinedCoords.concat(session.coordinates);
+          sessionCoords = session.coordinates;
         } else if (session.x && session.y) {
-          combinedCoords = combinedCoords.concat(
-            transformToCoordinates(session.x, session.y),
-          );
+          sessionCoords = transformToCoordinates(session.x, session.y);
+        }
+        combinedCoords = combinedCoords.concat(sessionCoords);
+
+        const sessionId = session.sessao_id || session.sessionId || session._id || session.id;
+        const participantName =
+          session.participante?.nome ||
+          session.participant?.nome ||
+          session.participant?.name ||
+          session.Nome ||
+          session.nome ||
+          "Anônimo";
+        const color = SESSION_COLORS[sessionColorIndex % SESSION_COLORS.length];
+        sessionColorIndex++;
+
+        if (sessionCoords.length > 0) {
+          perSessionCoords.push({
+            sessionId: String(sessionId),
+            participantName,
+            color,
+            coords: sessionCoords,
+          });
         }
       });
     } else {
@@ -234,6 +257,18 @@ export const useHeatmapData = (experimentId) => {
             );
 
       sessionsToUse.forEach((session) => {
+        let timelineOffset = 0;
+        const sessionId = session.sessao_id || session.sessionId || session._id || session.id;
+        const participantName =
+          session.participante?.nome ||
+          session.participant?.nome ||
+          session.participant?.name ||
+          "Anônimo";
+        const color = SESSION_COLORS[sessionColorIndex % SESSION_COLORS.length];
+        sessionColorIndex++;
+
+        let sessionMappedCoords = [];
+
         const matchingSamples = (session.amostras || []).filter((amostra) => {
           if (!activeSampleId) return true;
           return matchesSelectedId(amostra, activeSampleId);
@@ -299,14 +334,27 @@ export const useHeatmapData = (experimentId) => {
             estimateCaptureFps(mapped);
           if (pieceCaptureFps > 0) captureFpsCandidates.push(pieceCaptureFps);
 
-          combinedCoords = combinedCoords.concat(
-            mapped.map((point) => ({
-              ...point,
-              timestamp: point.timestamp + timelineOffset,
-            })),
-          );
+          const offsetMapped = mapped.map((point) => ({
+            ...point,
+            timestamp: point.timestamp + timelineOffset,
+          }));
+
+          combinedCoords = combinedCoords.concat(offsetMapped);
+          sessionMappedCoords = sessionMappedCoords.concat(offsetMapped);
           timelineOffset += segmentDurationMs;
+          if (timelineOffset > maxTimelineDurationMs) {
+            maxTimelineDurationMs = timelineOffset;
+          }
         });
+
+        if (sessionMappedCoords.length > 0) {
+          perSessionCoords.push({
+            sessionId: String(sessionId),
+            participantName,
+            color,
+            coords: sessionMappedCoords,
+          });
+        }
       });
     }
 
@@ -343,14 +391,24 @@ export const useHeatmapData = (experimentId) => {
     );
     const scaledCoords = scaleCoordinates(validCoords, scale);
 
+    // Scale per-session coords too
+    const scaledCoordsPerSession = perSessionCoords.map((sessionGroup) => ({
+      ...sessionGroup,
+      coords: scaleCoordinates(
+        validateCoordinates(sessionGroup.coords),
+        scale,
+      ),
+    }));
+
     return {
       activePiece: piece,
       coords: scaledCoords,
+      coordsBySession: scaledCoordsPerSession,
       radiusScale: scale,
       canvasSize: newCanvasSize,
       captureFps: estimatedCaptureFps,
       timelineDurationMs:
-        timelineOffset || validCoords[validCoords.length - 1]?.timestamp || 0,
+        maxTimelineDurationMs || validCoords[validCoords.length - 1]?.timestamp || 0,
     };
   }, [
     experiment,
@@ -364,6 +422,7 @@ export const useHeatmapData = (experimentId) => {
   const {
     activePiece,
     coords,
+    coordsBySession,
     radiusScale,
     canvasSize,
     captureFps,
@@ -383,6 +442,7 @@ export const useHeatmapData = (experimentId) => {
     selectedSessionId,
     setSelectedSessionId,
     coords,
+    coordsBySession,
     radiusScale,
     canvasSize,
     captureFps,

@@ -27,6 +27,7 @@ function NHeatmapPage() {
     selectedSessionId,
     setSelectedSessionId,
     coords,
+    coordsBySession,
     radiusScale,
     canvasSize,
     captureFps,
@@ -215,20 +216,24 @@ function NHeatmapPage() {
           <NHeatmapVideo
             experimentId={id}
             coords={coords}
+            coordsBySession={coordsBySession}
             canvasSize={canvasSize}
             radiusScale={radiusScale}
             mediaUrl={mediaUrl}
             exposureSeconds={activePiece.exposureSeconds}
             captureFps={captureFps}
             durationMs={timelineDurationMs}
+            selectedSessionId={selectedSessionId}
           />
         ) : (
           <NHeatmapStatic
             experimentId={id}
             coords={coords}
+            coordsBySession={coordsBySession}
             canvasSize={canvasSize}
             radiusScale={radiusScale}
             mediaUrl={mediaUrl}
+            selectedSessionId={selectedSessionId}
           />
         )}
       </div>

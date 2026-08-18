@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { useCurrentFrame, useVideoConfig, AbsoluteFill, Video } from "remotion";
 import h337 from "@mars3d/heatmap.js";
 import { interpolateCoordinates } from "@/utils/heatmapUtils";
+import AnimatedBubbleOverlay from "./AnimatedBubbleOverlay";
+import AnimatedGazePlotOverlay from "./AnimatedGazePlotOverlay";
 
 const BackgroundMedia = ({ img, type, durationInFrames }) => {
   if (img && type === 1) {
@@ -10,6 +12,7 @@ const BackgroundMedia = ({ img, type, durationInFrames }) => {
         src={img}
         startFrom={0}
         endAt={durationInFrames}
+        crossOrigin="anonymous"
         style={{
           width: "100%",
           height: "100%",
@@ -23,6 +26,7 @@ const BackgroundMedia = ({ img, type, durationInFrames }) => {
     return (
       <img
         src={img}
+        crossOrigin="anonymous"
         style={{
           width: "100%",
           height: "100%",
@@ -36,7 +40,14 @@ const BackgroundMedia = ({ img, type, durationInFrames }) => {
   return null;
 };
 
-export const HeatmapComposition = ({ heatmapData, img, type }) => {
+export const HeatmapComposition = ({
+  heatmapData,
+  img,
+  type,
+  modes,
+  coordsBySession,
+  selectedSessionId,
+}) => {
   const frame = useCurrentFrame();
   const { durationInFrames, fps } = useVideoConfig(); // Pega o FPS configurado (60)
 
@@ -46,6 +57,13 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
 
   const canvasSize = heatmapData.canvasSize || { width: 1280, height: 720 };
   const [heatmapInitialized, setHeatmapInitialized] = useState(false);
+
+  // Resolve modes with defaults
+  const activeModes = {
+    heatmap: modes?.heatmap ?? true,
+    bubbles: modes?.bubbles ?? false,
+    gazePlot: modes?.gazePlot ?? false,
+  };
 
   // MATEMÁTICA DO TEMPO REAL
   const currentTimeMs = (frame / fps) * 1000; // Tempo atual do vídeo em milissegundos
@@ -90,6 +108,7 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
 
   // Inicializa o Canvas do Heatmap (h337)
   useEffect(() => {
+    if (!activeModes.heatmap) return;
     if (!containerRef.current || totalPoints === 0) return;
 
     const initHeatmap = () => {
@@ -132,10 +151,12 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
     heatmapData.radiusScale,
     totalPoints,
     interpolatedCoords,
+    activeModes.heatmap,
   ]);
 
   // Atualiza os dados do Heatmap conforme o tempo avança
   useEffect(() => {
+    if (!activeModes.heatmap) return;
     if (
       heatmapInstanceRef.current &&
       heatmapInitialized &&
@@ -147,10 +168,11 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
         data: currentCoords,
       });
     }
-  }, [currentCoords, heatmapInitialized, totalPoints]);
+  }, [currentCoords, heatmapInitialized, totalPoints, activeModes.heatmap]);
 
   // DESENHA O RASTRO DO OLHAR (GAZE) BASEADO NO TEMPO REAL
   useEffect(() => {
+    if (!activeModes.heatmap) return;
     const canvas = gazeCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -195,6 +217,7 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
     latestIdx,
     currentTimeMs,
     isComplete,
+    activeModes.heatmap,
   ]);
 
   // Renderização final (Feedback de Conclusão)
@@ -243,21 +266,57 @@ export const HeatmapComposition = ({ heatmapData, img, type }) => {
           durationInFrames={durationInFrames}
         />
 
-        <canvas
-          ref={gazeCanvasRef}
-          className="gaze-canvas"
-          width={canvasSize.width}
-          height={canvasSize.height}
+        {/* Heatmap gaze trail canvas */}
+        {activeModes.heatmap && (
+          <canvas
+            ref={gazeCanvasRef}
+            className="gaze-canvas"
+            width={canvasSize.width}
+            height={canvasSize.height}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              pointerEvents: "none",
+              zIndex: 10,
+            }}
+          />
+        )}
+
+        {/* Wrapper para isolar os SVGs das visualizações e não capturar os ícones do Remotion */}
+        <div
+          className="custom-svg-overlays-container"
           style={{
             position: "absolute",
-            top: 0,
-            left: 0,
+            inset: 0,
             pointerEvents: "none",
-            zIndex: 10,
+            zIndex: 15,
           }}
-        />
+        >
+          {/* Animated Bubble overlay */}
+          {activeModes.bubbles && (
+            <AnimatedBubbleOverlay
+              canvasSize={canvasSize}
+              coords={heatmapData.coords}
+              coordsBySession={coordsBySession}
+              selectedSessionId={selectedSessionId}
+              currentTimeMs={currentTimeMs}
+            />
+          )}
 
-        {!heatmapInitialized && (
+          {/* Animated GazePlot overlay */}
+          {activeModes.gazePlot && (
+            <AnimatedGazePlotOverlay
+              canvasSize={canvasSize}
+              coords={heatmapData.coords}
+              coordsBySession={coordsBySession}
+              selectedSessionId={selectedSessionId}
+              currentTimeMs={currentTimeMs}
+            />
+          )}
+        </div>
+
+        {!heatmapInitialized && activeModes.heatmap && (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-2.5 bg-black/50 text-white rounded z-20">
             <div className="text-center text-white">
               Inicializando heatmap&hellip;
