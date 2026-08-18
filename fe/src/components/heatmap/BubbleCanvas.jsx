@@ -131,6 +131,7 @@ const BubbleCanvas = ({
           height: `${canvasSize.height}px`,
           pointerEvents: "all",
           display: "block",
+          opacity: 0.75,
         }}
         viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
       >

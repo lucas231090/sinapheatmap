@@ -183,6 +183,7 @@ const GazePlot = ({
           display: "block",
           position: "relative",
           zIndex: 2,
+          opacity: 0.75,
         }}
         viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
       >

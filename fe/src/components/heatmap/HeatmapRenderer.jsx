@@ -32,8 +32,8 @@ const HeatmapRenderer = ({
       const heatmapInstance = h337.create({
         container: node,
         radius: Math.max(10, 50 * radiusScale),
-        maxOpacity: 1,
-        minOpacity: 0.3,
+        maxOpacity: 0.75,
+        minOpacity: 0.5,
         blur: 0.9,
         backgroundColor: "rgba(255, 255, 255, 0)",
       });

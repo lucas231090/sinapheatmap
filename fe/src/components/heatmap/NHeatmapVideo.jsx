@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import api from "@/services/api";
 import { Player } from "@remotion/player";
 import { HeatmapComposition } from "./HeatmapComposition";
 import SpeedIcon from "@mui/icons-material/Speed";
@@ -30,7 +31,6 @@ const NHeatmapVideo = ({
 
   // Download state
   const [isRecording, setIsRecording] = useState(false);
-  const [recordingProgress, setRecordingProgress] = useState(0);
 
   // FPS travado em 60 para bater exatamente com a taxa de atualização da webcam
   const FPS = 60;
@@ -65,14 +65,16 @@ const NHeatmapVideo = ({
   }, [captureFps, coords]);
 
   // Normaliza os dados garantindo que todos tenham timestamp (compatibilidade com testes antigos)
-  const normalizedCoords = (coords || []).map((c, i) => ({
-    ...c,
-    // Se não tiver timestamp, simula um intervalo de 60Hz (~16.6ms)
-    timestamp:
-      c.timestamp !== undefined
-        ? c.timestamp
-        : i * (1000 / estimatedCaptureFps),
-  }));
+  const normalizedCoords = useMemo(() => {
+    return (coords || []).map((c, i) => ({
+      ...c,
+      // Se não tiver timestamp, simula um intervalo de 60Hz (~16.6ms)
+      timestamp:
+        c.timestamp !== undefined
+          ? c.timestamp
+          : i * (1000 / estimatedCaptureFps),
+    }));
+  }, [coords, estimatedCaptureFps]);
 
   const parsedDurationMs = Number(durationMs);
   const effectiveDurationMs =
@@ -82,22 +84,21 @@ const NHeatmapVideo = ({
 
   // A duração visual deve seguir o tempo configurado do estímulo, não o último ponto capturado.
   const totalFrames = Math.max(
-    Math.ceil((effectiveDurationMs / 1000) * estimatedCaptureFps) +
-      estimatedCaptureFps,
+    Math.ceil((effectiveDurationMs / 1000) * FPS) + FPS,
     150,
   );
 
   const width = parseInt(canvasSize.width, 10) || 1280;
   const height = parseInt(canvasSize.height, 10) || 720;
 
-  const heatmapData = {
+  const heatmapData = useMemo(() => ({
     coords: normalizedCoords,
     radiusScale: radiusScale || 1,
     canvasSize: { width, height },
     exposureSeconds: parsedExposureSeconds,
     durationMs: effectiveDurationMs,
     captureFps: estimatedCaptureFps,
-  };
+  }), [normalizedCoords, radiusScale, width, height, parsedExposureSeconds, effectiveDurationMs, estimatedCaptureFps]);
 
   const resolvedMediaUrl = mediaUrl || "";
 
@@ -108,229 +109,67 @@ const NHeatmapVideo = ({
   const isVideoFile = /\.(mp4|webm|ogg|mov)$/i.test(mediaUrl || "");
   const mediaType = isVideoFile ? 1 : 0;
 
-  const modes = {
+  const modes = useMemo(() => ({
     heatmap: heatmapVisible,
     bubbles: bubblesVisible,
     gazePlot: gazePlotVisible,
-  };
+  }), [heatmapVisible, bubblesVisible, gazePlotVisible]);
 
-  // Download video via gravação em tempo real (Real-time playback capture)
-  // A estratégia é: reproduzir o vídeo normalmente a 1x e gravar o canvas composto em tempo real.
-  // Isso evita artefatos visuais causados por seek frame-a-frame.
+  // Download video processado no Back-end (Remotion API)
   const handleDownloadVideo = useCallback(async () => {
-    const player = playerRef.current;
-    const container = playerContainerRef.current;
-    if (!player || !container) return;
-
     setIsRecording(true);
-    setRecordingProgress(0);
 
     try {
-      // Localiza o container de renderização do Remotion Player
-      const playerElement =
-        container.querySelector("[data-remotion-player-container]") ||
-        container.querySelector("div");
-
-      if (!playerElement) {
-        console.error("Could not find player container element");
-        setIsRecording(false);
-        return;
-      }
-
-      // Canvas de composição off-screen (nunca exibido ao usuário)
-      const compositeCanvas = document.createElement("canvas");
-      compositeCanvas.width = width;
-      compositeCanvas.height = height;
-      const ctx = compositeCanvas.getContext("2d");
-
-      // Configura MediaRecorder no stream do canvas de composição
-      const CAPTURE_FPS = 30;
-      const stream = compositeCanvas.captureStream(CAPTURE_FPS);
-      const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
-        ? "video/webm;codecs=vp9"
-        : "video/webm";
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType,
-        videoBitsPerSecond: 8_000_000,
-      });
-
-      const chunks = [];
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunks.push(e.data);
-      };
-
-      // Promise que resolve quando o MediaRecorder para
-      const recordingDone = new Promise((resolve) => {
-        mediaRecorder.onstop = resolve;
-      });
-
-      // Cache de imagens SVG renderizadas (double-buffer para evitar flicker)
-      // A cada frame de animação, desenhamos os SVGs do frame anterior (já carregados)
-      // enquanto pré-carregamos os SVGs do frame atual de forma assíncrona.
-      let svgImageCache = [];
-
-      let isCapturing = true;
-      let animFrameId;
-
-      // Loop de composição em tempo real sincronizado com requestAnimationFrame
-      const compositeLoop = () => {
-        if (!isCapturing) return;
-
-        // Limpa e pinta fundo
-        ctx.fillStyle = "#020617";
-        ctx.fillRect(0, 0, width, height);
-
-        // --- Camada 1: Background Media (vídeo ou imagem) ---
-        const bgVideo = playerElement.querySelector("video");
-        const bgImg = playerElement.querySelector("img");
-        if (bgVideo && bgVideo.readyState >= 2) {
-          ctx.drawImage(bgVideo, 0, 0, width, height);
-        } else if (bgImg && bgImg.complete) {
-          ctx.drawImage(bgImg, 0, 0, width, height);
+      const response = await api.post(
+        "/video/export",
+        {
+          coords,
+          coordsBySession,
+          canvasSize,
+          radiusScale,
+          mediaUrl,
+          exposureSeconds,
+          captureFps,
+          durationMs,
+          selectedSessionId,
+          heatmapVisible,
+          bubblesVisible,
+          gazePlotVisible,
+        },
+        {
+          responseType: "blob", // Importante para receber o arquivo de vídeo
         }
+      );
 
-        // --- Camada 2: Heatmap canvas (h337) ---
-        const heatmapCanvas = playerElement.querySelector(".heatmap-canvas");
-        if (heatmapCanvas) {
-          ctx.drawImage(heatmapCanvas, 0, 0, width, height);
-        }
-
-        // --- Camada 3: Gaze trail canvas ---
-        const gazeCanvas = playerElement.querySelector(".gaze-canvas");
-        if (gazeCanvas) {
-          ctx.drawImage(gazeCanvas, 0, 0, width, height);
-        }
-
-        // --- Camada 4: SVG overlays (Bolhas / GazePlot) via cache ---
-        // Desenha os SVGs já rasterizados do frame anterior (síncrono, sem flicker)
-        for (let i = 0; i < svgImageCache.length; i++) {
-          const cached = svgImageCache[i];
-          if (cached && cached.complete && cached.naturalWidth > 0) {
-            ctx.drawImage(cached, 0, 0, width, height);
-          }
-        }
-
-        // Pré-carrega os SVGs do frame atual para o PRÓXIMO ciclo de desenho
-        const svgContainer = playerElement.querySelector(
-          ".custom-svg-overlays-container",
-        );
-        const svgs = svgContainer
-          ? svgContainer.querySelectorAll("svg")
-          : [];
-
-        if (svgs.length > 0) {
-          const nextCache = [];
-          svgs.forEach((svg) => {
-            const serialized = new XMLSerializer().serializeToString(svg);
-            const blob = new Blob([serialized], {
-              type: "image/svg+xml;charset=utf-8",
-            });
-            const url = URL.createObjectURL(blob);
-            const img = new Image();
-            img.onload = () => URL.revokeObjectURL(url);
-            img.onerror = () => URL.revokeObjectURL(url);
-            img.src = url;
-            nextCache.push(img);
-          });
-          svgImageCache = nextCache;
-        }
-
-        // Progresso baseado no frame atual do Remotion Player
-        try {
-          const currentFrame = player.getCurrentFrame();
-          setRecordingProgress(
-            Math.min(99, Math.round((currentFrame / totalFrames) * 100)),
-          );
-        } catch {
-          // getCurrentFrame pode falhar durante a transição — ignora
-        }
-
-        animFrameId = requestAnimationFrame(compositeLoop);
-      };
-
-      // Handler para quando o Remotion Player termina a reprodução
-      const handlePlayerEnded = () => {
-        isCapturing = false;
-        if (animFrameId) cancelAnimationFrame(animFrameId);
-
-        // Captura mais um frame final para garantir o último estado
-        ctx.fillStyle = "#020617";
-        ctx.fillRect(0, 0, width, height);
-        const bgVideo = playerElement.querySelector("video");
-        const bgImg = playerElement.querySelector("img");
-        if (bgVideo && bgVideo.readyState >= 2) {
-          ctx.drawImage(bgVideo, 0, 0, width, height);
-        } else if (bgImg && bgImg.complete) {
-          ctx.drawImage(bgImg, 0, 0, width, height);
-        }
-        const hc = playerElement.querySelector(".heatmap-canvas");
-        if (hc) ctx.drawImage(hc, 0, 0, width, height);
-        const gc = playerElement.querySelector(".gaze-canvas");
-        if (gc) ctx.drawImage(gc, 0, 0, width, height);
-        for (let i = 0; i < svgImageCache.length; i++) {
-          const cached = svgImageCache[i];
-          if (cached && cached.complete && cached.naturalWidth > 0) {
-            ctx.drawImage(cached, 0, 0, width, height);
-          }
-        }
-
-        // Para o gravador após um pequeno delay para o último frame ser encodado
-        setTimeout(() => {
-          if (mediaRecorder.state === "recording") {
-            mediaRecorder.stop();
-          }
-        }, 200);
-      };
-
-      // Configura: seek para o início, espera renderizar, começa gravação
-      player.pause();
-      player.seekTo(0);
-      await new Promise((r) => setTimeout(r, 500));
-
-      // Ouve o evento 'ended' do Remotion Player
-      player.addEventListener("ended", handlePlayerEnded);
-
-      // Fallback: se o player não emitir 'ended', para automaticamente pelo timer
-      const maxDurationMs = (totalFrames / estimatedCaptureFps) * 1000 + 2000;
-      const fallbackTimer = setTimeout(() => {
-        if (isCapturing) {
-          handlePlayerEnded();
-        }
-      }, maxDurationMs);
-
-      // Inicia gravação e reprodução
-      mediaRecorder.start();
-      compositeLoop();
-      player.play();
-
-      // Aguarda a finalização do MediaRecorder
-      await recordingDone;
-
-      // Limpa recursos
-      clearTimeout(fallbackTimer);
-      player.removeEventListener("ended", handlePlayerEnded);
-
-      // Gera o download
-      setRecordingProgress(100);
-      const blob = new Blob(chunks, { type: mimeType });
-      const url = URL.createObjectURL(blob);
+      // Cria um link temporário para forçar o download do Blob
+      const url = URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.download = `heatmap-video-${Date.now()}.webm`;
+      link.setAttribute("download", `heatmap-video-${Date.now()}.mp4`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-
-      // Reseta o player
-      player.seekTo(0);
     } catch (error) {
-      console.error("Erro ao gravar vídeo:", error);
+      console.error("Erro ao exportar vídeo no backend:", error);
+      alert("Ocorreu um erro ao renderizar o vídeo. Tente novamente.");
     } finally {
       setIsRecording(false);
-      setRecordingProgress(0);
     }
-  }, [width, height, totalFrames, estimatedCaptureFps]);
+  }, [
+    coords,
+    coordsBySession,
+    canvasSize,
+    radiusScale,
+    mediaUrl,
+    exposureSeconds,
+    captureFps,
+    durationMs,
+    selectedSessionId,
+    heatmapVisible,
+    bubblesVisible,
+    gazePlotVisible,
+  ]);
 
   return (
     <div className="flex w-full flex-col items-center">
@@ -450,7 +289,7 @@ const NHeatmapVideo = ({
         >
           <DownloadIcon fontSize="small" />
           {isRecording ? (
-            <span className="text-sm">{recordingProgress}%</span>
+            <span className="text-sm">Gerando...</span>
           ) : (
             <span className="text-sm hidden sm:inline">Baixar</span>
           )}
@@ -467,7 +306,7 @@ const NHeatmapVideo = ({
             ref={playerRef}
             component={HeatmapComposition}
             durationInFrames={totalFrames}
-            fps={estimatedCaptureFps}
+            fps={FPS}
             compositionWidth={width}
             compositionHeight={height}
             style={{
@@ -509,7 +348,7 @@ const NHeatmapVideo = ({
                 <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
               </span>
               <span className="text-sm font-semibold text-white">
-                Gravando — {recordingProgress}%
+                Renderizando vídeo no servidor...
               </span>
             </div>
           </>

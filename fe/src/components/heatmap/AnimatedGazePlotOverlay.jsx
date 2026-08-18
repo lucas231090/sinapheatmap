@@ -160,7 +160,7 @@ const AnimatedGazePlotOverlay = ({
         width={canvasSize.width}
         height={canvasSize.height}
         viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
-        style={{ display: "block" }}
+        style={{ display: "block", opacity: 0.75 }}
       >
         {/* Arrow markers */}
         <defs>

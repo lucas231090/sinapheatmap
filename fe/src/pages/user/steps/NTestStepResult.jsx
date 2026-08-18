@@ -1,6 +1,10 @@
 import { useEffect, useReducer, useRef } from "react";
 import { createEyeTrackingSession } from "@/services/eyetrackingService";
 
+// Global cache to prevent identical sessions from being submitted multiple times
+// within the same browser session (e.g. from StrictMode or accidental remounts).
+const submittedSessionsCache = new WeakSet();
+
 export default function NTestStepResult({
   experimentId,
   participantInfo,
@@ -8,10 +12,29 @@ export default function NTestStepResult({
 }) {
   const [status, setStatus] = useReducer((state, action) => action, "saving"); // saving | success | error
 
+  // Gera o sessao_id UMA ÚNICA VEZ na montagem do componente.
+  // Isso garante que, mesmo com React StrictMode (double-mount),
+  // o ID seja o mesmo em ambas as execuções.
+  const sessionIdRef = useRef(crypto.randomUUID());
+
+  // Flag de idempotência: impede submit duplicado em StrictMode
+  const hasSubmittedRef = useRef(false);
+
   const submitDataRef = useRef({ experimentId, participantInfo, sessionData });
   submitDataRef.current = { experimentId, participantInfo, sessionData };
 
   useEffect(() => {
+    // Se já submeteu, não submete novamente (proteção contra StrictMode)
+    if (hasSubmittedRef.current) return;
+    
+    // Evita o reenvio se o array 'sessionData' já tiver sido salvo antes nesta navegação (previne duplicate session)
+    if (sessionData && submittedSessionsCache.has(sessionData)) {
+      setStatus("success");
+      return;
+    }
+
+    let cancelled = false;
+
     async function submit() {
       try {
         const {
@@ -21,7 +44,7 @@ export default function NTestStepResult({
         } = submitDataRef.current;
 
         const payload = {
-          sessao_id: crypto.randomUUID(),
+          sessao_id: sessionIdRef.current,
           experimento_id: currentExpId,
           participante: {
             nome: currentPartInfo.nome || "",
@@ -30,14 +53,27 @@ export default function NTestStepResult({
           amostras: currentSessData,
         };
 
+        hasSubmittedRef.current = true;
+        if (currentSessData) {
+          submittedSessionsCache.add(currentSessData);
+        }
         await createEyeTrackingSession(payload);
-        setStatus("success");
+
+        if (!cancelled) {
+          setStatus("success");
+        }
       } catch (err) {
         console.error("Erro ao salvar:", err);
-        setStatus("error");
+        if (!cancelled) {
+          setStatus("error");
+        }
       }
     }
     submit();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -87,3 +123,4 @@ export default function NTestStepResult({
     </div>
   );
 }
+

@@ -118,8 +118,8 @@ export const HeatmapComposition = ({
         const heatmapInstance = h337.create({
           container: containerRef.current,
           radius: Math.max(10, 50 * (heatmapData.radiusScale || 1)),
-          maxOpacity: 1,
-          minOpacity: 0.1,
+          maxOpacity: 0.75,
+          minOpacity: 0.5,
           blur: 0.9,
           backgroundColor: "rgba(255, 255, 255, 0)",
         });

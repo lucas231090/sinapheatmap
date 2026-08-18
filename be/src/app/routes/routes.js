@@ -16,6 +16,8 @@ const routes = Router();
 routes.post("/sign-in", routeAdapter(SignInController));
 routes.post("/sign-up", routeAdapter(SignUpController));
 
+const VideoExportController = require("../controllers/VideoExportController");
+
 // Leitura de experimentos: pública para que a visualização de heatmap funcione sem login
 routes.get("/eyetracking", EyeTrackingController.index);
 routes.get("/eyetracking/:_id", EyeTrackingController.show);
@@ -23,6 +25,7 @@ routes.get("/eyetracking/public/:_id", EyeTrackingController.publicShow);
 routes.post("/eyetracking", EyeTrackingController.store);
 routes.post("/eyetracking/sessions", EyeTrackingController.storeSession);
 routes.get("/eyetracking/:_id/sessions", EyeTrackingController.getSessions);
+routes.post("/video/export", VideoExportController.export);
 
 // Servir arquivos de mídia: público para que a visualização do heatmap carregue a imagem/vídeo
 routes.get("/uploads/media/:filename", (req, res) => {
