@@ -1,6 +1,6 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import h337 from "@mars3d/heatmap.js";
-import { interpolateCoordinates } from "@/utils/heatmapUtils";
+import { interpolateCoordinates, simplifyPath, createColorGradient } from "@/utils/heatmapUtils";
 
 const HeatmapRenderer = ({
   heatmapCanvasRef,
@@ -8,8 +8,13 @@ const HeatmapRenderer = ({
   img,
   imgRef,
   coords,
+  coordsBySession,
+  selectedSessionId,
   radiusScale,
+  disableInterpolation = false,
 }) => {
+  const instancesRef = useRef([]);
+
   const combinedRef = useCallback((node) => {
     // 1. Assign ref to forwarded ref from parent
     if (heatmapCanvasRef) {
@@ -23,31 +28,68 @@ const HeatmapRenderer = ({
     // 2. Perform h337 setup and cleanup
     if (!node) {
       document.querySelectorAll(".heatmap-canvas").forEach((e) => e.remove());
+      instancesRef.current = [];
       return;
     }
 
-    if (coords.length > 0 && canvasSize.width > 0 && canvasSize.height > 0) {
+    if (canvasSize.width > 0 && canvasSize.height > 0) {
       document.querySelectorAll(".heatmap-canvas").forEach((e) => e.remove());
+      instancesRef.current = [];
 
-      const heatmapInstance = h337.create({
-        container: node,
-        radius: Math.max(10, 50 * radiusScale),
-        maxOpacity: 0.75,
-        minOpacity: 0.5,
-        blur: 0.9,
-        backgroundColor: "rgba(255, 255, 255, 0)",
-      });
+      const isMultiSession = selectedSessionId === "all" && coordsBySession && coordsBySession.length > 1;
 
-      const interpolated = interpolateCoordinates(coords);
-      // Dinâmico: quanto mais frames (tempo e trajeto), mais "resistente" é a tela para ficar vermelha
-      const dynamicMax = Math.max(200, Math.min(50, interpolated.length * 3));
+      if (isMultiSession) {
+        coordsBySession.forEach((sessionGroup) => {
+          if (sessionGroup.coords && sessionGroup.coords.length > 0) {
+            const heatmapInstance = h337.create({
+              container: node,
+              radius: Math.max(10, 50 * radiusScale),
+              maxOpacity: 0.75,
+              minOpacity: 0.5,
+              blur: 0.9,
+              gradient: createColorGradient(sessionGroup.color),
+              backgroundColor: "rgba(255, 255, 255, 0)",
+            });
 
-      heatmapInstance.setData({
-        max: dynamicMax,
-        data: interpolated,
-      });
+            const sessionCoords = disableInterpolation 
+              ? simplifyPath(sessionGroup.coords, 6).map(c => ({ ...c, value: 200 }))
+              : interpolateCoordinates(sessionGroup.coords);
+
+            const dynamicMax = Math.max(200, Math.min(50, sessionCoords.length * 3));
+
+            heatmapInstance.setData({
+              max: dynamicMax,
+              data: sessionCoords,
+            });
+            instancesRef.current.push(heatmapInstance);
+          }
+        });
+      } else {
+        if (coords.length > 0) {
+          const heatmapInstance = h337.create({
+            container: node,
+            radius: Math.max(10, 50 * radiusScale),
+            maxOpacity: 0.75,
+            minOpacity: 0.5,
+            blur: 0.9,
+            backgroundColor: "rgba(255, 255, 255, 0)",
+          });
+
+          const dataToRender = disableInterpolation 
+            ? coords.map(c => ({ ...c, value: 200 })) // NHeatmapStatic já passou por simplifyPath se heatmapOnlyBubbles
+            : interpolateCoordinates(coords);
+            
+          const dynamicMax = Math.max(200, Math.min(50, dataToRender.length * 3));
+
+          heatmapInstance.setData({
+            max: dynamicMax,
+            data: dataToRender,
+          });
+          instancesRef.current.push(heatmapInstance);
+        }
+      }
     }
-  }, [heatmapCanvasRef, coords, canvasSize, radiusScale]);
+  }, [heatmapCanvasRef, coords, coordsBySession, selectedSessionId, canvasSize, radiusScale, disableInterpolation]);
 
   return (
     <div

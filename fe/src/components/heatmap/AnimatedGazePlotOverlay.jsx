@@ -15,6 +15,7 @@ const AnimatedGazePlotOverlay = ({
   coordsBySession,
   selectedSessionId,
   currentTimeMs,
+  fadeModeVisible,
 }) => {
   const isMultiSession =
     selectedSessionId === "all" && coordsBySession && coordsBySession.length > 1;
@@ -89,18 +90,28 @@ const AnimatedGazePlotOverlay = ({
   const visibleFixations = useMemo(() => {
     return allFixations.reduce((acc, fix) => {
       if (fix.startTime <= currentTimeMs) {
+        if (fadeModeVisible && fix.endTime < currentTimeMs - 3000) {
+          return acc;
+        }
+
         const isComplete = fix.endTime <= currentTimeMs;
-        // For in-progress fixations, compute partial growth
         let growthFactor = 1;
         if (!isComplete) {
           const elapsed = currentTimeMs - fix.startTime;
           growthFactor = Math.min(1, elapsed / fix.durationMs);
         }
-        acc.push({ ...fix, isComplete, growthFactor });
+
+        let opacityFactor = 1;
+        if (fadeModeVisible && isComplete) {
+          const age = currentTimeMs - fix.endTime;
+          opacityFactor = Math.max(0, 1 - age / 3000);
+        }
+
+        acc.push({ ...fix, isComplete, growthFactor, opacityFactor });
       }
       return acc;
     }, []);
-  }, [allFixations, currentTimeMs]);
+  }, [allFixations, currentTimeMs, fadeModeVisible]);
 
   // Group visible by session for saccade lines
   const sessionGroups = useMemo(() => {

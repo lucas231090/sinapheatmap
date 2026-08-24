@@ -12,6 +12,7 @@ const AnimatedBubbleOverlay = ({
   coordsBySession,
   selectedSessionId,
   currentTimeMs,
+  fadeModeVisible,
 }) => {
   const isMultiSession =
     selectedSessionId === "all" && coordsBySession && coordsBySession.length > 1;
@@ -57,9 +58,23 @@ const AnimatedBubbleOverlay = ({
   }, [coords, coordsBySession, isMultiSession]);
 
   // Only show bubbles whose timestamp <= currentTimeMs
+  // If fadeModeVisible is true, limit to the last 3000ms
   const visibleBubbles = useMemo(() => {
-    return allBubbles.filter((b) => b.timestamp <= currentTimeMs);
-  }, [allBubbles, currentTimeMs]);
+    let bubbles = allBubbles.filter((b) => b.timestamp <= currentTimeMs);
+    
+    if (fadeModeVisible) {
+      const windowStart = currentTimeMs - 3000;
+      bubbles = bubbles.filter((b) => b.timestamp >= windowStart);
+      bubbles = bubbles.map((b) => {
+        const age = currentTimeMs - b.timestamp;
+        const factor = Math.max(0, 1 - age / 3000);
+        return { ...b, opacityFactor: factor };
+      });
+    } else {
+      bubbles = bubbles.map((b) => ({ ...b, opacityFactor: 1 }));
+    }
+    return bubbles;
+  }, [allBubbles, currentTimeMs, fadeModeVisible]);
 
   // Group visible bubbles by session for saccade lines
   const sessionGroups = useMemo(() => {
@@ -139,7 +154,7 @@ const AnimatedBubbleOverlay = ({
                 y2={bubble.y}
                 stroke={bubble.color.stroke}
                 strokeWidth={lineWidth}
-                opacity={0.35}
+                opacity={0.35 * bubble.opacityFactor}
               />
             );
           }),
@@ -151,7 +166,7 @@ const AnimatedBubbleOverlay = ({
           const r = isLatest ? radius * 1.3 : radius;
 
           return (
-            <g key={`vbub-${bubble.globalIndex}`} opacity={isLatest ? 1 : 0.85}>
+            <g key={`vbub-${bubble.globalIndex}`} opacity={(isLatest ? 1 : 0.85) * bubble.opacityFactor}>
               {/* Pulse ring on latest */}
               {isLatest && (
                 <circle

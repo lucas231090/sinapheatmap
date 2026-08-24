@@ -184,6 +184,18 @@ export const SESSION_COLORS = [
 ];
 
 /**
+ * Creates a custom gradient configuration for heatmap.js based on a session color.
+ */
+export const createColorGradient = (colorObj) => {
+  if (!colorObj) return null;
+  return {
+    0.2: "rgba(255, 255, 255, 0)",
+    0.6: colorObj.fill,
+    1.0: colorObj.stroke,
+  };
+};
+
+/**
  * Compute fixations from raw gaze coordinates using I-DT
  * (Identification by Dispersion Threshold) algorithm.
  *
@@ -329,7 +341,7 @@ export const downloadHeatMapImage = ({
   }
 
   try {
-    const overlayCanvas = document.querySelectorAll(".heatmap-canvas")[0];
+    const overlayCanvases = document.querySelectorAll(".heatmap-canvas");
     const mediaElement = imgRef.current;
     const mediaWidth =
       mediaElement?.naturalWidth ||
@@ -362,8 +374,10 @@ export const downloadHeatMapImage = ({
       );
     }
 
-    if (overlayCanvas && heatmapVisible) {
-      finalContext.drawImage(overlayCanvas, 0, 0);
+    if (heatmapVisible) {
+      overlayCanvases.forEach((canvas) => {
+        finalContext.drawImage(canvas, 0, 0);
+      });
     }
 
     if (canvasRef?.current && canvasVisible) {

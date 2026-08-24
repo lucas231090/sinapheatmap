@@ -53,7 +53,7 @@ const AnimatedGazePlotSaccades = ({ sessionGroups, arrowSize, getFixationRadius,
               y2={y2}
               stroke={fix.color.stroke}
               strokeWidth={lineWidth}
-              opacity={0.45}
+              opacity={0.45 * (fix.opacityFactor ?? 1)}
               markerEnd={`url(#varrowhead-${sessionId})`}
             />
           );

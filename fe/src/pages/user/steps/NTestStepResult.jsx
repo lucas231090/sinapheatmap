@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import { createEyeTrackingSession } from "@/services/eyetrackingService";
 
 // Global cache to prevent identical sessions from being submitted multiple times
@@ -18,19 +18,19 @@ export default function NTestStepResult({
   const hasSubmittedRef = useRef(false);
 
   useEffect(() => {
-    // Se já submeteu, não submete novamente (proteção contra StrictMode)
-    if (hasSubmittedRef.current) return;
-    
-    // Evita o reenvio se o array 'sessionData' já tiver sido salvo antes nesta navegação (previne duplicate session)
+    // Evita o reenvio se o array 'sessionData' já tiver sido salvo antes com sucesso
     if (sessionData && submittedSessionsCache.has(sessionData)) {
       setStatus("success");
       return;
     }
 
-    let cancelled = false;
+    // Proteção contra chamadas duplas no Strict Mode ou remounts rápidos
+    if (hasSubmittedRef.current) return;
 
     async function submit() {
       try {
+        hasSubmittedRef.current = true;
+
         const payload = {
           sessao_id: sessionId,
           experimento_id: experimentId,
@@ -41,27 +41,21 @@ export default function NTestStepResult({
           amostras: sessionData,
         };
 
-        hasSubmittedRef.current = true;
+        await createEyeTrackingSession(payload);
+
+        // Somente adiciona ao cache se tiver sucesso
         if (sessionData) {
           submittedSessionsCache.add(sessionData);
         }
-        await createEyeTrackingSession(payload);
-
-        if (!cancelled) {
-          setStatus("success");
-        }
+        setStatus("success");
       } catch (err) {
         console.error("Erro ao salvar:", err);
-        if (!cancelled) {
-          setStatus("error");
-        }
+        // Permite tentar novamente em caso de erro
+        hasSubmittedRef.current = false;
+        setStatus("error");
       }
     }
     submit();
-
-    return () => {
-      cancelled = true;
-    };
   }, [experimentId, participantInfo, sessionData, sessionId]);
 
   return (

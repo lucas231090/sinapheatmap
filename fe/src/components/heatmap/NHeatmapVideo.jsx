@@ -7,6 +7,8 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import CircleOutlinedIcon from "@mui/icons-material/CircleOutlined";
 import AdjustIcon from "@mui/icons-material/Adjust";
+import GrainIcon from "@mui/icons-material/Grain";
+import HistoryIcon from "@mui/icons-material/History";
 import DownloadIcon from "@mui/icons-material/Download";
 
 const NHeatmapVideoControls = ({
@@ -16,6 +18,10 @@ const NHeatmapVideoControls = ({
   setBubblesVisible,
   gazePlotVisible,
   setGazePlotVisible,
+  heatmapOnlyBubbles,
+  setHeatmapOnlyBubbles,
+  fadeModeVisible,
+  setFadeModeVisible,
   playbackSpeed,
   handleSpeedChange,
   estimatedCaptureFps,
@@ -85,6 +91,44 @@ const NHeatmapVideoControls = ({
         />
         <span className="flex size-8 items-center justify-center rounded-xl text-current transition group-hover:scale-105 peer-checked:text-black">
           <AdjustIcon fontSize="small" />
+        </span>
+      </label>
+
+      <label
+        className={`group flex cursor-pointer items-center justify-center rounded-2xl border p-3 transition ${
+          heatmapOnlyBubbles
+            ? "border-sinapgreen-500 bg-sinapgreen-500 text-black shadow-sm"
+            : "border-slate-200 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+        }`}
+        title={heatmapOnlyBubbles ? "Heatmap com rastro" : "Heatmap apenas nos pontos (sem rastro)"}
+      >
+        <input
+          type="checkbox"
+          checked={heatmapOnlyBubbles}
+          onChange={(e) => setHeatmapOnlyBubbles(e.target.checked)}
+          className="peer sr-only"
+        />
+        <span className="flex size-8 items-center justify-center rounded-xl text-current transition group-hover:scale-105 peer-checked:text-black">
+          <GrainIcon fontSize="small" />
+        </span>
+      </label>
+
+      <label
+        className={`group flex cursor-pointer items-center justify-center rounded-2xl border p-3 transition ${
+          fadeModeVisible
+            ? "border-sinapgreen-500 bg-sinapgreen-500 text-black shadow-sm"
+            : "border-slate-200 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+        }`}
+        title={fadeModeVisible ? "Desativar Fade" : "Fade ao longo do tempo (Rastro de 3s)"}
+      >
+        <input
+          type="checkbox"
+          checked={fadeModeVisible}
+          onChange={(e) => setFadeModeVisible(e.target.checked)}
+          className="peer sr-only"
+        />
+        <span className="flex size-8 items-center justify-center rounded-xl text-current transition group-hover:scale-105 peer-checked:text-black">
+          <HistoryIcon fontSize="small" />
         </span>
       </label>
 
@@ -168,6 +212,8 @@ const NHeatmapVideo = ({
   const [heatmapVisible, setHeatmapVisible] = useState(true);
   const [bubblesVisible, setBubblesVisible] = useState(false);
   const [gazePlotVisible, setGazePlotVisible] = useState(false);
+  const [heatmapOnlyBubbles, setHeatmapOnlyBubbles] = useState(false);
+  const [fadeModeVisible, setFadeModeVisible] = useState(false);
 
   // Download state
   const [isRecording, setIsRecording] = useState(false);
@@ -253,7 +299,9 @@ const NHeatmapVideo = ({
     heatmap: heatmapVisible,
     bubbles: bubblesVisible,
     gazePlot: gazePlotVisible,
-  }), [heatmapVisible, bubblesVisible, gazePlotVisible]);
+    heatmapOnlyBubbles: heatmapOnlyBubbles,
+    fadeModeVisible: fadeModeVisible,
+  }), [heatmapVisible, bubblesVisible, gazePlotVisible, heatmapOnlyBubbles, fadeModeVisible]);
 
   // Download video processado no Back-end (Remotion API)
   const handleDownloadVideo = useCallback(async () => {
@@ -275,6 +323,8 @@ const NHeatmapVideo = ({
           heatmapVisible,
           bubblesVisible,
           gazePlotVisible,
+          heatmapOnlyBubbles,
+          fadeModeVisible,
         },
         {
           responseType: "blob", // Importante para receber o arquivo de vídeo
@@ -309,6 +359,8 @@ const NHeatmapVideo = ({
     heatmapVisible,
     bubblesVisible,
     gazePlotVisible,
+    heatmapOnlyBubbles,
+    fadeModeVisible,
   ]);
 
   return (
@@ -320,6 +372,10 @@ const NHeatmapVideo = ({
         setBubblesVisible={setBubblesVisible}
         gazePlotVisible={gazePlotVisible}
         setGazePlotVisible={setGazePlotVisible}
+        heatmapOnlyBubbles={heatmapOnlyBubbles}
+        setHeatmapOnlyBubbles={setHeatmapOnlyBubbles}
+        fadeModeVisible={fadeModeVisible}
+        setFadeModeVisible={setFadeModeVisible}
         playbackSpeed={playbackSpeed}
         handleSpeedChange={handleSpeedChange}
         estimatedCaptureFps={estimatedCaptureFps}

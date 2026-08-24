@@ -13,7 +13,7 @@ const AnimatedGazePlotFixations = ({
         const isLatest = latestPerSession.has(fix.globalIndex);
 
         return (
-          <g key={`vfix-${fix.globalIndex}`} opacity={fix.isComplete ? 0.85 : 1}>
+          <g key={`vfix-${fix.globalIndex}`} opacity={(fix.isComplete ? 0.85 : 1) * (fix.opacityFactor ?? 1)}>
             {(isLatest || !fix.isComplete) && (
               <circle
                 cx={fix.x}
