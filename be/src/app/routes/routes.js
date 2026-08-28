@@ -8,6 +8,8 @@ const SignUpController = require("../controllers/SignUpController");
 const GetMeController = require("../controllers/GetMeController");
 const EyeTrackingController = require("../controllers/EyeTrackingController");
 const HeatMapController = require("../controllers/HeatMapController");
+const AdminUsersController = require("../controllers/AdminUsersController");
+const adminMiddleware = require("../middlewares/adminMiddleware");
 const { uploadsMediaDir } = require("../configs/uploadsPaths");
 
 const routes = Router();
@@ -69,5 +71,11 @@ routes.post("/heatmap", HeatMapController.store);
 routes.put("/heatmap/:id", HeatMapController.update);
 routes.put("/eyetracking/:_id", EyeTrackingController.updateActiveStatus);
 routes.delete("/eyetracking/:_id", EyeTrackingController.delete);
+
+// ─── Rotas de Admin ───────────────────────────────────────────────────────────
+routes.get("/admin/users", adminMiddleware, AdminUsersController.index);
+routes.post("/admin/users", adminMiddleware, AdminUsersController.store);
+routes.put("/admin/users/:id", adminMiddleware, AdminUsersController.update);
+routes.delete("/admin/users/:id", adminMiddleware, AdminUsersController.delete);
 
 module.exports = routes;

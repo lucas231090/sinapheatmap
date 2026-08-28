@@ -2,7 +2,6 @@ import { createBrowserRouter } from "react-router-dom";
 
 import NLayout from "@/layout/NLayout";
 import NUserLayout from "@/layout/NUserLayout";
-import NSignUpPage from "@/pages/user/NSignUpPage";
 import NSignInPage from "@/pages/user/NSignInPage";
 import NNotFoundPage from "@/pages/user/NNotFoundPage";
 import NTestPage from "@/pages/user/NTestPage";
@@ -25,7 +24,7 @@ export const appRoutes = createBrowserRouter([
     children: [
       { path: "/", element: <NSignInPage /> },
       { path: "/login", element: <NSignInPage /> },
-      { path: "/signup", element: <NSignUpPage /> },
+
       { path: "/unauthorized", element: <NNotFoundPage /> },
       { path: "/test/:id", element: <NTestPage /> },
       { path: "*", element: <NNotFoundPage /> },

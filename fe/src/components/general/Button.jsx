@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 const variants = {
   primary:
-    "bg-sinapgreen-500 text-black hover:bg-sinapgreen-400 dark:hover:bg-sinapgreen-600 border border-transparent shadow-sm",
+    "bg-[#00BED5] text-white hover:bg-[#00a8bc] dark:hover:bg-[#00a8bc] border border-transparent shadow-sm",
   secondary:
     "bg-white text-black dark:bg-slate-700 dark:text-white border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 shadow-sm",
   danger:
@@ -31,7 +31,7 @@ const Button = ({
   ...props
 }) => {
   const baseClasses =
-    "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-not-allowed disabled:opacity-50";
+    "inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00BED5]/50 disabled:pointer-events-none disabled:opacity-60";
   const variantClasses = variants[variant] || variants.primary;
   const sizeClasses = sizes[size] || sizes.md;
 

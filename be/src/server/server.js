@@ -24,10 +24,13 @@ if (!process.env.JWT_SECRET) {
 
 mongoose.connect(process.env.MONGO_URL);
 
+const seedAdmin = require("../seedAdmin");
+
 mongoose.connection
   .on("error", console.error.bind(console, "Erro na conexão com o MongoDB:"))
-  .once("open", function () {
+  .once("open", async function () {
     console.log("Conexão MongoDB estabelecida com sucesso!");
+    await seedAdmin();
   });
 
 const server = http.createServer(app);

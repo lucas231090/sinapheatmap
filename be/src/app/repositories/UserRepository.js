@@ -31,6 +31,41 @@ class UsersRepository {
   async create(userData) {
     return Users.create(userData);
   }
+
+  /**
+   * Retrieves all users from the database.
+   * @returns {Promise<Array>} A promise resolving to an array of user documents (without passwords).
+   */
+  async findAll() {
+    return Users.find().select("-password");
+  }
+
+  /**
+   * Updates an existing user record in the database.
+   * @param {string} id - The MongoDB ObjectID of the user to update.
+   * @param {Object} updateData - The data to update.
+   * @returns {Promise<Object|null>} A promise resolving to the updated user document (without password).
+   */
+  async update(id, updateData) {
+    return Users.findByIdAndUpdate(id, updateData, { new: true }).select("-password");
+  }
+
+  /**
+   * Deletes a user record from the database.
+   * @param {string} id - The MongoDB ObjectID of the user to delete.
+   * @returns {Promise<Object|null>} A promise resolving to the deleted user document.
+   */
+  async delete(id) {
+    return Users.findByIdAndDelete(id);
+  }
+
+  /**
+   * Counts the number of users with the "admin" role.
+   * @returns {Promise<number>} A promise resolving to the number of admins.
+   */
+  async countAdmins() {
+    return Users.countDocuments({ role: "admin" });
+  }
 }
 
 module.exports = new UsersRepository();

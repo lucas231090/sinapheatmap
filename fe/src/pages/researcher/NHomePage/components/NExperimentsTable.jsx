@@ -31,6 +31,7 @@ const SORTABLE_COLUMNS = {
   startDate: "Início",
   endDate: "Fim",
   participantsCount: "Participantes",
+  createdBy: "Criado por",
   status: "Status",
 };
 
@@ -751,6 +752,15 @@ export default function NExperimentsTable({
                 </th>
                 <th className="px-4 py-3">
                   <SortableHeader
+                    columnKey="createdBy"
+                    label={SORTABLE_COLUMNS.createdBy}
+                    sortKey={sortKey}
+                    sortDirection={sortDirection}
+                    onSort={handleHeaderSort}
+                  />
+                </th>
+                <th className="px-4 py-3">
+                  <SortableHeader
                     columnKey="status"
                     label={SORTABLE_COLUMNS.status}
                     sortKey={sortKey}
@@ -830,6 +840,9 @@ function ExperimentRow({
       </td>
       <td className="px-4 py-4 text-slate-600 dark:text-slate-400 ">
         {experiment.participantsCount ?? 0}
+      </td>
+      <td className="px-4 py-4 text-slate-600 dark:text-slate-400">
+        {experiment.createdBy || "-"}
       </td>
       <td className="px-4 py-4">
         <span

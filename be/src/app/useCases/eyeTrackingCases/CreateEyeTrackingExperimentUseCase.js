@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const FileRepository = require("../../repositories/FileRepository");
+const UserRepository = require("../../repositories/UserRepository");
 const { uploadsJsonDir } = require("../../configs/uploadsPaths");
 const { createExperimentSchema, getExperimentValidationError } = require("./EyeTrackingValidation");
 
@@ -36,10 +37,18 @@ class CreateEyeTrackingExperimentUseCase {
       throw error;
     }
 
+    let creatorName = createdBy;
+    if (createdBy) {
+      const user = await UserRepository.findById(createdBy);
+      if (user) {
+        creatorName = user.name;
+      }
+    }
+
     const dataToSave = {
       ...experimentData,
       createdAt: new Date().toISOString(),
-      createdBy,
+      createdBy: creatorName,
     };
 
     if (!fs.existsSync(uploadsJsonDir)) {
@@ -61,7 +70,7 @@ class CreateEyeTrackingExperimentUseCase {
         path: jsonPath,
         jsonData: dataToSave,
         active: true,
-        createdBy,
+        createdBy: creatorName,
         experimentType: "eyetracking-experiment",
       });
     } catch (error) {

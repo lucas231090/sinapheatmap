@@ -6,6 +6,7 @@ import { useTheme } from "@/hooks/useTheme";
 import WbSunnyIcon from "@mui/icons-material/WbSunny";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 
 const bubbleColors = ["#42C9E4", "#87D4F3", "#B8EDF3"];
 
@@ -61,6 +62,7 @@ function NLayout() {
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
   const initializeSession = useAuthStore((state) => state.initializeSession);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const { isDark, logoSrc } = useTheme();
   const navigate = useNavigate();
@@ -124,6 +126,16 @@ function NLayout() {
             >
               {isDark ? <WbSunnyIcon /> : <DarkModeIcon />}
             </button>
+            {isAuthenticated && user?.role === "admin" && (
+              <Link
+                to="/admin"
+                className="flex items-center justify-center rounded-3xl bg-sinapgreen-500 hover:bg-sinapgreen-600 p-2 text-white transition-colors dark:bg-sinapgreen-700"
+                aria-label="Administração"
+                title="Administração"
+              >
+                <AdminPanelSettingsIcon />
+              </Link>
+            )}
             {isAuthenticated ? (
               <button
                 type="button"
