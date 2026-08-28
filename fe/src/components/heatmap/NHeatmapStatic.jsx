@@ -23,6 +23,7 @@ const NHeatmapStatic = ({
   radiusScale,
   mediaUrl,
   selectedSessionId,
+  imageDisplayMode,
 }) => {
   const transformComponentRef = useRef(null);
   const fitContainerRef = useRef(null);
@@ -243,6 +244,7 @@ const NHeatmapStatic = ({
                         selectedSessionId={selectedSessionId}
                         radiusScale={radiusScale}
                         disableInterpolation={heatmapOnlyBubbles}
+                        imageDisplayMode={imageDisplayMode}
                       />
                     </div>
                   )}
@@ -281,6 +283,7 @@ const NHeatmapStatic = ({
                       selectedSessionId={selectedSessionId}
                       mediaUrl={!heatmapVisible ? mediaUrl : null}
                       imgRef={gazePlotImgRef}
+                      imageDisplayMode={imageDisplayMode}
                     />
                   </div>
                 </div>

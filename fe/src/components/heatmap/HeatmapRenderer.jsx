@@ -12,6 +12,7 @@ const HeatmapRenderer = ({
   selectedSessionId,
   radiusScale,
   disableInterpolation = false,
+  imageDisplayMode,
 }) => {
   const instancesRef = useRef([]);
 
@@ -102,15 +103,27 @@ const HeatmapRenderer = ({
       }}
     >
       {img ? (
-        <img
-          ref={imgRef}
-          src={img}
-          crossOrigin="anonymous"
-          className="absolute inset-0 block h-full w-full object-contain object-center bg-slate-950 visible"
-          alt="Heatmap background"
-        />
+        <div
+          className={
+            imageDisplayMode === "cover"
+              ? "absolute inset-0 bg-slate-950"
+              : "absolute inset-0 flex items-center justify-center bg-slate-950"
+          }
+        >
+          <img
+            ref={imgRef}
+            src={img}
+            crossOrigin="anonymous"
+            className={
+              imageDisplayMode === "cover"
+                ? "block h-full w-full object-contain object-center visible"
+                : "block max-h-full max-w-full object-contain object-center visible"
+            }
+            alt="Heatmap background"
+          />
+        </div>
       ) : (
-        <div></div>
+        <div className="absolute inset-0 bg-slate-950"></div>
       )}
     </div>
   );

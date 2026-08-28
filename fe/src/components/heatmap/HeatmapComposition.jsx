@@ -5,36 +5,48 @@ import { interpolateCoordinates, simplifyPath } from "@/utils/heatmapUtils";
 import AnimatedBubbleOverlay from "./AnimatedBubbleOverlay";
 import AnimatedGazePlotOverlay from "./AnimatedGazePlotOverlay";
 
-const BackgroundMedia = ({ img, type, durationInFrames }) => {
+const BackgroundMedia = ({ img, type, durationInFrames, imageDisplayMode }) => {
+  const shouldCover = imageDisplayMode === "cover";
+
   if (img && type === 1) {
     return (
-      <Video
-        src={img}
-        startFrom={0}
-        endAt={durationInFrames}
-        crossOrigin="anonymous"
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "contain",
-          backgroundColor: "#020617",
-        }}
-      />
+      <div style={
+        shouldCover 
+          ? { position: "absolute", inset: 0, backgroundColor: "#020617" }
+          : { position: "absolute", inset: 0, backgroundColor: "#020617", display: "flex", alignItems: "center", justifyContent: "center" }
+      }>
+        <Video
+          src={img}
+          startFrom={0}
+          endAt={durationInFrames}
+          crossOrigin="anonymous"
+          style={
+            shouldCover
+              ? { width: "100%", height: "100%", objectFit: "contain" }
+              : { maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }
+          }
+        />
+      </div>
     );
   }
   if (img) {
     return (
-      <img
-        src={img}
-        crossOrigin="anonymous"
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "contain",
-          backgroundColor: "#020617",
-        }}
-        alt="bg"
-      />
+      <div style={
+        shouldCover 
+          ? { position: "absolute", inset: 0, backgroundColor: "#020617" }
+          : { position: "absolute", inset: 0, backgroundColor: "#020617", display: "flex", alignItems: "center", justifyContent: "center" }
+      }>
+        <img
+          src={img}
+          crossOrigin="anonymous"
+          style={
+            shouldCover
+              ? { width: "100%", height: "100%", objectFit: "contain" }
+              : { maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }
+          }
+          alt="bg"
+        />
+      </div>
     );
   }
   return null;
@@ -47,6 +59,7 @@ export const HeatmapComposition = ({
   modes,
   coordsBySession,
   selectedSessionId,
+  imageDisplayMode,
 }) => {
   const frame = useCurrentFrame();
   const { durationInFrames, fps } = useVideoConfig(); // Pega o FPS configurado (60)
@@ -277,6 +290,7 @@ export const HeatmapComposition = ({
             img={img}
             type={type}
             durationInFrames={durationInFrames}
+            imageDisplayMode={imageDisplayMode}
           />
 
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 p-5 bg-black/70 text-white rounded-lg text-2xl text-center z-30">
@@ -304,6 +318,7 @@ export const HeatmapComposition = ({
           img={img}
           type={type}
           durationInFrames={durationInFrames}
+          imageDisplayMode={imageDisplayMode}
         />
 
         {/* Heatmap gaze trail canvas */}

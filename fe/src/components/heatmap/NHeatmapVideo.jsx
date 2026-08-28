@@ -193,7 +193,8 @@ const NHeatmapVideoControls = ({
 
 
 
-const NHeatmapVideo = ({
+export default function NHeatmapVideo({
+  experimentId,
   coords,
   coordsBySession,
   canvasSize,
@@ -203,7 +204,8 @@ const NHeatmapVideo = ({
   captureFps,
   durationMs,
   selectedSessionId,
-}) => {
+  imageDisplayMode,
+}) {
   const playerRef = useRef(null);
   const playerContainerRef = useRef(null);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
@@ -325,6 +327,7 @@ const NHeatmapVideo = ({
           gazePlotVisible,
           heatmapOnlyBubbles,
           fadeModeVisible,
+          imageDisplayMode,
         },
         {
           responseType: "blob", // Importante para receber o arquivo de vídeo
@@ -399,9 +402,10 @@ const NHeatmapVideo = ({
             compositionWidth={width}
             compositionHeight={height}
             style={{
-              width: width / 1.5,
-              height: height / 1.5,
+              width: "100%",
+              height: "auto",
               maxHeight: "70vh",
+              aspectRatio: `${width} / ${height}`,
             }}
             controls={true}
             inputProps={{
@@ -411,6 +415,7 @@ const NHeatmapVideo = ({
               modes,
               coordsBySession: coordsBySession || [],
               selectedSessionId: selectedSessionId || "all",
+              imageDisplayMode,
             }}
             autoPlay={false}
             clickToPlay={true}

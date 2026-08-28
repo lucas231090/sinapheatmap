@@ -7,6 +7,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 
 function NDashboardPage() {
   const [users, setUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -95,6 +96,11 @@ function NDashboardPage() {
     }
   };
 
+  const filteredUsers = users.filter(user => 
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <section className="flex flex-col gap-10 text-black dark:text-white">
       <Card>
@@ -114,6 +120,15 @@ function NDashboardPage() {
       </Card>
 
       <Card className="overflow-x-auto">
+        <div className="mb-6">
+          <Input
+            type="text"
+            placeholder="Buscar usuário por nome ou email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full sm:max-w-md"
+          />
+        </div>
         {isLoading ? (
           <p>Carregando usuários...</p>
         ) : (
@@ -127,7 +142,7 @@ function NDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <tr key={user._id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                   <td className="py-3 px-4 font-medium">{user.name}</td>
                   <td className="py-3 px-4">{user.email}</td>
@@ -146,7 +161,7 @@ function NDashboardPage() {
                   </td>
                 </tr>
               ))}
-              {users.length === 0 && (
+              {filteredUsers.length === 0 && (
                 <tr>
                   <td colSpan="4" className="py-4 text-center text-gray-500">
                     Nenhum usuário encontrado.

@@ -224,6 +224,7 @@ function NHeatmapPage() {
             captureFps={captureFps}
             durationMs={timelineDurationMs}
             selectedSessionId={selectedSessionId}
+            imageDisplayMode={activePiece.imageDisplayMode}
           />
         ) : (
           <NHeatmapStatic
@@ -234,6 +235,7 @@ function NHeatmapPage() {
             radiusScale={radiusScale}
             mediaUrl={mediaUrl}
             selectedSessionId={selectedSessionId}
+            imageDisplayMode={activePiece.imageDisplayMode}
           />
         )}
       </div>
