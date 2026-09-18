@@ -7,7 +7,6 @@ const submittedSessionsCache = new WeakSet();
 
 export default function NTestStepResult({
   experimentId,
-  participantInfo,
   sessionData,
 }) {
   const [status, setStatus] = useReducer((state, action) => action, "saving"); // saving | success | error
@@ -34,10 +33,6 @@ export default function NTestStepResult({
         const payload = {
           sessao_id: sessionId,
           experimento_id: experimentId,
-          participante: {
-            nome: participantInfo.nome || "",
-            cpf: participantInfo.cpf || "",
-          },
           amostras: sessionData,
         };
 
@@ -56,7 +51,7 @@ export default function NTestStepResult({
       }
     }
     submit();
-  }, [experimentId, participantInfo, sessionData, sessionId]);
+  }, [experimentId, sessionData, sessionId]);
 
   return (
     <div className="flex h-screen w-full items-center justify-center p-8 text-center text-white">

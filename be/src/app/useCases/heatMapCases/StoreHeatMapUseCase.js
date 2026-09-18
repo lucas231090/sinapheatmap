@@ -56,10 +56,6 @@ class StoreHeatMapUseCase {
           screenWidth: screenWidth,
           screenHeight: screenHeight,
         },
-        identification: {
-          required: false,
-          mode: "nome",
-        },
         samples: [
           {
             id: sampleId,
@@ -78,7 +74,6 @@ class StoreHeatMapUseCase {
             previewKind: mediaFile && mediaFile.detectedMediaType === 1 ? "video" : "image",
           },
         ],
-        participants: [],
         organization: {
           randomizeSamples: false,
           randomizePieces: false,
@@ -119,10 +114,6 @@ class StoreHeatMapUseCase {
         const sessionPayload = {
           sessao_id: `imported-${savedFile._id}-${i}`,
           experimento_id: savedFile._id.toString(),
-          participante: {
-            nome: sessionRow.Nome || sessionRow.nome || `Participante ${i + 1}`,
-            cpf: "",
-          },
           amostras: [
             {
               amostra_id: sampleId,

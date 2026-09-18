@@ -359,11 +359,6 @@ export const useHeatmapData = (experimentId) => {
     }
 
     const validCoords = validateCoordinates(combinedCoords);
-    console.log("Heatmap Coordinates parsed:", {
-      raw: combinedCoords.length,
-      valid: validCoords.length,
-      sample: validCoords.slice(0, 5),
-    });
 
     const estimatedCaptureFps =
       medianNumber(captureFpsCandidates) ||

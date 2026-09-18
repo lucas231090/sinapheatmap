@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState, memo } from "react";
 import api from "@/services/api";
 import { Player } from "@remotion/player";
 import { HeatmapComposition } from "./HeatmapComposition";
@@ -11,7 +11,7 @@ import GrainIcon from "@mui/icons-material/Grain";
 import HistoryIcon from "@mui/icons-material/History";
 import DownloadIcon from "@mui/icons-material/Download";
 
-const NHeatmapVideoControls = ({
+const NHeatmapVideoControls = memo(({
   heatmapVisible,
   setHeatmapVisible,
   bubblesVisible,
@@ -189,7 +189,7 @@ const NHeatmapVideoControls = ({
       )}
     </button>
   </div>
-);
+));
 
 
 

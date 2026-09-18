@@ -87,16 +87,6 @@ const eyeTrackingSessionSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    participante: {
-      nome: {
-        type: String,
-        default: "",
-      },
-      cpf: {
-        type: String,
-        default: "",
-      },
-    },
     amostras: {
       type: [sampleSessionSchema],
       default: [],

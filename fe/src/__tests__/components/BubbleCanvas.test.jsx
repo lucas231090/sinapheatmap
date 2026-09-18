@@ -15,7 +15,7 @@ describe("BubbleCanvas", () => {
       restore: vi.fn(),
     };
 
-    const contextSpy = jest
+    const contextSpy = vi
       .spyOn(HTMLCanvasElement.prototype, "getContext")
       .mockImplementation(() => ctx);
 

@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, memo } from "react";
 import { useCurrentFrame, useVideoConfig, AbsoluteFill, Video } from "remotion";
 import h337 from "@mars3d/heatmap.js";
 import { interpolateCoordinates, simplifyPath } from "@/utils/heatmapUtils";
 import AnimatedBubbleOverlay from "./AnimatedBubbleOverlay";
 import AnimatedGazePlotOverlay from "./AnimatedGazePlotOverlay";
 
-const BackgroundMedia = ({ img, type, durationInFrames, imageDisplayMode }) => {
+const BackgroundMedia = memo(({ img, type, durationInFrames, imageDisplayMode }) => {
   const shouldCover = imageDisplayMode === "cover";
 
   if (img && type === 1) {
@@ -50,7 +50,7 @@ const BackgroundMedia = ({ img, type, durationInFrames, imageDisplayMode }) => {
     );
   }
   return null;
-};
+});
 
 export const HeatmapComposition = ({
   heatmapData,
