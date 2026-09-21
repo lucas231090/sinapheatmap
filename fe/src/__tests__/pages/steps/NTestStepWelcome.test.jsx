@@ -1,33 +1,25 @@
 import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import NTestStepWelcome from "@/pages/user/steps/NTestStepWelcome";
+import { vi } from "vitest";
 
 describe("NTestStepWelcome", () => {
-  it("shows error when required name is missing", () => {
+  it("renders experiment name and description", () => {
     const onNext = vi.fn();
     const experiment = {
-      basic: { name: "Teste", description: "Desc" },
-      identification: { mode: "nome", required: true },
-      participants: [],
+      basic: { name: "Teste LGPD", description: "Descricao LGPD" },
     };
 
     render(<NTestStepWelcome experiment={experiment} onNext={onNext} />);
 
-    fireEvent.submit(
-      screen.getByRole("button", { name: /iniciar experimento/i }).closest("form"),
-    );
-    expect(
-      screen.getByText(/informe seu nome para continuar/i),
-    ).toBeInTheDocument();
-    expect(onNext).not.toHaveBeenCalled();
+    expect(screen.getByText("Teste LGPD")).toBeInTheDocument();
+    expect(screen.getByText("Descricao LGPD")).toBeInTheDocument();
   });
 
-  it("calls onNext when identification is not required", () => {
+  it("calls onNext when starting experiment", () => {
     const onNext = vi.fn();
     const experiment = {
       basic: { name: "Teste", description: "Desc" },
-      identification: { mode: "nome", required: false },
-      participants: [],
     };
 
     render(<NTestStepWelcome experiment={experiment} onNext={onNext} />);
@@ -35,6 +27,6 @@ describe("NTestStepWelcome", () => {
     fireEvent.click(
       screen.getByRole("button", { name: /iniciar experimento/i }),
     );
-    expect(onNext).toHaveBeenCalledWith({ nome: "", cpf: "" });
+    expect(onNext).toHaveBeenCalled();
   });
 });

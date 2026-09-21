@@ -9,17 +9,7 @@ import {
 } from "@/services/eyetrackingService";
 import {
   buildExperimentPayload,
-  buildParticipantsText,
-  canAdvanceFromAssets,
-  createEmptyExperimentState,
-  createEmptyParticipant,
-  createEmptyPieceDraft,
-  createEmptySampleDraft,
-  isVideoSource,
-  moveItem,
-  parseParticipantRows,
   reorderPiecesWithinSample,
-  hasInvalidParticipantCpf,
 } from "@/utils/eyetrackingExperimentWizard";
 
 export function useCreateExperimentWizard() {
@@ -38,7 +28,6 @@ export function useCreateExperimentWizard() {
   const [selectedSampleId, setSelectedSampleId] = useState(null);
   const [selectedPieceId, setSelectedPieceId] = useState(null);
   const [organizationSampleId, setOrganizationSampleId] = useState(null);
-  const [participantsText, setParticipantsText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
 
@@ -73,7 +62,6 @@ export function useCreateExperimentWizard() {
     setSelectedSampleId(null);
     setSelectedPieceId(null);
     setOrganizationSampleId(null);
-    setParticipantsText("");
     setActiveStep(1);
     setSubmissionError("");
     setIsSubmitting(false);
@@ -90,16 +78,6 @@ export function useCreateExperimentWizard() {
     }));
   }, []);
 
-  const updateIdentificationField = useCallback((field, value) => {
-    setExperiment((current) => ({
-      ...current,
-      identification: {
-        ...current.identification,
-        [field]: value,
-      },
-    }));
-  }, []);
-
   const updateOrganizationField = useCallback((field, value) => {
     setExperiment((current) => ({
       ...current,
@@ -108,39 +86,6 @@ export function useCreateExperimentWizard() {
         [field]: value,
       },
     }));
-  }, []);
-
-  const updateParticipantField = useCallback((participantId, field, value) => {
-    setExperiment((current) => ({
-      ...current,
-      participants: current.participants.map((participant) =>
-        participant.id === participantId
-          ? { ...participant, [field]: value }
-          : participant,
-      ),
-    }));
-  }, []);
-
-  const addParticipantRow = useCallback(() => {
-    setExperiment((current) => ({
-      ...current,
-      participants: [...current.participants, createEmptyParticipant()],
-    }));
-  }, []);
-
-  const removeParticipantRow = useCallback((participantId) => {
-    setExperiment((current) => {
-      const nextParticipants = current.participants.filter(
-        (participant) => participant.id !== participantId,
-      );
-
-      return {
-        ...current,
-        participants: nextParticipants.length
-          ? nextParticipants
-          : [createEmptyParticipant()],
-      };
-    });
   }, []);
 
   const updateSampleDraft = useCallback((field, value) => {
@@ -496,17 +441,10 @@ export function useCreateExperimentWizard() {
       return false;
     }
 
-    if (hasInvalidParticipantCpf(experiment.participants)) {
-      notifyError("Existe um CPF inválido na lista de participantes.");
-      setSubmissionError("Existe um CPF inválido na lista de participantes.");
-      setActiveStep(2);
-      return false;
-    }
-
     if (!canContinueToOrganization) {
       notifyError("Cada amostra precisa ter pelo menos uma peça.");
       setSubmissionError("Cada amostra precisa ter pelo menos uma peça.");
-      setActiveStep(3);
+      setActiveStep(2);
       return false;
     }
 
@@ -528,14 +466,14 @@ export function useCreateExperimentWizard() {
       return false;
     }
 
-    if (activeStep === 3 && !canContinueToOrganization) {
+    if (activeStep === 2 && !canContinueToOrganization) {
       setSubmissionError("Cada amostra precisa ter pelo menos uma peça.");
       notifyError("Cada amostra precisa ter pelo menos uma peça.");
       return false;
     }
 
     setSubmissionError("");
-    setActiveStep((current) => Math.min(current + 1, 4));
+    setActiveStep((current) => Math.min(current + 1, 3));
     return true;
   }, [
     activeStep,
@@ -596,26 +534,6 @@ export function useCreateExperimentWizard() {
     }
   }, [experiment, navigate, notifyError, notifySuccess, validateBeforeSubmit]);
 
-  const importParticipants = useCallback(() => {
-    const parsedRows = parseParticipantRows(participantsText);
-
-    if (!parsedRows.length) {
-      notifyError("Cole uma lista válida no formato Nome, CPF.");
-      return;
-    }
-
-    if (hasInvalidParticipantCpf(parsedRows)) {
-      notifyError("Um ou mais CPFs importados são inválidos.");
-      return;
-    }
-
-    setExperiment((current) => ({
-      ...current,
-      participants: parsedRows,
-    }));
-    notifySuccess(`${parsedRows.length} participante(s) importado(s).`);
-  }, [notifyError, notifySuccess, participantsText]);
-
   const hydrateWizard = useCallback(
     (nextExperiment, options = {}) => {
       if (!nextExperiment) {
@@ -624,14 +542,13 @@ export function useCreateExperimentWizard() {
 
       setExperiment(nextExperiment);
 
-      const nextParticipantsText =
-        options.participantsText ??
-        buildParticipantsText(nextExperiment.participants);
-
       const defaultSampleId = nextExperiment.samples[0]?.id || null;
       const defaultPieceId = nextExperiment.pieces[0]?.id || null;
       const selectedSampleId = options.selectedSampleId ?? defaultSampleId;
       const selectedPieceId = options.selectedPieceId ?? defaultPieceId;
+
+      setSelectedSampleId(selectedSampleId);
+      setSelectedPieceId(selectedPieceId);
 
       const selectedSample = nextExperiment.samples.find(
         (sample) => sample.id === selectedSampleId,
@@ -645,9 +562,6 @@ export function useCreateExperimentWizard() {
         nextExperiment.organization?.sampleOrder?.[0] ??
         selectedSampleId;
 
-      setParticipantsText(nextParticipantsText);
-      setSelectedSampleId(selectedSampleId);
-      setSelectedPieceId(selectedPieceId);
       setOrganizationSampleId(organizationSampleId || null);
       setSampleDraft(
         selectedSample ? { ...selectedSample } : createEmptySampleDraft(),
@@ -666,7 +580,6 @@ export function useCreateExperimentWizard() {
       setExperiment,
       setIsSubmitting,
       setOrganizationSampleId,
-      setParticipantsText,
       setPieceDraft,
       setSampleDraft,
       setSelectedPieceId,
@@ -687,26 +600,18 @@ export function useCreateExperimentWizard() {
     selectedOrganizationPieces,
     sampleDraft,
     pieceDraft,
-    participantsText,
     isSubmitting,
     submissionError,
     canContinueToOrganization,
     setActiveStep,
-    setParticipantsText,
     setSampleDraft,
     setPieceDraft,
     setSelectedSampleId,
     setSelectedPieceId,
     setOrganizationSampleId,
     setIsSubmitting,
-    setSubmissionError,
     updateBasicField,
-    updateIdentificationField,
     updateOrganizationField,
-    updateParticipantField,
-    addParticipantRow,
-    removeParticipantRow,
-    importParticipants,
     updateSampleDraft,
     clearSampleDraft,
     selectSampleForEdit,

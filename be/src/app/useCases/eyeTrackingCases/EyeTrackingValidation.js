@@ -1,13 +1,5 @@
 const { z } = require("zod");
 
-const participantSchema = z
-  .object({
-    id: z.string().trim().min(1).optional(),
-    name: z.string().trim(),
-    cpf: z.string().trim().optional().default(""),
-  })
-  .passthrough();
-
 const sampleSchema = z
   .object({
     id: z.string().trim().min(1),
@@ -49,13 +41,6 @@ const createExperimentSchema = z.object({
           isImported: z.boolean().default(false),
         })
         .passthrough(),
-      identification: z
-        .object({
-          required: z.boolean().default(true),
-          mode: z.enum(["nome", "cpf", "nome-cpf"]),
-        })
-        .passthrough(),
-      participants: z.array(participantSchema).default([]),
       samples: z
         .array(sampleSchema)
         .min(1, "Pelo menos uma amostra é obrigatória"),
@@ -76,12 +61,6 @@ const createExperimentSchema = z.object({
 const eyeTrackingSessionSchema = z.object({
   sessao_id: z.string().trim().min(1),
   experimento_id: z.string().trim().min(1),
-  participante: z
-    .object({
-      nome: z.string().trim().default(""),
-      cpf: z.string().trim().default(""),
-    })
-    .passthrough(),
   amostras: z
     .array(
       z.object({

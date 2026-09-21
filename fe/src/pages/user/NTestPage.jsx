@@ -38,7 +38,6 @@ export default function NTestPage() {
   const [currentStep, setCurrentStep] = useState("WELCOME");
 
   // Dados Coletados
-  const [participantInfo, setParticipantInfo] = useState({ nome: "", cpf: "" });
   const [sessionData, setSessionData] = useState([]);
 
   // Ref de Câmera (Este será atrelado ao vídeo invisível)
@@ -136,8 +135,7 @@ export default function NTestPage() {
         {currentStep === "WELCOME" && (
           <NTestStepWelcome
             experiment={experiment.experiment}
-            onNext={(info) => {
-              setParticipantInfo(info);
+            onNext={() => {
               setCurrentStep("TUTORIAL");
             }}
           />
@@ -179,7 +177,6 @@ export default function NTestPage() {
         {currentStep === "RESULT" && (
           <NTestStepResult
             experimentId={experiment.id}
-            participantInfo={participantInfo}
             sessionData={sessionData}
           />
         )}

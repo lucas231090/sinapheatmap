@@ -1,6 +1,7 @@
 import { Video } from "remotion";
+import { memo } from "react";
 
-export const BackgroundMedia = ({ img, type, durationInFrames, imageDisplayMode }) => {
+export const BackgroundMedia = memo(({ img, type, durationInFrames, imageDisplayMode }) => {
   const shouldCover = imageDisplayMode === "cover";
 
   if (img && type === 1) {

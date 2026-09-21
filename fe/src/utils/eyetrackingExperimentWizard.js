@@ -1,4 +1,3 @@
-import { formatCpf, isValidCpf } from "@/utils/cpf";
 
 function createId() {
   return crypto.randomUUID();
@@ -15,12 +14,6 @@ function createEmptyBasicData() {
   };
 }
 
-function createEmptyIdentificationData() {
-  return {
-    required: true,
-    mode: "nome",
-  };
-}
 
 function createEmptyOrganizationData() {
   return {
@@ -29,13 +22,6 @@ function createEmptyOrganizationData() {
   };
 }
 
-export function createEmptyParticipant() {
-  return {
-    id: createId(),
-    name: "",
-    cpf: "",
-  };
-}
 
 function createEmptySample() {
   return {
@@ -65,9 +51,7 @@ function createEmptyPiece(sampleId = "") {
 export function createEmptyExperimentState() {
   return {
     basic: createEmptyBasicData(),
-    identification: createEmptyIdentificationData(),
     organization: createEmptyOrganizationData(),
-    participants: [],
     samples: [],
     pieces: [],
   };
@@ -92,34 +76,6 @@ export function moveItem(list, fromIndex, toIndex) {
   return nextList;
 }
 
-export function parseParticipantRows(text) {
-  return text
-    .split(/\n+/)
-    .flatMap((rawLine) => {
-      const line = rawLine.replace(/;+$/g, "").trim();
-      if (!line) return [];
-
-      const parts = line.split(",").flatMap((item) => {
-        const trimmed = item.trim();
-        return trimmed ? [trimmed] : [];
-      });
-
-      if (!parts[0]) return [];
-
-      return [{
-        id: createId(),
-        name: parts[0] || "",
-        cpf: parts[1] ? formatCpf(parts[1]) : "",
-      }];
-    });
-}
-
-export function hasInvalidParticipantCpf(participants = []) {
-  return participants.some((participant) => {
-    const cpf = String(participant?.cpf || "").trim();
-    return Boolean(cpf) && !isValidCpf(cpf);
-  });
-}
 
 function sampleHasPieces(sampleId, pieces) {
   return pieces.some((piece) => piece.sampleId === sampleId);
@@ -166,19 +122,6 @@ export function isVideoSource({
   return /video|\.(mp4|webm|mov|avi)$/i.test(source);
 }
 
-export function buildParticipantsText(participants = []) {
-  return participants
-    .flatMap((participant) => {
-      const name = participant?.name?.trim() || "";
-      const cpf = participant?.cpf?.trim() ? formatCpf(participant.cpf) : "";
-      if (!name && !cpf) {
-        return [];
-      }
-
-      return [cpf ? `${name}, ${cpf}` : name];
-    })
-    .join("\n");
-}
 
 export function normalizeExperimentRecord(record) {
   const rawExperiment =
@@ -193,9 +136,6 @@ export function normalizeExperimentRecord(record) {
     : [];
   const normalizedPieces = Array.isArray(rawExperiment.pieces)
     ? rawExperiment.pieces
-    : [];
-  const normalizedParticipants = Array.isArray(rawExperiment.participants)
-    ? rawExperiment.participants
     : [];
 
   const experiment = {
@@ -212,19 +152,10 @@ export function normalizeExperimentRecord(record) {
         rawExperiment?.basic?.isImported || Array.isArray(record?.jsonData),
       recordId: record?._id || record?.id,
     },
-    identification: {
-      ...baseState.identification,
-      ...(rawExperiment.identification || {}),
-    },
     organization: {
       ...baseState.organization,
       ...(rawExperiment.organization || {}),
     },
-    participants: normalizedParticipants.map((participant) => ({
-      id: participant?.id || createId(),
-      name: participant?.name || "",
-      cpf: participant?.cpf || "",
-    })),
     samples: normalizedSamples.map((sample) => ({
       id: sample?.id || createId(),
       name: sample?.name || "",
@@ -274,8 +205,6 @@ export function buildExperimentPayload(experiment, options = {}) {
         name: experiment.basic.name.trim(),
         description: experiment.basic.description.trim(),
       },
-      identification: experiment.identification,
-      participants: experiment.participants,
       samples: experiment.samples,
       pieces: serializablePieces,
       organization: {
