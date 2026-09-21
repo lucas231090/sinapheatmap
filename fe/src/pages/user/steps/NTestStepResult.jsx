@@ -18,6 +18,8 @@ export default function NTestStepResult({
   const hasSubmittedRef = useRef(false);
 
   useEffect(() => {
+    let ignore = false;
+
     // Evita o reenvio se o array 'sessionData' já tiver sido salvo antes com sucesso
     if (sessionData && submittedSessionsCache.has(sessionData)) {
       setStatus("success");
@@ -43,19 +45,24 @@ export default function NTestStepResult({
 
         await createEyeTrackingSession(payload);
 
-        // Somente adiciona ao cache se tiver sucesso
-        if (sessionData) {
-          submittedSessionsCache.add(sessionData);
+        if (!ignore) {
+          // Somente adiciona ao cache se tiver sucesso
+          if (sessionData) {
+            submittedSessionsCache.add(sessionData);
+          }
+          setStatus("success");
         }
-        setStatus("success");
       } catch (err) {
-        console.error("Erro ao salvar:", err);
-        // Permite tentar novamente em caso de erro
-        hasSubmittedRef.current = false;
-        setStatus("error");
+        if (!ignore) {
+          console.error("Erro ao salvar:", err);
+          // Permite tentar novamente em caso de erro
+          hasSubmittedRef.current = false;
+          setStatus("error");
+        }
       }
     }
     submit();
+    return () => { ignore = true; };
   }, [experimentId, participantInfo, sessionData, sessionId]);
 
   return (

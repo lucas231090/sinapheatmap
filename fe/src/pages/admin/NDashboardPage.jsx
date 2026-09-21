@@ -25,7 +25,7 @@ function NDashboardPage() {
     try {
       const data = await NAdminUsersService.getAllUsers();
       setUsers(data);
-    } catch (error) {
+    } catch (_error) {
       notifyError("Erro ao carregar usuários.");
     } finally {
       setIsLoading(false);
@@ -34,6 +34,7 @@ function NDashboardPage() {
 
   useEffect(() => {
     fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleInputChange = (e) => {
@@ -90,7 +91,7 @@ function NDashboardPage() {
         await NAdminUsersService.deleteUser(id);
         notifySuccess("Usuário deletado.");
         fetchUsers();
-      } catch (error) {
+      } catch (_error) {
         notifyError("Erro ao deletar usuário.");
       }
     }

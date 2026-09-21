@@ -46,6 +46,7 @@ const NHeatmapVideoControls = ({
           checked={heatmapVisible}
           onChange={(e) => setHeatmapVisible(e.target.checked)}
           className="peer sr-only"
+          aria-label="Alternar exibição do heatmap"
         />
         <span className="flex size-8 items-center justify-center rounded-xl text-current transition group-hover:scale-105 peer-checked:text-black">
           {heatmapVisible ? (
@@ -69,6 +70,7 @@ const NHeatmapVideoControls = ({
           checked={bubblesVisible}
           onChange={(e) => setBubblesVisible(e.target.checked)}
           className="peer sr-only"
+          aria-label="Alternar exibição de bolhas"
         />
         <span className="flex size-8 items-center justify-center rounded-xl text-current transition group-hover:scale-105 peer-checked:text-black">
           <CircleOutlinedIcon fontSize="small" />
@@ -88,6 +90,7 @@ const NHeatmapVideoControls = ({
           checked={gazePlotVisible}
           onChange={(e) => setGazePlotVisible(e.target.checked)}
           className="peer sr-only"
+          aria-label="Alternar exibição das fixações do olhar"
         />
         <span className="flex size-8 items-center justify-center rounded-xl text-current transition group-hover:scale-105 peer-checked:text-black">
           <AdjustIcon fontSize="small" />
@@ -107,6 +110,7 @@ const NHeatmapVideoControls = ({
           checked={heatmapOnlyBubbles}
           onChange={(e) => setHeatmapOnlyBubbles(e.target.checked)}
           className="peer sr-only"
+          aria-label="Alternar modo de rastro"
         />
         <span className="flex size-8 items-center justify-center rounded-xl text-current transition group-hover:scale-105 peer-checked:text-black">
           <GrainIcon fontSize="small" />
@@ -126,6 +130,7 @@ const NHeatmapVideoControls = ({
           checked={fadeModeVisible}
           onChange={(e) => setFadeModeVisible(e.target.checked)}
           className="peer sr-only"
+          aria-label="Alternar modo fade"
         />
         <span className="flex size-8 items-center justify-center rounded-xl text-current transition group-hover:scale-105 peer-checked:text-black">
           <HistoryIcon fontSize="small" />
@@ -194,7 +199,6 @@ const NHeatmapVideoControls = ({
 
 
 export default function NHeatmapVideo({
-  experimentId,
   coords,
   coordsBySession,
   canvasSize,
@@ -364,6 +368,7 @@ export default function NHeatmapVideo({
     gazePlotVisible,
     heatmapOnlyBubbles,
     fadeModeVisible,
+    imageDisplayMode,
   ]);
 
   return (
@@ -450,6 +455,4 @@ export default function NHeatmapVideo({
       </div>
     </div>
   );
-};
-
-export default NHeatmapVideo;
+}

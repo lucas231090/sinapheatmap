@@ -1,56 +1,10 @@
-import { useEffect, useRef, useState, useMemo } from "react";
-import { useCurrentFrame, useVideoConfig, AbsoluteFill, Video } from "remotion";
+import { useEffect, useRef, useState } from "react";
+import { useCurrentFrame, useVideoConfig, AbsoluteFill } from "remotion";
 import h337 from "@mars3d/heatmap.js";
-import { interpolateCoordinates, simplifyPath } from "@/utils/heatmapUtils";
 import AnimatedBubbleOverlay from "./AnimatedBubbleOverlay";
 import AnimatedGazePlotOverlay from "./AnimatedGazePlotOverlay";
-
-const BackgroundMedia = ({ img, type, durationInFrames, imageDisplayMode }) => {
-  const shouldCover = imageDisplayMode === "cover";
-
-  if (img && type === 1) {
-    return (
-      <div style={
-        shouldCover 
-          ? { position: "absolute", inset: 0, backgroundColor: "#020617" }
-          : { position: "absolute", inset: 0, backgroundColor: "#020617", display: "flex", alignItems: "center", justifyContent: "center" }
-      }>
-        <Video
-          src={img}
-          startFrom={0}
-          endAt={durationInFrames}
-          crossOrigin="anonymous"
-          style={
-            shouldCover
-              ? { width: "100%", height: "100%", objectFit: "contain" }
-              : { maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }
-          }
-        />
-      </div>
-    );
-  }
-  if (img) {
-    return (
-      <div style={
-        shouldCover 
-          ? { position: "absolute", inset: 0, backgroundColor: "#020617" }
-          : { position: "absolute", inset: 0, backgroundColor: "#020617", display: "flex", alignItems: "center", justifyContent: "center" }
-      }>
-        <img
-          src={img}
-          crossOrigin="anonymous"
-          style={
-            shouldCover
-              ? { width: "100%", height: "100%", objectFit: "contain" }
-              : { maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }
-          }
-          alt="bg"
-        />
-      </div>
-    );
-  }
-  return null;
-};
+import { BackgroundMedia } from "./BackgroundMedia";
+import { useHeatmapSessionData } from "./useHeatmapSessionData";
 
 export const HeatmapComposition = ({
   heatmapData,
@@ -83,74 +37,19 @@ export const HeatmapComposition = ({
   // MATEMÁTICA DO TEMPO REAL
   const currentTimeMs = (frame / fps) * 1000; // Tempo atual do vídeo em milissegundos
 
-  // INTERPOLAÇÃO OU SIMPLIFICAÇÃO POR SESSÃO
-  const isMultiSession = selectedSessionId === "all" && coordsBySession && coordsBySession.length > 1;
-
-  const sessionData = useMemo(() => {
-    if (isMultiSession) {
-      return coordsBySession.map((group) => {
-        let coords = group.coords || [];
-        if (activeModes.heatmapOnlyBubbles) {
-          coords = simplifyPath(coords, 6).map((c) => ({ ...c, value: 200 }));
-        } else {
-          coords = interpolateCoordinates(coords);
-        }
-        return { ...group, interpolated: coords };
-      });
-    }
-
-    // Única sessão
-    let coords = heatmapData.coords || [];
-    if (activeModes.heatmapOnlyBubbles) {
-      coords = simplifyPath(coords, 6).map((c) => ({ ...c, value: 200 }));
-    } else {
-      coords = interpolateCoordinates(coords);
-    }
-    return [{ sessionId: "single", interpolated: coords, color: null }];
-  }, [heatmapData.coords, coordsBySession, isMultiSession, activeModes.heatmapOnlyBubbles]);
-
-  const totalPointsAllSessions = useMemo(() => 
-    sessionData.reduce((acc, group) => acc + group.interpolated.length, 0)
-  , [sessionData]);
-
-  const expectedDurationMs = useMemo(() => {
-    return Number(heatmapData.durationMs) > 0
-      ? Number(heatmapData.durationMs)
-      : Number(heatmapData.exposureSeconds) > 0
-        ? Number(heatmapData.exposureSeconds) * 1000
-        : totalPointsAllSessions > 0
-          ? sessionData[0].interpolated[sessionData[0].interpolated.length - 1]?.timestamp || 0
-          : 0;
-  }, [
-    heatmapData.durationMs,
-    heatmapData.exposureSeconds,
-    totalPointsAllSessions,
+  const {
     sessionData,
-  ]);
+    totalPointsAllSessions,
+    expectedDurationMs,
+    sessionCurrentCoords,
+  } = useHeatmapSessionData({
+    heatmapData,
+    coordsBySession,
+    selectedSessionId,
+    activeModes,
+    currentTimeMs,
+  });
 
-  const sessionCurrentCoords = useMemo(() => {
-    return sessionData.map((group) => {
-      const coords = group.interpolated;
-      const total = coords.length;
-      let latestIdx = coords.findIndex((c) => c.timestamp > currentTimeMs) - 1;
-      if (latestIdx === -2) latestIdx = total - 1;
-      if (latestIdx < 0) latestIdx = 0;
-
-      let current = coords.slice(0, latestIdx + 1);
-
-      if (activeModes.fadeModeVisible) {
-        const windowStart = currentTimeMs - 3000;
-        current = current.filter((c) => (c.timestamp ?? 0) >= windowStart);
-        current = current.map((c) => {
-          const age = currentTimeMs - (c.timestamp ?? 0);
-          const factor = Math.max(0, 1 - age / 3000);
-          const baseValue = c.value || 50;
-          return { ...c, value: baseValue * factor };
-        });
-      }
-      return { ...group, currentCoords: current, latestIdx, totalPoints: total };
-    });
-  }, [sessionData, currentTimeMs, activeModes.fadeModeVisible]);
 
   // A visualização está completa quando passamos do tempo do último ponto + 1 segundo folga
   const isComplete =

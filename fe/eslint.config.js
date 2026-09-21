@@ -62,6 +62,7 @@ export default [
         ...globals.browser,
         ...globals.node,
         ...globals.jest,
+        vi: "readonly",
       },
     },
     rules: {
