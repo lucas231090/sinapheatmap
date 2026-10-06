@@ -4,9 +4,11 @@ import { HeatmapComposition } from "@/components/heatmap/HeatmapComposition";
 import { useCurrentFrame, useVideoConfig } from "remotion";
 
 vi.mock("@mars3d/heatmap.js", async () => ({
-  create: vi.fn(() => ({
-    setData: vi.fn(),
-  })),
+  default: {
+    create: vi.fn(() => ({
+      setData: vi.fn(),
+    })),
+  },
 }));
 
 vi.mock("remotion", async () => ({

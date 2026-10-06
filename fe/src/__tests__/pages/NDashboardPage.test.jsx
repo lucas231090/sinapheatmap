@@ -5,6 +5,6 @@ import NDashboardPage from "@/pages/admin/NDashboardPage";
 describe("NDashboardPage", () => {
   it("renders dashboard title", () => {
     render(<NDashboardPage />);
-    expect(screen.getByText(/dashboard/i)).toBeInTheDocument();
+    expect(screen.getByText(/gerenciar usuários/i)).toBeInTheDocument();
   });
 });

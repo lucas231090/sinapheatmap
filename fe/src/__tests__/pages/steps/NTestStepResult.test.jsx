@@ -22,7 +22,7 @@ describe("NTestStepResult", () => {
     render(
       <NTestStepResult
         experimentId="exp-1"
-        participantInfo={{ nome: "Ana", cpf: "123" }}
+        participantData={{ age: 30, gender: "feminino" }}
         sessionData={[]}
       />,
     );
@@ -40,7 +40,7 @@ describe("NTestStepResult", () => {
     render(
       <NTestStepResult
         experimentId="exp-1"
-        participantInfo={{ nome: "Ana", cpf: "123" }}
+        participantData={{ age: 30, gender: "feminino" }}
         sessionData={[]}
       />,
     );

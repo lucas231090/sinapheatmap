@@ -37,6 +37,11 @@ const NHeatmapStatic = ({
   const [canvasVisible, setCanvasVisible] = useState(false);
   const [gazePlotVisible, setGazePlotVisible] = useState(false);
   const [heatmapOnlyBubbles, setHeatmapOnlyBubbles] = useState(false);
+  const [transformState, setTransformState] = useState({
+    scale: fitScale,
+    positionX: 0,
+    positionY: 0,
+  });
 
   const heatmapCoords = useMemo(() => {
     if (heatmapOnlyBubbles) {
@@ -224,6 +229,7 @@ const NHeatmapStatic = ({
               ref={transformComponentRef}
               initialScale={fitScale}
               minScale={Math.max(0.1, fitScale * 0.5)}
+              onTransformed={(_, state) => setTransformState(state)}
             >
               <TransformComponent>
                 <div className="relative">
@@ -262,7 +268,7 @@ const NHeatmapStatic = ({
                       canvasSize={canvasSize}
                       coords={coords}
                       coordsBySession={coordsBySession}
-                      transformComponentRef={transformComponentRef}
+                      zoomScale={transformState.scale}
                       selectedSessionId={selectedSessionId}
                     />
                   </div>
@@ -279,7 +285,7 @@ const NHeatmapStatic = ({
                       canvasSize={canvasSize}
                       coords={coords}
                       coordsBySession={coordsBySession}
-                      transformComponentRef={transformComponentRef}
+                      zoomScale={transformState.scale}
                       selectedSessionId={selectedSessionId}
                       mediaUrl={!heatmapVisible ? mediaUrl : null}
                       imgRef={gazePlotImgRef}

@@ -11,7 +11,8 @@ vi.mock("@/components/heatmap/BubbleCanvas", async () => ({ default: () => (
   <div data-testid="bubble-canvas" />
 ) }));
 
-vi.mock("@/utils/heatmapUtils", async () => ({
+vi.mock("@/utils/heatmapUtils", async (importOriginal) => ({
+  ...(await importOriginal()),
   downloadHeatMapImage: vi.fn(),
 }));
 

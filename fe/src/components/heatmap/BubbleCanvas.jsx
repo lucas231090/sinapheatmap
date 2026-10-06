@@ -1,16 +1,28 @@
 import { useState, useMemo } from "react";
 import { simplifyPath } from "@/utils/heatmapUtils";
 
+const formatTime = (timestamp) => {
+  const milliseconds = Number(timestamp);
+  if (!Number.isFinite(milliseconds)) return "Tempo indisponível";
+  const wholeMilliseconds = Math.max(0, Math.round(milliseconds));
+  const minutes = Math.floor(wholeMilliseconds / 60000);
+  const seconds = Math.floor((wholeMilliseconds % 60000) / 1000);
+  const remainder = wholeMilliseconds % 1000;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(remainder).padStart(3, "0")} (${wholeMilliseconds} ms)`;
+};
+
 const BubbleCanvas = ({
   canvasSize,
   coords,
   coordsBySession,
   transformComponentRef,
+  zoomScale: providedZoomScale,
   selectedSessionId,
 }) => {
   const [hoveredBubble, setHoveredBubble] = useState(null);
 
-  const zoomScale = transformComponentRef?.current?.state?.scale || 1;
+  const zoomScale =
+    providedZoomScale || transformComponentRef?.current?.state?.scale || 1;
   const baseRadius = 15;
   const radius = Math.max(8, baseRadius / Math.sqrt(zoomScale));
   const fontSize = Math.max(10, 14 / zoomScale);
@@ -37,6 +49,7 @@ const BubbleCanvas = ({
             color: sessionGroup.color,
             localIndex,
             globalIndex: result.length,
+            timestamp: coord.timestamp,
           });
         });
       });
@@ -57,6 +70,7 @@ const BubbleCanvas = ({
       color: defaultColor,
       localIndex: index,
       globalIndex: index,
+      timestamp: coord.timestamp,
     }));
   }, [coords, coordsBySession, isMultiSession]);
 
@@ -170,7 +184,16 @@ const BubbleCanvas = ({
               onMouseEnter={() => setHoveredBubble(bubble.globalIndex)}
               onMouseLeave={() => setHoveredBubble(null)}
               cursor="pointer"
+              aria-label={`Bolha ${bubble.localIndex + 1}${bubble.participantName ? `, ${bubble.participantName}` : ""}`}
             >
+              <circle
+                cx={bubble.x}
+                cy={bubble.y}
+                r={Math.max(radius + 8, 16 / zoomScale)}
+                fill="transparent"
+                stroke="none"
+                pointerEvents="all"
+              />
               {/* Drop shadow */}
               <circle
                 cx={bubble.x}
@@ -205,6 +228,41 @@ const BubbleCanvas = ({
               >
                 {bubble.localIndex + 1}
               </text>
+              {hoveredBubble === bubble.globalIndex && (
+                <g pointerEvents="none">
+                  <rect
+                    x={bubble.x + radius + 8}
+                    y={bubble.y + radius}
+                    width={Math.max(150, (bubble.participantName || "").length * 7 + 80)}
+                    height={bubble.participantName ? 48 : 30}
+                    rx={6}
+                    fill="rgba(15, 23, 42, 0.94)"
+                    stroke="rgba(255,255,255,0.18)"
+                    strokeWidth={1}
+                  />
+                  <text
+                    x={bubble.x + radius + 16}
+                    y={bubble.y + radius + 14}
+                    fill="white"
+                    fontSize={Math.max(10, 12 / zoomScale)}
+                    fontFamily="sans-serif"
+                    fontWeight="600"
+                  >
+                    Item {bubble.localIndex + 1} - {formatTime(bubble.timestamp)}
+                  </text>
+                  {bubble.participantName && (
+                    <text
+                      x={bubble.x + radius + 16}
+                      y={bubble.y + radius + 34}
+                      fill="rgba(255,255,255,0.78)"
+                      fontSize={Math.max(9, 11 / zoomScale)}
+                      fontFamily="sans-serif"
+                    >
+                      Participante: {bubble.participantName}
+                    </text>
+                  )}
+                </g>
+              )}
             </g>
           );
         })}

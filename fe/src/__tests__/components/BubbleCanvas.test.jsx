@@ -1,34 +1,20 @@
 import React from "react";
-import { render } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import BubbleCanvas from "@/components/heatmap/BubbleCanvas";
 
 describe("BubbleCanvas", () => {
-  it("draws bubbles on canvas", () => {
-    const ctx = {
-      clearRect: vi.fn(),
-      beginPath: vi.fn(),
-      arc: vi.fn(),
-      fill: vi.fn(),
-      stroke: vi.fn(),
-      fillText: vi.fn(),
-      save: vi.fn(),
-      restore: vi.fn(),
-    };
-
-    const contextSpy = vi
-      .spyOn(HTMLCanvasElement.prototype, "getContext")
-      .mockImplementation(() => ctx);
-
+  it("shows the item and exact timestamp on hover", () => {
     render(
       <BubbleCanvas
-        canvasRef={{ current: document.createElement("canvas") }}
         canvasSize={{ width: 100, height: 100 }}
-        coords={[{ x: 10, y: 20 }]}
+        coords={[{ x: 10, y: 20, timestamp: 1234 }]}
         transformComponentRef={{ current: { state: { scale: 1 } } }}
       />,
     );
 
-    expect(ctx.fillText).toHaveBeenCalled();
-    contextSpy.mockRestore();
+    fireEvent.mouseEnter(screen.getByLabelText("Bolha 1"));
+
+    expect(screen.getByText(/00:01.234/)).toBeInTheDocument();
+    expect(screen.getByText(/1234 ms/)).toBeInTheDocument();
   });
 });

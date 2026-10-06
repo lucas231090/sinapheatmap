@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 
 const stepLabels = [
   "Dados basicos",
-  "Identificacao",
+  "Dados demograficos",
   "Amostras e pecas",
   "Organizacao final",
 ];
@@ -82,15 +82,8 @@ function NEditPage() {
 
               {wizard.activeStep === 2 ? (
                 <NCreateStepIdentification
-                  identification={wizard.experiment.identification}
-                  participants={wizard.experiment.participants}
-                  participantsText={wizard.participantsText}
-                  onIdentificationChange={wizard.updateIdentificationField}
-                  onParticipantsTextChange={wizard.setParticipantsText}
-                  onImportParticipants={wizard.importParticipants}
-                  onParticipantChange={wizard.updateParticipantField}
-                  onAddParticipantRow={wizard.addParticipantRow}
-                  onRemoveParticipantRow={wizard.removeParticipantRow}
+                  participantData={wizard.experiment.participantData}
+                  onParticipantDataChange={wizard.updateParticipantData}
                   onPrevious={wizard.goToPreviousStep}
                   onNext={wizard.goToNextStep}
                   onReset={wizard.resetToLoaded}

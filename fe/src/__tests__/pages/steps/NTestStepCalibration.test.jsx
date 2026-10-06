@@ -1,13 +1,11 @@
 import React from "react";
-import { fireEvent, render } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import NTestStepCalibration from "@/pages/user/steps/NTestStepCalibration";
 import { CALIBRATION_POINTS } from "@/utils/eyeTrackingMath";
 
 describe("NTestStepCalibration", () => {
-  it("alerts when face is not valid", () => {
-    const alertMock = vi.spyOn(window, "alert").mockImplementation(() => {});
-
-    const { container } = render(
+  it("shows a message when face is not valid", () => {
+    render(
       <NTestStepCalibration
         faceValid={false}
         addCalibrationPoint={vi.fn()}
@@ -15,27 +13,35 @@ describe("NTestStepCalibration", () => {
       />,
     );
 
-    fireEvent.click(container.querySelector("button"));
-    expect(alertMock).toHaveBeenCalled();
-
-    alertMock.mockRestore();
+    expect(screen.getByText(/c.mera perdeu seu rosto/i)).toBeInTheDocument();
   });
 
-  it("calls onFinishCalibration on last point", () => {
+  it("calls onFinishCalibration on last point", async () => {
+    vi.useFakeTimers();
     const onFinishCalibration = vi.fn();
 
-    const { container } = render(
+    render(
       <NTestStepCalibration
         faceValid={true}
         addCalibrationPoint={vi.fn()}
+        clearFrameBuffer={vi.fn()}
         onFinishCalibration={onFinishCalibration}
       />,
     );
 
     for (let i = 0; i < CALIBRATION_POINTS.length; i += 1) {
-      fireEvent.click(container.querySelector("button"));
+      await act(async () => {
+        vi.advanceTimersByTime(1000);
+      });
+      await act(async () => {
+        vi.advanceTimersByTime(800);
+      });
+      await act(async () => {
+        vi.advanceTimersByTime(400);
+      });
     }
 
     expect(onFinishCalibration).toHaveBeenCalled();
+    vi.useRealTimers();
   });
 });

@@ -10,7 +10,6 @@ import {
 } from "@/services/eyetrackingService";
 import {
   buildExperimentPayload,
-  buildParticipantsText,
   normalizeExperimentRecord,
 } from "@/utils/eyetrackingExperimentWizard";
 
@@ -46,7 +45,6 @@ export function useEditExperimentWizard() {
 
   const { isLoading, error: loadError } = loadState;
   const initialExperimentRef = useRef(null);
-  const initialParticipantsTextRef = useRef("");
   const createdAtRef = useRef("");
 
   const loadExperiment = useCallback(async () => {
@@ -60,14 +58,9 @@ export function useEditExperimentWizard() {
     try {
       const response = await getExperimentById(id);
       const normalized = normalizeExperimentRecord(response);
-      const participantsText = buildParticipantsText(
-        normalized.experiment.participants,
-      );
-
       initialExperimentRef.current = normalized.experiment;
-      initialParticipantsTextRef.current = participantsText;
       createdAtRef.current = normalized.createdAt;
-      hydrateWizard(normalized.experiment, { participantsText });
+      hydrateWizard(normalized.experiment);
       dispatchLoad({ type: "LOAD_SUCCESS" });
     } catch (error) {
       const message = getApiErrorMessage(
@@ -89,9 +82,7 @@ export function useEditExperimentWizard() {
       return;
     }
 
-    hydrateWizard(initialExperimentRef.current, {
-      participantsText: initialParticipantsTextRef.current,
-    });
+      hydrateWizard(initialExperimentRef.current);
   }, [hydrateWizard, resetWizard]);
 
   const saveExperimentRequest = useCallback(async () => {

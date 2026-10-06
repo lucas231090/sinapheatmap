@@ -35,11 +35,6 @@ mongoose.connection
 
 const server = http.createServer(app);
 
-// Rota de healthcheck usada pelo Docker para verificar se o servidor está rodando
-app.get("/health", (request, response) => {
-  response.status(200).json({ status: "ok" });
-});
-
 server.listen(PORT, () => {
   console.log(MESSAGE_SERVER + PORT);
 });

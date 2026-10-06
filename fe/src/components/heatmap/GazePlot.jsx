@@ -1,6 +1,14 @@
 import { useState, useMemo } from "react";
 import { computeFixations } from "@/utils/heatmapUtils";
 
+const formatTime = (milliseconds) => {
+  const value = Math.max(0, Math.round(Number(milliseconds) || 0));
+  const minutes = Math.floor(value / 60000);
+  const seconds = Math.floor((value % 60000) / 1000);
+  const remainder = value % 1000;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(remainder).padStart(3, "0")}`;
+};
+
 const GazePlotLegend = ({ isMultiSession, legend, zoomScale }) => {
   if (!isMultiSession || legend.length === 0) return null;
   return (
@@ -148,6 +156,7 @@ const GazePlotFixations = ({
   strokeWidth,
   fontSize,
   zoomScale,
+  regionInfoByGlobalIndex,
 }) => {
   return (
     <>
@@ -163,7 +172,16 @@ const GazePlotFixations = ({
             onMouseEnter={() => setHoveredFixation(fix.globalIndex)}
             onMouseLeave={() => setHoveredFixation(null)}
             cursor="pointer"
+            aria-label={`Fixação ${fix.localIndex + 1}${fix.participantName ? `, ${fix.participantName}` : ""}`}
           >
+            <circle
+              cx={fix.x}
+              cy={fix.y}
+              r={r + 8}
+              fill="transparent"
+              stroke="none"
+              pointerEvents="all"
+            />
             <circle
               cx={fix.x}
               cy={fix.y}
@@ -202,11 +220,28 @@ const GazePlotFixations = ({
 
             {hoveredFixation === fix.globalIndex && (
               <g>
+                {(() => {
+                  const region = regionInfoByGlobalIndex[fix.globalIndex];
+                  const participantText = fix.participantName
+                    ? `Participante: ${fix.participantName}`
+                    : "Participante atual";
+                  const intervals = region.intervals.join(", ");
+                  const lines = [
+                    `Total: ${region.totalDurationMs} ms (${region.visitCount} passage${region.visitCount === 1 ? "m" : "ns"})`,
+                    `Intervalos: ${intervals}`,
+                    participantText,
+                  ];
+                  const tooltipWidth = Math.max(
+                    190,
+                    ...lines.map((line) => line.length * 6.5 + 16),
+                  );
+                  return (
+                    <>
                 <rect
                   x={fix.x + r + 5}
-                  y={fix.y - 14}
-                  width={Math.max(60, `${fix.durationMs}ms`.length * 8 + 16)}
-                  height={22}
+                  y={fix.y + r + 6}
+                  width={tooltipWidth}
+                  height={58}
                   rx={6}
                   fill="rgba(15, 23, 42, 0.9)"
                   stroke="rgba(255,255,255,0.15)"
@@ -214,14 +249,21 @@ const GazePlotFixations = ({
                 />
                 <text
                   x={fix.x + r + 5 + 8}
-                  y={fix.y - 3}
+                  y={fix.y + r + 20}
                   fill="white"
                   fontSize={Math.max(9, 11 / zoomScale)}
                   fontFamily="monospace"
                   style={{ pointerEvents: "none" }}
                 >
-                  {fix.durationMs}ms
+                  {lines.map((line, index) => (
+                    <tspan key={line} x={fix.x + r + 13} dy={index === 0 ? 0 : 16}>
+                      {line}
+                    </tspan>
+                  ))}
                 </text>
+                    </>
+                  );
+                })()}
               </g>
             )}
           </g>
@@ -238,13 +280,15 @@ const GazePlot = ({
   coords,
   coordsBySession,
   transformComponentRef,
+  zoomScale: providedZoomScale,
   selectedSessionId,
   mediaUrl,
   imgRef,
 }) => {
   const [hoveredFixation, setHoveredFixation] = useState(null);
 
-  const zoomScale = transformComponentRef?.current?.state?.scale || 1;
+  const zoomScale =
+    providedZoomScale || transformComponentRef?.current?.state?.scale || 1;
   const fontSize = Math.max(10, 14 / zoomScale);
   const strokeWidth = Math.max(1, 2 / zoomScale);
   const lineWidth = Math.max(0.8, 1.5 / zoomScale);
@@ -311,6 +355,29 @@ const GazePlot = ({
       groups[fix.sessionId].push(fix);
     });
     return groups;
+  }, [allFixations]);
+
+  const regionInfoByGlobalIndex = useMemo(() => {
+    const regions = {};
+    allFixations.forEach((fix) => {
+      const relatedFixations = allFixations.filter(
+        (candidate) =>
+          candidate.sessionId === fix.sessionId &&
+          Math.hypot(candidate.x - fix.x, candidate.y - fix.y) <= 50,
+      );
+      regions[fix.globalIndex] = {
+        totalDurationMs: relatedFixations.reduce(
+          (total, candidate) => total + candidate.durationMs,
+          0,
+        ),
+        visitCount: relatedFixations.length,
+        intervals: relatedFixations.map(
+          (candidate) =>
+            `${formatTime(candidate.startTime)}-${formatTime(candidate.endTime)}`,
+        ),
+      };
+    });
+    return regions;
   }, [allFixations]);
 
   // Reversed for rendering: first fixations appear on top
@@ -435,6 +502,7 @@ const GazePlot = ({
           strokeWidth={strokeWidth}
           fontSize={fontSize}
           zoomScale={zoomScale}
+          regionInfoByGlobalIndex={regionInfoByGlobalIndex}
         />
       </svg>
 
