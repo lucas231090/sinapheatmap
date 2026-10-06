@@ -3,12 +3,9 @@ services:
     image: mongo:6
     container_name: sinapheatmap-mongo-dev
     restart: unless-stopped
+    command: ["mongod", "--noauth", "--bind_ip_all"]
     ports:
       - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
     volumes:
       - mongo_data:/data/db
     networks:
@@ -24,7 +21,7 @@ services:
       - "3333:3333"
     environment:
       PORT: ${PORT:-3333}
-      MONGO_URL: ${MONGO_URL:-mongodb://root:senha123@mongodb:27017/sinapheatmap?authSource=admin}
+      MONGO_URL: mongodb://mongodb:27017/sinapheatmap
       JWT_SECRET: ${JWT_SECRET:-sinapheatmap/.env.example}
       NODE_ENV: development
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}

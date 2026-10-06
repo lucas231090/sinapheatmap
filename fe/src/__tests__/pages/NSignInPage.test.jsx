@@ -34,10 +34,10 @@ describe("NSignInPage", async () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole("heading", { name: /login/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /sinapeye/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/senha/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /entrar/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /fazer login/i })).toBeInTheDocument();
   });
 
   it("shows validation error when submitting empty form", async () => {
@@ -47,10 +47,10 @@ describe("NSignInPage", async () => {
       </MemoryRouter>
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /entrar/i }));
+    fireEvent.click(screen.getByRole("button", { name: /fazer login/i }));
 
     expect(mockNotifyError).toHaveBeenCalledWith(
-      "Preencha os campos obrigatorios para continuar."
+      "Preencha os campos obrigatórios para continuar."
     );
     expect(mockSignIn).not.toHaveBeenCalled();
   });
@@ -71,7 +71,7 @@ describe("NSignInPage", async () => {
       target: { value: "password123" },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: /entrar/i }));
+    fireEvent.click(screen.getByRole("button", { name: /fazer login/i }));
 
     await waitFor(() => {
       expect(mockSignIn).toHaveBeenCalledWith({

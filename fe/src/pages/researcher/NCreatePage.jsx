@@ -2,12 +2,14 @@ import NPageHeader from "@/components/general/NPageHeader";
 import Card from "@/components/general/Card";
 import NCreateWizardStepper from "@/pages/researcher/NCreatePage/components/NCreateWizardStepper";
 import NCreateStepBasic from "@/pages/researcher/NCreatePage/components/NCreateStepBasic";
+import NCreateStepIdentification from "@/pages/researcher/NCreatePage/components/NCreateStepIdentification";
 import NCreateStepAssets from "@/pages/researcher/NCreatePage/components/NCreateStepAssets";
 import NCreateStepOrganization from "@/pages/researcher/NCreatePage/components/NCreateStepOrganization";
 import { useCreateExperimentWizard } from "@/hooks/useCreateExperimentWizard";
 
 const stepLabels = [
   "Dados básicos",
+  "Dados demográficos",
   "Amostras e peças",
   "Organização final",
 ];
@@ -45,6 +47,16 @@ function NCreatePage() {
           ) : null}
 
           {wizard.activeStep === 2 ? (
+            <NCreateStepIdentification
+              participantData={wizard.experiment.participantData}
+              onParticipantDataChange={wizard.updateParticipantData}
+              onPrevious={wizard.goToPreviousStep}
+              onNext={wizard.goToNextStep}
+              onReset={wizard.resetWizard}
+            />
+          ) : null}
+
+          {wizard.activeStep === 3 ? (
             <NCreateStepAssets
               samples={wizard.experiment.samples}
               pieces={wizard.experiment.pieces}
@@ -74,7 +86,7 @@ function NCreatePage() {
             />
           ) : null}
 
-          {wizard.activeStep === 3 ? (
+          {wizard.activeStep === 4 ? (
             <NCreateStepOrganization
               samples={wizard.experiment.samples}
               pieces={wizard.experiment.pieces}

@@ -79,6 +79,7 @@ function NEditPage() {
               ) : null}
 
               {wizard.activeStep === 2 ? (
+
                 <NCreateStepAssets
                   samples={wizard.experiment.samples}
                   pieces={wizard.experiment.pieces}

@@ -61,6 +61,12 @@ const createExperimentSchema = z.object({
 const eyeTrackingSessionSchema = z.object({
   sessao_id: z.string().trim().min(1),
   experimento_id: z.string().trim().min(1),
+  participante: z
+    .object({
+      age: z.coerce.number().int().min(1).max(120).nullable().optional(),
+      gender: z.string().trim().max(80).nullable().optional(),
+    })
+    .optional(),
   amostras: z
     .array(
       z.object({

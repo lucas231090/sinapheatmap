@@ -78,6 +78,16 @@ export function useCreateExperimentWizard() {
     }));
   }, []);
 
+  const updateParticipantData = useCallback((field, value) => {
+    setExperiment((current) => ({
+      ...current,
+      participantData: {
+        ...current.participantData,
+        [field]: value,
+      },
+    }));
+  }, []);
+
   const updateOrganizationField = useCallback((field, value) => {
     setExperiment((current) => ({
       ...current,
@@ -444,7 +454,7 @@ export function useCreateExperimentWizard() {
     if (!canContinueToOrganization) {
       notifyError("Cada amostra precisa ter pelo menos uma peça.");
       setSubmissionError("Cada amostra precisa ter pelo menos uma peça.");
-      setActiveStep(2);
+      setActiveStep(3);
       return false;
     }
 
@@ -466,14 +476,14 @@ export function useCreateExperimentWizard() {
       return false;
     }
 
-    if (activeStep === 2 && !canContinueToOrganization) {
+    if (activeStep === 3 && !canContinueToOrganization) {
       setSubmissionError("Cada amostra precisa ter pelo menos uma peça.");
       notifyError("Cada amostra precisa ter pelo menos uma peça.");
       return false;
     }
 
     setSubmissionError("");
-    setActiveStep((current) => Math.min(current + 1, 3));
+    setActiveStep((current) => Math.min(current + 1, 4));
     return true;
   }, [
     activeStep,
@@ -611,6 +621,7 @@ export function useCreateExperimentWizard() {
     setOrganizationSampleId,
     setIsSubmitting,
     updateBasicField,
+    updateParticipantData,
     updateOrganizationField,
     updateSampleDraft,
     clearSampleDraft,
