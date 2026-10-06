@@ -78,16 +78,6 @@ export function useCreateExperimentWizard() {
     }));
   }, []);
 
-  const updateParticipantData = useCallback((field, value) => {
-    setExperiment((current) => ({
-      ...current,
-      participantData: {
-        ...current.participantData,
-        [field]: value,
-      },
-    }));
-  }, []);
-
   const updateOrganizationField = useCallback((field, value) => {
     setExperiment((current) => ({
       ...current,
@@ -621,7 +611,7 @@ export function useCreateExperimentWizard() {
     setOrganizationSampleId,
     setIsSubmitting,
     updateBasicField,
-    updateParticipantData,
+
     updateOrganizationField,
     updateSampleDraft,
     clearSampleDraft,

@@ -2,14 +2,12 @@ import NPageHeader from "@/components/general/NPageHeader";
 import Card from "@/components/general/Card";
 import NCreateWizardStepper from "@/pages/researcher/NCreatePage/components/NCreateWizardStepper";
 import NCreateStepBasic from "@/pages/researcher/NCreatePage/components/NCreateStepBasic";
-import NCreateStepIdentification from "@/pages/researcher/NCreatePage/components/NCreateStepIdentification";
 import NCreateStepAssets from "@/pages/researcher/NCreatePage/components/NCreateStepAssets";
 import NCreateStepOrganization from "@/pages/researcher/NCreatePage/components/NCreateStepOrganization";
 import { useCreateExperimentWizard } from "@/hooks/useCreateExperimentWizard";
 
 const stepLabels = [
   "Dados básicos",
-  "Dados demográficos",
   "Amostras e peças",
   "Organização final",
 ];
@@ -22,7 +20,7 @@ function NCreatePage() {
       <div className="mx-auto flex w-full flex-col gap-10">
         <NPageHeader
           title="CRIAR EXPERIMENTO"
-          description="Fluxo em 4 etapas para configurar o experimento de eyetracking com dados, participantes, amostras, peças e organização final."
+          description="Fluxo em 3 etapas para configurar o experimento de eyetracking com dados, amostras, peças e organização final."
         />
 
         <NCreateWizardStepper
@@ -47,16 +45,6 @@ function NCreatePage() {
           ) : null}
 
           {wizard.activeStep === 2 ? (
-            <NCreateStepIdentification
-              participantData={wizard.experiment.participantData}
-              onParticipantDataChange={wizard.updateParticipantData}
-              onPrevious={wizard.goToPreviousStep}
-              onNext={wizard.goToNextStep}
-              onReset={wizard.resetWizard}
-            />
-          ) : null}
-
-          {wizard.activeStep === 3 ? (
             <NCreateStepAssets
               samples={wizard.experiment.samples}
               pieces={wizard.experiment.pieces}
@@ -86,7 +74,7 @@ function NCreatePage() {
             />
           ) : null}
 
-          {wizard.activeStep === 4 ? (
+          {wizard.activeStep === 3 ? (
             <NCreateStepOrganization
               samples={wizard.experiment.samples}
               pieces={wizard.experiment.pieces}

@@ -14,13 +14,6 @@ function createEmptyBasicData() {
   };
 }
 
-function createEmptyParticipantData() {
-  return {
-    collectAge: false,
-    collectGender: false,
-  };
-}
-
 function createEmptyOrganizationData() {
   return {
     randomizeSamples: false,
@@ -57,7 +50,7 @@ function createEmptyPiece(sampleId = "") {
 export function createEmptyExperimentState() {
   return {
     basic: createEmptyBasicData(),
-    participantData: createEmptyParticipantData(),
+
     organization: createEmptyOrganizationData(),
     samples: [],
     pieces: [],
@@ -163,10 +156,7 @@ export function normalizeExperimentRecord(record) {
       ...baseState.organization,
       ...(rawExperiment.organization || {}),
     },
-    participantData: {
-      ...baseState.participantData,
-      ...(rawExperiment.participantData || rawExperiment.demographics || {}),
-    },
+
     samples: normalizedSamples.map((sample) => ({
       id: sample?.id || createId(),
       name: sample?.name || "",
@@ -216,10 +206,7 @@ export function buildExperimentPayload(experiment, options = {}) {
         name: experiment.basic.name.trim(),
         description: experiment.basic.description.trim(),
       },
-      participantData: {
-        collectAge: Boolean(experiment.participantData?.collectAge),
-        collectGender: Boolean(experiment.participantData?.collectGender),
-      },
+
       samples: experiment.samples,
       pieces: serializablePieces,
       organization: {

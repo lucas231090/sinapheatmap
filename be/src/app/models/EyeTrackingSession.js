@@ -87,19 +87,7 @@ const eyeTrackingSessionSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    participante: {
-      age: {
-        type: Number,
-        min: 1,
-        max: 120,
-        default: null,
-      },
-      gender: {
-        type: String,
-        maxlength: 80,
-        default: null,
-      },
-    },
+
     amostras: {
       type: [sampleSessionSchema],
       default: [],
