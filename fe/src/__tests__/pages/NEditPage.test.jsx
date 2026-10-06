@@ -14,9 +14,7 @@ vi.mock(
   "@/pages/researcher/NCreatePage/components/NCreateStepBasic", async () => ({ default: () => <div>StepBasic</div> })
 );
 
-vi.mock(
-  "@/pages/researcher/NCreatePage/components/NCreateStepIdentification", async () => ({ default: () => <div>StepIdentification</div> })
-);
+
 
 vi.mock(
   "@/pages/researcher/NCreatePage/components/NCreateStepAssets", async () => ({ default: () => <div>StepAssets</div> })

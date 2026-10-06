@@ -62,31 +62,34 @@ export const HeatmapComposition = ({
 
     const initHeatmap = () => {
       try {
-        import("@/utils/heatmapUtils").then(({ createColorGradient }) => {
+        import("@/utils/heatmapUtils").then(() => {
           document.querySelectorAll(".heatmap-canvas").forEach((e) => e.remove());
-          heatmapInstanceRef.current = {};
+          const heatmapInstance = h337.create({
+            container: containerRef.current,
+            radius: Math.max(10, 50 * (heatmapData.radiusScale || 1)),
+            maxOpacity: 0.75,
+            minOpacity: 0.5,
+            blur: 0.9,
+            backgroundColor: "rgba(255, 255, 255, 0)",
+          });
 
+          heatmapInstanceRef.current = heatmapInstance;
+
+          let initialData = [];
           sessionData.forEach((group) => {
-            const heatmapInstance = h337.create({
-              container: containerRef.current,
-              radius: Math.max(10, 50 * (heatmapData.radiusScale || 1)),
-              maxOpacity: 0.75,
-              minOpacity: 0.5,
-              blur: 0.9,
-              gradient: createColorGradient(group.color),
-              backgroundColor: "rgba(255, 255, 255, 0)",
-            });
-
-            heatmapInstanceRef.current[group.sessionId] = heatmapInstance;
-
             if (group.interpolated.length > 0) {
-              const dynamicMax = Math.max(200, Math.min(50, group.interpolated.length * 3));
-              heatmapInstance.setData({
-                max: dynamicMax,
-                data: [group.interpolated[0]],
-              });
+              initialData.push(group.interpolated[0]);
             }
           });
+
+          if (initialData.length > 0) {
+            const dynamicMax = Math.max(200, Math.min(50, initialData.length * 3));
+            heatmapInstance.setData({
+              max: dynamicMax,
+              data: initialData,
+            });
+          }
+
           setHeatmapInitialized(true);
         });
       } catch (error) {
@@ -112,16 +115,26 @@ export const HeatmapComposition = ({
   useEffect(() => {
     if (!activeModes.heatmap || !heatmapInitialized) return;
     
+    const instance = heatmapInstanceRef.current;
+    if (!instance) return;
+
+    let allCurrentCoords = [];
+    let totalPoints = 0;
+
     sessionCurrentCoords.forEach((group) => {
-      const instance = heatmapInstanceRef.current?.[group.sessionId];
-      if (instance && group.currentCoords.length > 0) {
-        const dynamicMax = Math.max(200, Math.min(50, group.totalPoints * 3));
-        instance.setData({
-          max: dynamicMax,
-          data: group.currentCoords,
-        });
+      if (group.currentCoords.length > 0) {
+        allCurrentCoords = allCurrentCoords.concat(group.currentCoords);
+        totalPoints += group.totalPoints;
       }
     });
+
+    if (allCurrentCoords.length > 0) {
+      const dynamicMax = Math.max(200, Math.min(50, totalPoints * 3));
+      instance.setData({
+        max: dynamicMax,
+        data: allCurrentCoords,
+      });
+    }
   }, [sessionCurrentCoords, heatmapInitialized, activeModes.heatmap]);
 
   // DESENHA O RASTRO DO OLHAR (GAZE) BASEADO NO TEMPO REAL

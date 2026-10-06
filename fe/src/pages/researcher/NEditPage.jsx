@@ -2,7 +2,6 @@ import NPageHeader from "@/components/general/NPageHeader";
 import Card from "@/components/general/Card";
 import NCreateWizardStepper from "@/pages/researcher/NCreatePage/components/NCreateWizardStepper";
 import NCreateStepBasic from "@/pages/researcher/NCreatePage/components/NCreateStepBasic";
-import NCreateStepIdentification from "@/pages/researcher/NCreatePage/components/NCreateStepIdentification";
 import NCreateStepAssets from "@/pages/researcher/NCreatePage/components/NCreateStepAssets";
 import NCreateStepOrganization from "@/pages/researcher/NCreatePage/components/NCreateStepOrganization";
 import { useEditExperimentWizard } from "@/hooks/useEditExperimentWizard";
@@ -10,10 +9,9 @@ import NEditImported from "@/pages/researcher/NEditPage/NEditImported";
 import { useNavigate } from "react-router-dom";
 
 const stepLabels = [
-  "Dados basicos",
-  "Identificacao",
-  "Amostras e pecas",
-  "Organizacao final",
+  "Dados básicos",
+  "Amostras e peças",
+  "Organização final",
 ];
 
 function NEditPage() {
@@ -46,7 +44,7 @@ function NEditPage() {
           description={
             isImported
               ? "Edite o nome, descrição ou mídia do experimento importado."
-              : "Revise os dados do experimento e ajuste amostras, participantes, pecas e organizacao final."
+              : "Revise os dados do experimento e ajuste amostras, peças e organização final."
           }
         />
 
@@ -81,23 +79,6 @@ function NEditPage() {
               ) : null}
 
               {wizard.activeStep === 2 ? (
-                <NCreateStepIdentification
-                  identification={wizard.experiment.identification}
-                  participants={wizard.experiment.participants}
-                  participantsText={wizard.participantsText}
-                  onIdentificationChange={wizard.updateIdentificationField}
-                  onParticipantsTextChange={wizard.setParticipantsText}
-                  onImportParticipants={wizard.importParticipants}
-                  onParticipantChange={wizard.updateParticipantField}
-                  onAddParticipantRow={wizard.addParticipantRow}
-                  onRemoveParticipantRow={wizard.removeParticipantRow}
-                  onPrevious={wizard.goToPreviousStep}
-                  onNext={wizard.goToNextStep}
-                  onReset={wizard.resetToLoaded}
-                />
-              ) : null}
-
-              {wizard.activeStep === 3 ? (
                 <NCreateStepAssets
                   samples={wizard.experiment.samples}
                   pieces={wizard.experiment.pieces}
@@ -127,7 +108,7 @@ function NEditPage() {
                 />
               ) : null}
 
-              {wizard.activeStep === 4 ? (
+              {wizard.activeStep === 3 ? (
                 <NCreateStepOrganization
                   samples={wizard.experiment.samples}
                   pieces={wizard.experiment.pieces}

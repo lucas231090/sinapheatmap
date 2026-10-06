@@ -239,8 +239,6 @@ const GazePlot = ({
   coordsBySession,
   transformComponentRef,
   selectedSessionId,
-  mediaUrl,
-  imgRef,
 }) => {
   const [hoveredFixation, setHoveredFixation] = useState(null);
 
@@ -385,25 +383,6 @@ const GazePlot = ({
 
   return (
     <div style={{ position: "relative" }}>
-      {/* Background image */}
-      {mediaUrl && (
-        <img
-          ref={imgRef}
-          src={mediaUrl}
-          crossOrigin="anonymous"
-          alt="Gaze plot background"
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: `${canvasSize.width}px`,
-            height: `${canvasSize.height}px`,
-            objectFit: "contain",
-            objectPosition: "center",
-            backgroundColor: "#020617",
-          }}
-        />
-      )}
 
       <svg
         width={canvasSize.width}

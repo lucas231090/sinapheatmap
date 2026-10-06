@@ -4,14 +4,22 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNotifications } from "@/hooks/useNotifications";
 import { validateSignInForm } from "@/utils/authValidation";
 
+import { useTheme } from "@/hooks/useTheme";
+import WbSunnyIcon from "@mui/icons-material/WbSunny";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+
 import logoImage from "@/assets/logotransparente.png";
 import LogoSinapsense from "@/assets/logo_sinapsense 1.png";
-import Moon from "@/assets/Moon.png";
 
 function NSignInPage() {
   const navigate = useNavigate();
   const { signIn, isLoading, isAuthenticated, hasHydrated } = useAuth();
   const { notifyError, notifySuccess } = useNotifications();
+  const { isDark } = useTheme();
+
+  const toggleDarkMode = () => {
+    document.documentElement.classList.toggle("dark");
+  };
 
   const [formData, setFormData] = useState({
     email: "",
@@ -64,7 +72,7 @@ function NSignInPage() {
         </div>
       </div>
       
-      <div className="rounded-s-2xl bg-white shadow-lg flex flex-col px-10 md:px-15 w-full lg:w-auto min-h-screen justify-center">
+      <div className="rounded-s-2xl bg-white dark:bg-slate-800 shadow-lg flex flex-col px-10 md:px-15 w-full lg:w-auto min-h-screen justify-center transition-colors">
         <form
           onSubmit={handleSubmit}
           noValidate
@@ -76,15 +84,19 @@ function NSignInPage() {
               alt="Logo Sinapsense"
               className="w-16 h-16"
             />
-            <button type="button" className="bg-black rounded-full w-14 h-14 p-2 hover:bg-gray-800 flex items-center justify-center">
-              <img src={Moon} alt="Moon" className="w-6 h-6" />
+            <button 
+              type="button" 
+              onClick={toggleDarkMode}
+              className="bg-black dark:bg-white text-white dark:text-black rounded-full w-14 h-14 p-2 hover:bg-gray-800 dark:hover:bg-gray-200 flex items-center justify-center transition-colors"
+            >
+              {isDark ? <WbSunnyIcon /> : <DarkModeIcon />}
             </button>
           </div>
           
           <div className="flex flex-col gap-4 w-full md:w-96">
             <label
               htmlFor="email"
-              className="text-sm font-bold text-black text-left"
+              className="text-sm font-bold text-black dark:text-white text-left transition-colors"
             >
               EMAIL
             </label>
@@ -94,7 +106,7 @@ function NSignInPage() {
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              className={`border bg-gray-200 rounded-md p-3 text-black ${errors.email ? 'border-red-500' : 'border-black'}`}
+              className={`border bg-gray-200 dark:bg-slate-700 rounded-md p-3 text-black dark:text-white transition-colors focus:outline-none focus:border-sinapgreen-500 focus:ring-1 focus:ring-sinapgreen-500 ${errors.email ? 'border-red-500' : 'border-black dark:border-slate-500'}`}
             />
             {errors.email && <span className="text-red-500 text-xs text-left">{errors.email}</span>}
           </div>
@@ -102,7 +114,7 @@ function NSignInPage() {
           <div className="flex flex-col gap-4 w-full md:w-96">
             <label
               htmlFor="password"
-              className="text-sm font-bold text-black text-left"
+              className="text-sm font-bold text-black dark:text-white text-left transition-colors"
             >
               SENHA
             </label>
@@ -112,7 +124,7 @@ function NSignInPage() {
               name="password"
               value={formData.password}
               onChange={handleInputChange}
-              className={`border bg-gray-200 rounded-md p-3 text-black ${errors.password ? 'border-red-500' : 'border-black'}`}
+              className={`border bg-gray-200 dark:bg-slate-700 rounded-md p-3 text-black dark:text-white transition-colors focus:outline-none focus:border-sinapgreen-500 focus:ring-1 focus:ring-sinapgreen-500 ${errors.password ? 'border-red-500' : 'border-black dark:border-slate-500'}`}
             />
             {errors.password && <span className="text-red-500 text-xs text-left">{errors.password}</span>}
           </div>

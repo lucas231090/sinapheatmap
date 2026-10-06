@@ -46,4 +46,4 @@ export const BackgroundMedia = memo(({ img, type, durationInFrames, imageDisplay
     );
   }
   return null;
-};
+});

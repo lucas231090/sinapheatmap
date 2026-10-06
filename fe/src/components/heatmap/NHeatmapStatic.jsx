@@ -230,24 +230,55 @@ const NHeatmapStatic = ({
                   {canvasSize.width > 0 && canvasSize.height > 0 && (
                     <div
                       style={{
-                        visibility: heatmapVisible ? "visible" : "hidden",
+                        width: `${canvasSize.width}px`,
+                        height: `${canvasSize.height}px`,
                         position: "relative",
                       }}
                     >
-                      <HeatmapRenderer
-                        heatmapCanvasRef={heatmapCanvasRef}
-                        canvasSize={canvasSize}
-                        img={mediaUrl}
-                        imgRef={imgRef}
-                        coords={heatmapCoords}
-                        coordsBySession={coordsBySession}
-                        selectedSessionId={selectedSessionId}
-                        radiusScale={radiusScale}
-                        disableInterpolation={heatmapOnlyBubbles}
-                        imageDisplayMode={imageDisplayMode}
-                      />
-                    </div>
-                  )}
+                      {/* Base Image Layer */}
+                      {mediaUrl ? (
+                        <div
+                          className={
+                            imageDisplayMode === "cover"
+                              ? "absolute inset-0 bg-slate-950"
+                              : "absolute inset-0 flex items-center justify-center bg-slate-950"
+                          }
+                        >
+                          <img
+                            ref={imgRef}
+                            src={mediaUrl}
+                            crossOrigin="anonymous"
+                            className={
+                              imageDisplayMode === "cover"
+                                ? "block h-full w-full object-contain object-center visible"
+                                : "block max-h-full max-w-full object-contain object-center visible"
+                            }
+                            alt="Heatmap background"
+                          />
+                        </div>
+                      ) : (
+                        <div className="absolute inset-0 bg-slate-950"></div>
+                      )}
+
+                      {/* Heatmap Layer */}
+                      <div
+                        style={{
+                          visibility: heatmapVisible ? "visible" : "hidden",
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                        }}
+                      >
+                        <HeatmapRenderer
+                          heatmapCanvasRef={heatmapCanvasRef}
+                          canvasSize={canvasSize}
+                          coords={heatmapCoords}
+                          coordsBySession={coordsBySession}
+                          selectedSessionId={selectedSessionId}
+                          radiusScale={radiusScale}
+                          disableInterpolation={heatmapOnlyBubbles}
+                        />
+                      </div>
 
                   <div
                     style={{
@@ -267,6 +298,7 @@ const NHeatmapStatic = ({
                     />
                   </div>
 
+                  {/* GazePlot Layer */}
                   <div
                     style={{
                       visibility: gazePlotVisible ? "visible" : "hidden",
@@ -281,11 +313,10 @@ const NHeatmapStatic = ({
                       coordsBySession={coordsBySession}
                       transformComponentRef={transformComponentRef}
                       selectedSessionId={selectedSessionId}
-                      mediaUrl={!heatmapVisible ? mediaUrl : null}
-                      imgRef={gazePlotImgRef}
-                      imageDisplayMode={imageDisplayMode}
                     />
                   </div>
+                  </div>
+                  )}
                 </div>
               </TransformComponent>
             </TransformWrapper>
