@@ -1,5 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { computeFixations } from "@/utils/heatmapUtils";
+import {
+  createHoverStore,
+  getSurfaceHandlers,
+  hitTestCircles,
+  useHoverLayer,
+} from "./hover/hoverStore";
+import HoverTooltip from "./hover/HoverTooltip";
 
 const formatTime = (milliseconds) => {
   const value = Math.max(0, Math.round(Number(milliseconds) || 0));
@@ -9,10 +16,14 @@ const formatTime = (milliseconds) => {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(remainder).padStart(3, "0")}`;
 };
 
+const LAYER_ID = "gazeplot";
+const MAX_TOOLTIP_INTERVALS = 6;
+
 const GazePlotLegend = ({ isMultiSession, legend, zoomScale }) => {
   if (!isMultiSession || legend.length === 0) return null;
   return (
     <div
+      data-hover-ignore
       style={{
         position: "absolute",
         top: 8,
@@ -147,133 +158,72 @@ const GazePlotSaccades = ({
   );
 };
 
+const FixationCircle = ({ fix, r, strokeWidth, fontSize, highlighted }) => (
+  <>
+    <circle
+      cx={fix.x}
+      cy={fix.y}
+      r={r + 3}
+      fill="none"
+      stroke={highlighted ? "white" : fix.color.stroke}
+      strokeWidth={highlighted ? strokeWidth * 1.5 : 1}
+      opacity={highlighted ? 0.9 : 0.3}
+    />
+    <circle cx={fix.x} cy={fix.y + 1.5} r={r} fill="rgba(0,0,0,0.2)" />
+    <circle
+      cx={fix.x}
+      cy={fix.y}
+      r={r}
+      fill={fix.color.fill}
+      stroke={highlighted ? "white" : "rgba(255,255,255,0.9)"}
+      strokeWidth={highlighted ? strokeWidth * 1.5 : strokeWidth}
+    />
+    <text
+      x={fix.x}
+      y={fix.y}
+      textAnchor="middle"
+      dominantBaseline="central"
+      fill="white"
+      fontSize={Math.min(fontSize, r * 1.2)}
+      fontFamily="Arial, sans-serif"
+      fontWeight="700"
+      style={{
+        textShadow: "0 1px 3px rgba(0,0,0,0.7)",
+        userSelect: "none",
+      }}
+    >
+      {fix.pointCount}
+    </text>
+  </>
+);
+
 const GazePlotFixations = ({
   reversedFixations,
   getFixationRadius,
   getFixationOpacity,
-  setHoveredFixation,
-  hoveredFixation,
   strokeWidth,
   fontSize,
-  zoomScale,
-  regionInfoByGlobalIndex,
 }) => {
   return (
     <>
-      {reversedFixations.map((fix) => {
-        const r = getFixationRadius(fix.durationMs);
-        const opacity = getFixationOpacity(fix.globalIndex);
-
-        return (
-          <g
-            key={`fix-${fix.globalIndex}`}
-            style={{ transition: "opacity 200ms ease" }}
-            opacity={opacity}
-            onMouseEnter={() => setHoveredFixation(fix.globalIndex)}
-            onMouseLeave={() => setHoveredFixation(null)}
-            cursor="pointer"
-            aria-label={`Fixação ${fix.localIndex + 1}${fix.participantName ? `, ${fix.participantName}` : ""}`}
-          >
-            <circle
-              cx={fix.x}
-              cy={fix.y}
-              r={r + 8}
-              fill="transparent"
-              stroke="none"
-              pointerEvents="all"
-            />
-            <circle
-              cx={fix.x}
-              cy={fix.y}
-              r={r + 3}
-              fill="none"
-              stroke={fix.color.stroke}
-              strokeWidth={1}
-              opacity={0.3}
-            />
-            <circle cx={fix.x} cy={fix.y + 1.5} r={r} fill="rgba(0,0,0,0.2)" />
-            <circle
-              cx={fix.x}
-              cy={fix.y}
-              r={r}
-              fill={fix.color.fill}
-              stroke="rgba(255,255,255,0.9)"
-              strokeWidth={strokeWidth}
-            />
-            <text
-              x={fix.x}
-              y={fix.y}
-              textAnchor="middle"
-              dominantBaseline="central"
-              fill="white"
-              fontSize={Math.min(fontSize, r * 1.2)}
-              fontFamily="Arial, sans-serif"
-              fontWeight="700"
-              style={{
-                textShadow: "0 1px 3px rgba(0,0,0,0.7)",
-                pointerEvents: "none",
-                userSelect: "none",
-              }}
-            >
-              {fix.pointCount}
-            </text>
-
-            {hoveredFixation === fix.globalIndex && (
-              <g>
-                {(() => {
-                  const region = regionInfoByGlobalIndex[fix.globalIndex];
-                  const participantText = fix.participantName
-                    ? `Participante: ${fix.participantName}`
-                    : "Participante atual";
-                  const intervals = region.intervals.join(", ");
-                  const lines = [
-                    `Total: ${region.totalDurationMs} ms (${region.visitCount} passage${region.visitCount === 1 ? "m" : "ns"})`,
-                    `Intervalos: ${intervals}`,
-                    participantText,
-                  ];
-                  const tooltipWidth = Math.max(
-                    190,
-                    ...lines.map((line) => line.length * 6.5 + 16),
-                  );
-                  return (
-                    <>
-                <rect
-                  x={fix.x + r + 5}
-                  y={fix.y + r + 6}
-                  width={tooltipWidth}
-                  height={58}
-                  rx={6}
-                  fill="rgba(15, 23, 42, 0.9)"
-                  stroke="rgba(255,255,255,0.15)"
-                  strokeWidth={1}
-                />
-                <text
-                  x={fix.x + r + 5 + 8}
-                  y={fix.y + r + 20}
-                  fill="white"
-                  fontSize={Math.max(9, 11 / zoomScale)}
-                  fontFamily="monospace"
-                  style={{ pointerEvents: "none" }}
-                >
-                  {lines.map((line, index) => (
-                    <tspan key={line} x={fix.x + r + 13} dy={index === 0 ? 0 : 16}>
-                      {line}
-                    </tspan>
-                  ))}
-                </text>
-                    </>
-                  );
-                })()}
-              </g>
-            )}
-          </g>
-        );
-      })}
+      {reversedFixations.map((fix) => (
+        <g
+          key={`fix-${fix.globalIndex}`}
+          style={{ transition: "opacity 200ms ease" }}
+          opacity={getFixationOpacity(fix.globalIndex)}
+          aria-label={`Fixação ${fix.localIndex + 1}${fix.participantName ? `, ${fix.participantName}` : ""}`}
+        >
+          <FixationCircle
+            fix={fix}
+            r={getFixationRadius(fix.durationMs)}
+            strokeWidth={strokeWidth}
+            fontSize={fontSize}
+          />
+        </g>
+      ))}
     </>
   );
 };
-
-
 
 const GazePlot = ({
   canvasSize,
@@ -282,8 +232,14 @@ const GazePlot = ({
   transformComponentRef,
   zoomScale: providedZoomScale,
   selectedSessionId,
+  hoverStore: externalHoverStore,
+  interactive = true,
 }) => {
-  const [hoveredFixation, setHoveredFixation] = useState(null);
+  // When no shared store is provided (standalone usage), the SVG itself acts
+  // as the hover surface.
+  const [ownHoverStore] = useState(createHoverStore);
+  const hoverStore = externalHoverStore || ownHoverStore;
+  const isStandalone = !externalHoverStore;
 
   const zoomScale =
     providedZoomScale || transformComponentRef?.current?.state?.scale || 1;
@@ -309,7 +265,8 @@ const GazePlot = ({
       });
     }
 
-    const defaultColor = {
+    const singleSessionGroup = coordsBySession?.[0];
+    const defaultColor = singleSessionGroup?.color || {
       fill: "rgba(255, 0, 0, 0.4)",
       stroke: "#FF6384",
       label: "#FF6384",
@@ -317,8 +274,8 @@ const GazePlot = ({
     const fixations = computeFixations(coords || []);
     return [
       {
-        sessionId: "single",
-        participantName: "",
+        sessionId: singleSessionGroup?.sessionId || "single",
+        participantName: singleSessionGroup?.participantName || "",
         color: defaultColor,
         fixations,
       },
@@ -394,18 +351,41 @@ const GazePlot = ({
     };
   }, [allFixations]);
 
-  const getFixationRadius = (durationMs) => {
-    const minRadius = Math.max(10, 18 / Math.sqrt(zoomScale));
-    const maxRadius = Math.max(25, 45 / Math.sqrt(zoomScale));
-    if (maxDuration <= minDuration) return (minRadius + maxRadius) / 2;
-    const t = (durationMs - minDuration) / (maxDuration - minDuration);
-    return minRadius + t * (maxRadius - minRadius);
-  };
+  const getFixationRadius = useCallback(
+    (durationMs) => {
+      const minRadius = Math.max(10, 18 / Math.sqrt(zoomScale));
+      const maxRadius = Math.max(25, 45 / Math.sqrt(zoomScale));
+      if (maxDuration <= minDuration) return (minRadius + maxRadius) / 2;
+      const t = (durationMs - minDuration) / (maxDuration - minDuration);
+      return minRadius + t * (maxRadius - minRadius);
+    },
+    [zoomScale, minDuration, maxDuration],
+  );
+
+  // Hit-test with the exact rendering geometry. `allFixations` is already in
+  // top-to-bottom visual order (index 0 is drawn last / on top).
+  const hitTest = useCallback(
+    (x, y, unitsPerPixel) =>
+      hitTestCircles(
+        allFixations,
+        (fix) => getFixationRadius(fix.durationMs),
+        x,
+        y,
+        unitsPerPixel,
+      ),
+    [allFixations, getFixationRadius],
+  );
+
+  const hoveredFixation = useHoverLayer(hoverStore, LAYER_ID, {
+    priority: 2,
+    hitTest,
+    enabled: interactive && allFixations.length > 0,
+  });
+  const hovered =
+    hoveredFixation !== null ? allFixations[hoveredFixation] : null;
 
   // Hover highlight logic (same as BubbleCanvas)
   const highlightedSet = useMemo(() => {
-    if (hoveredFixation === null) return null;
-    const hovered = allFixations[hoveredFixation];
     if (!hovered) return null;
 
     const sessionFixes = sessionFixationGroups[hovered.sessionId] || [];
@@ -422,7 +402,7 @@ const GazePlot = ({
       highlighted.add(sessionFixes[posInSession + 1].globalIndex);
     }
     return highlighted;
-  }, [hoveredFixation, allFixations, sessionFixationGroups]);
+  }, [hovered, sessionFixationGroups]);
 
   const getFixationOpacity = (globalIndex) => {
     if (highlightedSet === null) return 1;
@@ -448,16 +428,79 @@ const GazePlot = ({
     }));
   }, [isMultiSession, fixationGroups]);
 
+  const { width: canvasWidth, height: canvasHeight } = canvasSize;
+  const surfaceRef = useCallback(
+    (element) => {
+      if (element) {
+        hoverStore.setSurface(element, {
+          width: canvasWidth,
+          height: canvasHeight,
+        });
+      }
+    },
+    [hoverStore, canvasWidth, canvasHeight],
+  );
+  const surfaceHandlers = useMemo(
+    () => getSurfaceHandlers(hoverStore),
+    [hoverStore],
+  );
+  const standaloneSurfaceProps =
+    isStandalone && interactive ? { ref: surfaceRef, ...surfaceHandlers } : {};
+
+  const tooltip = useMemo(() => {
+    if (!hovered) return null;
+    const region = regionInfoByGlobalIndex[hovered.globalIndex];
+    const visibleIntervals = region.intervals.slice(0, MAX_TOOLTIP_INTERVALS);
+    const hiddenCount = region.intervals.length - visibleIntervals.length;
+    return {
+      title: `Fixação ${hovered.localIndex + 1}`,
+      rows: [
+        { label: "Duração", value: `${Math.round(hovered.durationMs)} ms` },
+        {
+          label: "Intervalo",
+          value: `${formatTime(hovered.startTime)}-${formatTime(hovered.endTime)}`,
+        },
+        { label: "Pontos", value: String(hovered.pointCount) },
+        {
+          label: "Região",
+          value: `Total: ${Math.round(region.totalDurationMs)} ms (${region.visitCount} passage${region.visitCount === 1 ? "m" : "ns"})`,
+        },
+        {
+          label: "Participante",
+          value: hovered.participantName || "Participante atual",
+        },
+      ],
+      footer:
+        region.visitCount > 1 ? (
+          <>
+            <span className="mb-1 block font-semibold text-white/80">
+              Intervalos na região
+            </span>
+            <ul className="space-y-0.5 font-mono">
+              {visibleIntervals.map((interval, index) => (
+                <li key={`${interval}-${index}`}>{interval}</li>
+              ))}
+              {hiddenCount > 0 && (
+                <li className="text-white/50">+{hiddenCount} intervalo(s)</li>
+              )}
+            </ul>
+          </>
+        ) : null,
+    };
+  }, [hovered, regionInfoByGlobalIndex]);
+
   return (
     <div style={{ position: "relative" }}>
-
       <svg
+        {...standaloneSurfaceProps}
+        data-testid="gazeplot-svg"
         width={canvasSize.width}
         height={canvasSize.height}
         style={{
           width: `${canvasSize.width}px`,
           height: `${canvasSize.height}px`,
-          pointerEvents: "all",
+          pointerEvents: isStandalone && interactive ? "all" : "none",
+          cursor: hovered ? "pointer" : undefined,
           display: "block",
           position: "relative",
           zIndex: 2,
@@ -476,14 +519,33 @@ const GazePlot = ({
           reversedFixations={reversedFixations}
           getFixationRadius={getFixationRadius}
           getFixationOpacity={getFixationOpacity}
-          setHoveredFixation={setHoveredFixation}
-          hoveredFixation={hoveredFixation}
           strokeWidth={strokeWidth}
           fontSize={fontSize}
-          zoomScale={zoomScale}
-          regionInfoByGlobalIndex={regionInfoByGlobalIndex}
         />
+
+        {/* Re-draw the hovered fixation on top so it is never hidden */}
+        {hovered && (
+          <g pointerEvents="none">
+            <FixationCircle
+              fix={hovered}
+              r={getFixationRadius(hovered.durationMs)}
+              strokeWidth={strokeWidth}
+              fontSize={fontSize}
+              highlighted
+            />
+          </g>
+        )}
       </svg>
+
+      {hovered && tooltip && (
+        <HoverTooltip
+          store={hoverStore}
+          accentColor={hovered.color.stroke}
+          title={tooltip.title}
+          rows={tooltip.rows}
+          footer={tooltip.footer}
+        />
+      )}
 
       <GazePlotLegend
         isMultiSession={isMultiSession}

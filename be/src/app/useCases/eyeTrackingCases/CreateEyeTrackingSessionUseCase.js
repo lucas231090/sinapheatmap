@@ -22,7 +22,13 @@ class CreateEyeTrackingSessionUseCase {
       return existingSession;
     }
 
-    return await EyeTrackingSessionRepository.create(validatedData);
+    const sessionData = {
+      ...validatedData,
+      idade: validatedData.idade ?? validatedData.age ?? null,
+      genero: validatedData.genero ?? validatedData.gender ?? null,
+    };
+
+    return await EyeTrackingSessionRepository.create(sessionData);
   }
 }
 

@@ -1,26 +1,146 @@
+import { useState } from "react";
+
 export default function NTestStepWelcome({ experiment, onNext }) {
+  const requireAge = Boolean(
+    experiment?.basic?.requireAge || experiment?.requireAge,
+  );
+  const requireGender = Boolean(
+    experiment?.basic?.requireGender || experiment?.requireGender,
+  );
+
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const handleStart = () => {
+    setErrorMsg("");
+
+    if (requireAge) {
+      const parsedAge = Number(age);
+      if (!age || !Number.isInteger(parsedAge) || parsedAge <= 0 || parsedAge > 120) {
+        setErrorMsg("Por favor, informe uma idade válida (entre 1 e 120 anos).");
+        return;
+      }
+    }
+
+    if (requireGender) {
+      if (!gender.trim()) {
+        setErrorMsg("Por favor, selecione seu gênero.");
+        return;
+      }
+    }
+
+    onNext({
+      idade: requireAge ? Number(age) : null,
+      genero: requireGender ? gender.trim() : null,
+    });
+  };
 
   return (
     <div className="relative flex h-screen w-full items-center justify-center p-8 text-center text-white">
-      <div className="flex w-full max-w-3xl flex-col items-center gap-8 rounded-[2rem] border border-white/15 bg-slate-950/35 p-8 shadow-[0_24px_80px_rgba(0,0,0,0.32)] backdrop-blur-md">
+      <div className="flex w-full max-w-3xl flex-col items-center gap-6 rounded-[2rem] border border-white/15 bg-slate-950/45 p-8 shadow-[0_24px_80px_rgba(0,0,0,0.32)] backdrop-blur-md">
         <div className="space-y-3">
           <h1 className="text-4xl font-black tracking-tight sm:text-5xl">
             {experiment?.basic?.name || "Experimento"}
           </h1>
-          <p className="mx-auto max-w-2xl text-base leading-relaxed text-slate-200 sm:text-lg">
-            {experiment?.basic?.description}
-          </p>
+          {experiment?.basic?.description && (
+            <p className="mx-auto max-w-2xl text-base leading-relaxed text-slate-200 sm:text-lg">
+              {experiment.basic.description}
+            </p>
+          )}
         </div>
 
-          <div className="space-y-4">
-          <p className="text-sm text-slate-200">
-            Este teste é anônimo e não exige identificação. Você pode iniciar
-            quando estiver pronto.
-          </p>
+        {/* Formulário de Identificação Prévia (se exigido pelo teste) */}
+        {(requireAge || requireGender) && (
+          <div className="w-full max-w-md space-y-4 rounded-2xl border border-white/10 bg-white/5 p-6 text-left">
+            <p className="text-center text-sm font-semibold text-slate-200">
+              Antes de começar, precisamos de algumas informações básicas:
+            </p>
+
+            <div className="grid gap-4">
+              {requireAge && (
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="participant-age"
+                    className="text-xs font-bold uppercase tracking-wider text-slate-300"
+                  >
+                    Idade *
+                  </label>
+                  <input
+                    id="participant-age"
+                    type="number"
+                    min="1"
+                    max="120"
+                    value={age}
+                    onChange={(e) => {
+                      setAge(e.target.value);
+                      setErrorMsg("");
+                    }}
+                    placeholder="Ex: 25"
+                    className="w-full rounded-xl border border-white/20 bg-slate-900/80 px-4 py-2.5 text-white placeholder-slate-500 outline-none transition focus:border-sinapgreen-500 focus:ring-1 focus:ring-sinapgreen-500"
+                  />
+                </div>
+              )}
+
+              {requireGender && (
+                <div className="flex flex-col gap-1.5">
+                  <label
+                    htmlFor="participant-gender"
+                    className="text-xs font-bold uppercase tracking-wider text-slate-300"
+                  >
+                    Gênero *
+                  </label>
+                  <select
+                    id="participant-gender"
+                    value={gender}
+                    onChange={(e) => {
+                      setGender(e.target.value);
+                      setErrorMsg("");
+                    }}
+                    className="w-full rounded-xl border border-white/20 bg-slate-900/80 px-4 py-2.5 text-white outline-none transition focus:border-sinapgreen-500 focus:ring-1 focus:ring-sinapgreen-500"
+                  >
+                    <option value="" disabled className="bg-slate-900 text-slate-400">
+                      Selecione uma opção
+                    </option>
+                    <option value="Feminino" className="bg-slate-900 text-white">
+                      Feminino
+                    </option>
+                    <option value="Masculino" className="bg-slate-900 text-white">
+                      Masculino
+                    </option>
+                    <option value="Não-binário" className="bg-slate-900 text-white">
+                      Não-binário
+                    </option>
+                    <option value="Outro" className="bg-slate-900 text-white">
+                      Outro
+                    </option>
+                    <option value="Prefiro não informar" className="bg-slate-900 text-white">
+                      Prefiro não informar
+                    </option>
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {errorMsg && (
+              <p className="rounded-lg bg-red-500/20 px-3 py-2 text-center text-xs font-medium text-red-300 border border-red-500/30">
+                {errorMsg}
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {!requireAge && !requireGender && (
+            <p className="text-sm text-slate-200">
+              Este teste é anônimo e não exige identificação. Você pode iniciar quando estiver pronto.
+            </p>
+          )}
+
           <button
             type="button"
-            onClick={() => onNext()}
-            className="rounded-full bg-sinapgreen-500 px-8 py-3 font-bold text-black transition hover:bg-sinapgreen-400"
+            onClick={handleStart}
+            className="rounded-full bg-sinapgreen-500 px-8 py-3 font-bold text-black transition hover:bg-sinapgreen-400 cursor-pointer shadow-lg hover:shadow-sinapgreen-500/20"
           >
             Iniciar Experimento
           </button>

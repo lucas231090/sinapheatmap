@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import backgroundImage from "../assets/backgroundImage.png";
+import NNotificationCenter from "@/components/notifications/NNotificationCenter";
 
 export default function NUserLayout() {
   return (
@@ -12,6 +13,7 @@ export default function NUserLayout() {
       <main className="relative flex w-full h-full items-center justify-center overflow-auto">
         <Outlet />
       </main>
+      <NNotificationCenter />
     </div>
   );
 }

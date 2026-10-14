@@ -7,6 +7,7 @@ import { validateSignInForm } from "@/utils/authValidation";
 import { useTheme } from "@/hooks/useTheme";
 import WbSunnyIcon from "@mui/icons-material/WbSunny";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlineOutlined";
 
 import logoImage from "@/assets/logotransparente.png";
 import LogoSinapsense from "@/assets/logo_sinapsense 1.png";
@@ -26,6 +27,7 @@ function NSignInPage() {
     password: "",
   });
   const [errors, setErrors] = useState({});
+  const [loginError, setLoginError] = useState("");
 
   useEffect(() => {
     if (hasHydrated && isAuthenticated) {
@@ -36,6 +38,7 @@ function NSignInPage() {
   const handleInputChange = (event) => {
     const { name, value } = event.target;
     setFormData((previous) => ({ ...previous, [name]: value }));
+    setLoginError("");
 
     if (errors[name]) {
       setErrors((previous) => ({ ...previous, [name]: undefined }));
@@ -53,12 +56,15 @@ function NSignInPage() {
       return;
     }
 
+    setLoginError("");
     try {
       await signIn(formData);
       notifySuccess("Login realizado com sucesso.");
       navigate("/home", { replace: true });
     } catch (error) {
-      notifyError(error.message);
+      const message = error?.message || "Não foi possível fazer login.";
+      setLoginError(message);
+      notifyError(message);
     }
   };
 
@@ -128,6 +134,21 @@ function NSignInPage() {
             />
             {errors.password && <span className="text-red-500 text-xs text-left">{errors.password}</span>}
           </div>
+
+          {loginError && (
+            <div
+              role="alert"
+              aria-live="assertive"
+              id="login-error-alert"
+              className="flex w-full md:w-96 items-start gap-3 rounded-lg border border-red-300 bg-red-50 p-3 text-left text-sm text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-300"
+            >
+              <ErrorOutlineIcon fontSize="small" className="mt-0.5 shrink-0" />
+              <div className="flex flex-col">
+                <span className="font-semibold">Falha no login</span>
+                <span>{loginError}</span>
+              </div>
+            </div>
+          )}
 
           <button
             type="submit"

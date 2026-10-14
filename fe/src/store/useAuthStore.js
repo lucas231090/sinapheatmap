@@ -85,6 +85,14 @@ export const useAuthStore = create(
           return response;
         } catch (error) {
           set({ isLoading: false });
+          const status = error?.response?.status;
+          // The backend intentionally answers the same way for "user not
+          // found" and "wrong password", so we show a single message.
+          if (status === 401 || status === 400) {
+            throw new Error(
+              "Email ou senha incorretos. Verifique seus dados e tente novamente.",
+            );
+          }
           throw new Error(getAuthErrorMessage(error, "Falha ao entrar."));
         }
       },

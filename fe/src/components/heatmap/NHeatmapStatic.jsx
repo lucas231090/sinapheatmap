@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useMemo } from "react";
+import { useRef, useState, useEffect, useMemo, useCallback } from "react";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import HeatmapRenderer from "./HeatmapRenderer";
 import BubbleCanvas from "./BubbleCanvas";
@@ -14,6 +14,7 @@ import CircleOutlinedIcon from "@mui/icons-material/CircleOutlined";
 import AdjustIcon from "@mui/icons-material/Adjust";
 import GrainIcon from "@mui/icons-material/Grain";
 import { simplifyPath } from "@/utils/heatmapUtils";
+import { createHoverStore, getSurfaceHandlers } from "./hover/hoverStore";
 
 const NHeatmapStatic = ({
   experimentId,
@@ -42,6 +43,24 @@ const NHeatmapStatic = ({
     positionX: 0,
     positionY: 0,
   });
+
+  // Single hover surface shared by bubble and gaze plot layers.
+  const [hoverStore] = useState(createHoverStore);
+  const hoverSurfaceHandlers = useMemo(
+    () => getSurfaceHandlers(hoverStore),
+    [hoverStore],
+  );
+  const hoverSurfaceRef = useCallback(
+    (element) => {
+      if (element) {
+        hoverStore.setSurface(element, {
+          width: canvasSize.width,
+          height: canvasSize.height,
+        });
+      }
+    },
+    [hoverStore, canvasSize.width, canvasSize.height],
+  );
 
   const heatmapCoords = useMemo(() => {
     if (heatmapOnlyBubbles) {
@@ -229,12 +248,18 @@ const NHeatmapStatic = ({
               ref={transformComponentRef}
               initialScale={fitScale}
               minScale={Math.max(0.1, fitScale * 0.5)}
-              onTransformed={(_, state) => setTransformState(state)}
+              onTransformed={(_, state) => {
+                setTransformState(state);
+                // Content moved under a static cursor: re-run hit-testing.
+                requestAnimationFrame(() => hoverStore.refresh());
+              }}
             >
               <TransformComponent>
                 <div className="relative">
                   {canvasSize.width > 0 && canvasSize.height > 0 && (
                     <div
+                      ref={hoverSurfaceRef}
+                      {...hoverSurfaceHandlers}
                       style={{
                         width: `${canvasSize.width}px`,
                         height: `${canvasSize.height}px`,
@@ -301,6 +326,8 @@ const NHeatmapStatic = ({
                       coordsBySession={coordsBySession}
                       zoomScale={transformState.scale}
                       selectedSessionId={selectedSessionId}
+                      hoverStore={hoverStore}
+                      interactive={canvasVisible}
                     />
                   </div>
 
@@ -319,6 +346,8 @@ const NHeatmapStatic = ({
                       coordsBySession={coordsBySession}
                       zoomScale={transformState.scale}
                       selectedSessionId={selectedSessionId}
+                      hoverStore={hoverStore}
+                      interactive={gazePlotVisible}
                     />
                   </div>
                   </div>

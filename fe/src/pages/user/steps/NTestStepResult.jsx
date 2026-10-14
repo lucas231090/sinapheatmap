@@ -8,7 +8,7 @@ const submittedSessionsCache = new WeakSet();
 export default function NTestStepResult({
   experimentId,
   sessionData,
-
+  participantData,
 }) {
   const [status, setStatus] = useReducer((state, action) => action, "saving"); // saving | success | error
 
@@ -37,7 +37,8 @@ export default function NTestStepResult({
           sessao_id: sessionId,
           experimento_id: experimentId,
           amostras: sessionData,
-
+          idade: participantData?.idade ?? null,
+          genero: participantData?.genero ?? null,
         };
 
         await createEyeTrackingSession(payload);

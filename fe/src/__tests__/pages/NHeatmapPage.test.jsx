@@ -120,4 +120,43 @@ describe("NHeatmapPage", () => {
     expect(screen.getByText(/heatmapstatic/i)).toBeInTheDocument();
     expect(screen.getByText(/mudar para v/i)).toBeInTheDocument();
   });
+
+  it("renders formatted session options with age and gender instead of Anônimo", () => {
+    useHeatmapData.mockReturnValue({
+      experiment: {
+        jsonData: { basic: { name: "Teste", isImported: false }, samples: [] },
+        filename: "Teste",
+      },
+      sessions: [
+        { sessao_id: "s1", idade: 25, genero: "Feminino" },
+        { sessao_id: "s2", idade: 30 },
+        { sessao_id: "s3" },
+      ],
+      isLoading: false,
+      error: null,
+      activePiece: { previewKind: "image", exposureSeconds: 10 },
+      selectedSampleId: "",
+      setSelectedSampleId: vi.fn(),
+      selectedPieceId: "",
+      setSelectedPieceId: vi.fn(),
+      selectedSessionId: "all",
+      setSelectedSessionId: vi.fn(),
+      coords: [],
+      radiusScale: 1,
+      canvasSize: { width: 1280, height: 720 },
+      captureFps: 60,
+      timelineDurationMs: 0,
+    });
+
+    render(
+      <MemoryRouter>
+        <NHeatmapPage />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole("option", { name: /todos os participantes agrupados/i })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Sessão 1 (25 anos, Feminino)" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Sessão 2 (30 anos)" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Sessão 3" })).toBeInTheDocument();
+  });
 });

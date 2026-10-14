@@ -29,4 +29,32 @@ describe("NCreateStepBasic", () => {
     fireEvent.click(screen.getByRole("button", { name: /pr.ximo/i }));
     expect(onNext).toHaveBeenCalled();
   });
+
+  it("handles toggling requireGender and requireAge options", () => {
+    const onFieldChange = vi.fn();
+
+    render(
+      <NCreateStepBasic
+        basic={{
+          name: "Test",
+          startDate: "",
+          endDate: "",
+          description: "",
+          showDescriptionOnTest: false,
+          allowMultipleSessions: false,
+          requireGender: false,
+          requireAge: false,
+        }}
+        onFieldChange={onFieldChange}
+        onReset={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByLabelText(/coletar g.nero do participante/i));
+    expect(onFieldChange).toHaveBeenCalledWith("requireGender", true);
+
+    fireEvent.click(screen.getByLabelText(/coletar idade do participante/i));
+    expect(onFieldChange).toHaveBeenCalledWith("requireAge", true);
+  });
 });

@@ -8,6 +8,7 @@ import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import MovieOutlinedIcon from "@mui/icons-material/MovieOutlined";
 import CircularProgress from "@mui/material/CircularProgress";
 import NPageHeader from "@/components/general/NPageHeader";
+import { formatSessionParticipantLabel } from "@/utils/heatmapUtils";
 
 const normalizeMediaUrl = (value) => getPublicMediaUrl(value || "");
 
@@ -167,16 +168,12 @@ function NHeatmapPage() {
               className="w-full rounded-2xl border border-slate-200 bg-white dark:bg-slate-800 px-4 py-3 text-black dark:text-white outline-none transition focus:border-sinapgreen-500 focus:ring-2 focus:ring-sinapgreen-500/20"
             >
               <option value="all">Todos os Participantes Agrupados</option>
-              {sessions.map((s) => {
+              {sessions.map((s, index) => {
                 const sessionId = s.sessao_id || s.sessionId || s._id || s.id;
-                const participantName =
-                  s.participante?.nome ||
-                  s.participant?.nome ||
-                  s.participant?.name ||
-                  "Anônimo";
+                const label = formatSessionParticipantLabel(s, index);
                 return (
                   <option key={sessionId} value={sessionId}>
-                    {participantName} ({String(sessionId).substring(0, 8)}...)
+                    {label}
                   </option>
                 );
               })}

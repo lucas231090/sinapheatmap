@@ -1,5 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { simplifyPath } from "@/utils/heatmapUtils";
+import {
+  createHoverStore,
+  getSurfaceHandlers,
+  hitTestCircles,
+  useHoverLayer,
+} from "./hover/hoverStore";
+import HoverTooltip from "./hover/HoverTooltip";
 
 const formatTime = (timestamp) => {
   const milliseconds = Number(timestamp);
@@ -11,6 +18,8 @@ const formatTime = (timestamp) => {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${String(remainder).padStart(3, "0")} (${wholeMilliseconds} ms)`;
 };
 
+const LAYER_ID = "bubbles";
+
 const BubbleCanvas = ({
   canvasSize,
   coords,
@@ -18,8 +27,14 @@ const BubbleCanvas = ({
   transformComponentRef,
   zoomScale: providedZoomScale,
   selectedSessionId,
+  hoverStore: externalHoverStore,
+  interactive = true,
 }) => {
-  const [hoveredBubble, setHoveredBubble] = useState(null);
+  // When no shared store is provided (standalone usage), the SVG itself acts
+  // as the hover surface.
+  const [ownHoverStore] = useState(createHoverStore);
+  const hoverStore = externalHoverStore || ownHoverStore;
+  const isStandalone = !externalHoverStore;
 
   const zoomScale =
     providedZoomScale || transformComponentRef?.current?.state?.scale || 1;
@@ -55,8 +70,9 @@ const BubbleCanvas = ({
       });
       return result;
     }
-    // Single session — use default red
-    const defaultColor = {
+    // Single session
+    const singleSessionGroup = coordsBySession?.[0];
+    const defaultColor = singleSessionGroup?.color || {
       fill: "rgba(255, 0, 0, 0.4)",
       stroke: "#FF6384",
       label: "#FF6384",
@@ -65,8 +81,8 @@ const BubbleCanvas = ({
     return simplified.map((coord, index) => ({
       x: coord.x,
       y: coord.y,
-      sessionId: "single",
-      participantName: "",
+      sessionId: singleSessionGroup?.sessionId || "single",
+      participantName: singleSessionGroup?.participantName || "",
       color: defaultColor,
       localIndex: index,
       globalIndex: index,
@@ -89,10 +105,23 @@ const BubbleCanvas = ({
   // Reversed for rendering: first bubbles drawn last → appear on top
   const reversedBubbles = useMemo(() => [...bubbles].reverse(), [bubbles]);
 
+  // Hit-test uses the exact same geometry used for rendering. `bubbles` is
+  // already in top-to-bottom visual order (index 0 is drawn last / on top).
+  const hitTest = useCallback(
+    (x, y, unitsPerPixel) =>
+      hitTestCircles(bubbles, () => radius, x, y, unitsPerPixel),
+    [bubbles, radius],
+  );
+
+  const hoveredBubble = useHoverLayer(hoverStore, LAYER_ID, {
+    priority: 1,
+    hitTest,
+    enabled: interactive && bubbles.length > 0,
+  });
+  const hovered = hoveredBubble !== null ? bubbles[hoveredBubble] : null;
+
   // Which bubbles to highlight on hover (current + prev + next within same session)
   const highlightedSet = useMemo(() => {
-    if (hoveredBubble === null) return null;
-    const hovered = bubbles[hoveredBubble];
     if (!hovered) return null;
 
     const sessionBubbles = sessionGroups[hovered.sessionId] || [];
@@ -109,7 +138,7 @@ const BubbleCanvas = ({
       highlighted.add(sessionBubbles[posInSession + 1].globalIndex);
     }
     return highlighted;
-  }, [hoveredBubble, bubbles, sessionGroups]);
+  }, [hovered, sessionGroups]);
 
   // Legend data for multi-session
   const legend = useMemo(() => {
@@ -127,7 +156,7 @@ const BubbleCanvas = ({
     return highlightedSet.has(globalIndex) ? 1 : 0.12;
   };
 
-  const getLineOpacity = (sessionId, fromGlobalIdx, toGlobalIdx) => {
+  const getLineOpacity = (fromGlobalIdx, toGlobalIdx) => {
     if (highlightedSet === null) return 0.3;
     if (highlightedSet.has(fromGlobalIdx) && highlightedSet.has(toGlobalIdx)) {
       return 0.9;
@@ -135,15 +164,40 @@ const BubbleCanvas = ({
     return 0.06;
   };
 
+  const { width: canvasWidth, height: canvasHeight } = canvasSize;
+  const surfaceRef = useCallback(
+    (element) => {
+      if (element) {
+        hoverStore.setSurface(element, {
+          width: canvasWidth,
+          height: canvasHeight,
+        });
+      }
+    },
+    [hoverStore, canvasWidth, canvasHeight],
+  );
+  const surfaceHandlers = useMemo(
+    () => getSurfaceHandlers(hoverStore),
+    [hoverStore],
+  );
+
+  const standaloneSurfaceProps =
+    isStandalone && interactive
+      ? { ref: surfaceRef, ...surfaceHandlers }
+      : {};
+
   return (
     <div style={{ position: "relative" }}>
       <svg
+        {...standaloneSurfaceProps}
+        data-testid="bubble-canvas-svg"
         width={canvasSize.width}
         height={canvasSize.height}
         style={{
           width: `${canvasSize.width}px`,
           height: `${canvasSize.height}px`,
-          pointerEvents: "all",
+          pointerEvents: isStandalone && interactive ? "all" : "none",
+          cursor: hovered ? "pointer" : undefined,
           display: "block",
           opacity: 0.75,
         }}
@@ -162,11 +216,7 @@ const BubbleCanvas = ({
                 y2={bubble.y}
                 stroke={bubble.color.stroke}
                 strokeWidth={lineWidth}
-                opacity={getLineOpacity(
-                  sessionId,
-                  prev.globalIndex,
-                  bubble.globalIndex,
-                )}
+                opacity={getLineOpacity(prev.globalIndex, bubble.globalIndex)}
                 style={{ transition: "opacity 200ms ease" }}
               />
             );
@@ -181,19 +231,8 @@ const BubbleCanvas = ({
               key={`bubble-${bubble.globalIndex}`}
               style={{ transition: "opacity 200ms ease" }}
               opacity={opacity}
-              onMouseEnter={() => setHoveredBubble(bubble.globalIndex)}
-              onMouseLeave={() => setHoveredBubble(null)}
-              cursor="pointer"
               aria-label={`Bolha ${bubble.localIndex + 1}${bubble.participantName ? `, ${bubble.participantName}` : ""}`}
             >
-              <circle
-                cx={bubble.x}
-                cy={bubble.y}
-                r={Math.max(radius + 8, 16 / zoomScale)}
-                fill="transparent"
-                stroke="none"
-                pointerEvents="all"
-              />
               {/* Drop shadow */}
               <circle
                 cx={bubble.x}
@@ -222,55 +261,65 @@ const BubbleCanvas = ({
                 fontWeight="600"
                 style={{
                   textShadow: "0 1px 3px rgba(0,0,0,0.6)",
-                  pointerEvents: "none",
                   userSelect: "none",
                 }}
               >
                 {bubble.localIndex + 1}
               </text>
-              {hoveredBubble === bubble.globalIndex && (
-                <g pointerEvents="none">
-                  <rect
-                    x={bubble.x + radius + 8}
-                    y={bubble.y + radius}
-                    width={Math.max(150, (bubble.participantName || "").length * 7 + 80)}
-                    height={bubble.participantName ? 48 : 30}
-                    rx={6}
-                    fill="rgba(15, 23, 42, 0.94)"
-                    stroke="rgba(255,255,255,0.18)"
-                    strokeWidth={1}
-                  />
-                  <text
-                    x={bubble.x + radius + 16}
-                    y={bubble.y + radius + 14}
-                    fill="white"
-                    fontSize={Math.max(10, 12 / zoomScale)}
-                    fontFamily="sans-serif"
-                    fontWeight="600"
-                  >
-                    Item {bubble.localIndex + 1} - {formatTime(bubble.timestamp)}
-                  </text>
-                  {bubble.participantName && (
-                    <text
-                      x={bubble.x + radius + 16}
-                      y={bubble.y + radius + 34}
-                      fill="rgba(255,255,255,0.78)"
-                      fontSize={Math.max(9, 11 / zoomScale)}
-                      fontFamily="sans-serif"
-                    >
-                      Participante: {bubble.participantName}
-                    </text>
-                  )}
-                </g>
-              )}
             </g>
           );
         })}
+
+        {/* Re-draw the hovered bubble on top of everything so it is never hidden */}
+        {hovered && (
+          <g pointerEvents="none">
+            <circle
+              cx={hovered.x}
+              cy={hovered.y}
+              r={radius}
+              fill={hovered.color.fill}
+              stroke="white"
+              strokeWidth={strokeWidth * 1.5}
+            />
+            <text
+              x={hovered.x}
+              y={hovered.y}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fill="white"
+              fontSize={fontSize}
+              fontFamily="Arial, sans-serif"
+              fontWeight="700"
+              style={{ userSelect: "none" }}
+            >
+              {hovered.localIndex + 1}
+            </text>
+          </g>
+        )}
       </svg>
+
+      {hovered && (
+        <HoverTooltip
+          store={hoverStore}
+          accentColor={hovered.color.stroke}
+          title={`Item ${hovered.localIndex + 1}`}
+          rows={[
+            { label: "Tempo", value: formatTime(hovered.timestamp) },
+            {
+              label: "Posição",
+              value: `${Math.round(hovered.x)}, ${Math.round(hovered.y)}`,
+            },
+            ...(hovered.participantName
+              ? [{ label: "Participante", value: hovered.participantName }]
+              : []),
+          ]}
+        />
+      )}
 
       {/* Legend for multi-session */}
       {isMultiSession && legend.length > 0 && (
         <div
+          data-hover-ignore
           style={{
             position: "absolute",
             top: 8,

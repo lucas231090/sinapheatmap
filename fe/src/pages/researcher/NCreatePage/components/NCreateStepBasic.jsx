@@ -100,6 +100,52 @@ export default function NCreateStepBasic({
               </span>
             </span>
           </label>
+
+          <label
+            className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 dark:bg-slate-800 p-4"
+            htmlFor="basic-require-gender"
+          >
+            <input
+              id="basic-require-gender"
+              type="checkbox"
+              className="mt-1 size-4 accent-sinapgreen-500"
+              checked={Boolean(basic.requireGender)}
+              onChange={(event) =>
+                onFieldChange("requireGender", event.target.checked)
+              }
+            />
+            <span className="space-y-1">
+              <span className="block text-sm font-semibold text-black dark:text-white">
+                Coletar gênero do participante
+              </span>
+              <span className="block text-sm text-slate-600 dark:text-slate-400">
+                O participante precisará informar o gênero antes de iniciar o teste.
+              </span>
+            </span>
+          </label>
+
+          <label
+            className="flex items-start gap-3 rounded-3xl border border-slate-200 bg-slate-50 dark:bg-slate-800 p-4"
+            htmlFor="basic-require-age"
+          >
+            <input
+              id="basic-require-age"
+              type="checkbox"
+              className="mt-1 size-4 accent-sinapgreen-500"
+              checked={Boolean(basic.requireAge)}
+              onChange={(event) =>
+                onFieldChange("requireAge", event.target.checked)
+              }
+            />
+            <span className="space-y-1">
+              <span className="block text-sm font-semibold text-black dark:text-white">
+                Coletar idade do participante
+              </span>
+              <span className="block text-sm text-slate-600 dark:text-slate-400">
+                O participante precisará informar a idade antes de iniciar o teste.
+              </span>
+            </span>
+          </label>
         </div>
       </div>
 

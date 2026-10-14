@@ -396,3 +396,51 @@ export const downloadHeatMapImage = ({
     console.error("Erro ao gerar download do heatmap:", error);
   }
 };
+
+/**
+ * Formata o rótulo do participante/sessão exibido no heatmap,
+ * substituindo "Anônimo" pelo número da sessão e incluindo idade/gênero quando disponíveis.
+ */
+export const formatSessionParticipantLabel = (session, index) => {
+  const sessionNumber =
+    typeof index === "number" && index >= 0 ? `Sessão ${index + 1}` : "Sessão";
+
+  const age =
+    session?.idade ??
+    session?.age ??
+    session?.participante?.idade ??
+    session?.participant?.idade ??
+    null;
+  const gender =
+    session?.genero ??
+    session?.gender ??
+    session?.participante?.genero ??
+    session?.participant?.genero ??
+    null;
+  const rawName =
+    session?.participante?.nome ||
+    session?.participant?.nome ||
+    session?.participant?.name ||
+    session?.Nome ||
+    session?.nome ||
+    "";
+
+  const details = [];
+  if (age !== null && age !== "" && !isNaN(Number(age))) {
+    details.push(`${age} anos`);
+  }
+  if (gender && typeof gender === "string" && gender.trim()) {
+    details.push(gender.trim());
+  }
+
+  if (details.length > 0) {
+    return `${sessionNumber} (${details.join(", ")})`;
+  }
+
+  if (rawName && !/^an[oô]nimo$/i.test(rawName.trim())) {
+    return `${sessionNumber} (${rawName.trim()})`;
+  }
+
+  return sessionNumber;
+};
+

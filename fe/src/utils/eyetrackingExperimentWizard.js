@@ -11,6 +11,8 @@ function createEmptyBasicData() {
     description: "",
     showDescriptionOnTest: true,
     allowMultipleSessions: false,
+    requireGender: false,
+    requireAge: false,
   };
 }
 
@@ -150,6 +152,8 @@ export function normalizeExperimentRecord(record) {
         baseState.basic.description,
       isImported:
         rawExperiment?.basic?.isImported || Array.isArray(record?.jsonData),
+      requireGender: Boolean(rawExperiment?.basic?.requireGender),
+      requireAge: Boolean(rawExperiment?.basic?.requireAge),
       recordId: record?._id || record?.id,
     },
     organization: {

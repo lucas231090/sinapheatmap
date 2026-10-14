@@ -39,6 +39,8 @@ const createExperimentSchema = z.object({
           showDescriptionOnTest: z.boolean().default(true),
           allowMultipleSessions: z.boolean().default(false),
           isImported: z.boolean().default(false),
+          requireGender: z.boolean().default(false),
+          requireAge: z.boolean().default(false),
         })
         .passthrough(),
       samples: z
@@ -61,6 +63,10 @@ const createExperimentSchema = z.object({
 const eyeTrackingSessionSchema = z.object({
   sessao_id: z.string().trim().min(1),
   experimento_id: z.string().trim().min(1),
+  idade: z.coerce.number().optional().nullable(),
+  genero: z.string().trim().optional().nullable(),
+  age: z.coerce.number().optional().nullable(),
+  gender: z.string().trim().optional().nullable(),
 
   amostras: z
     .array(

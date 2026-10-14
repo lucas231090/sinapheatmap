@@ -10,6 +10,7 @@ import {
   calculateResponsiveScale,
   calculateCanvasSize,
   SESSION_COLORS,
+  formatSessionParticipantLabel,
 } from "@/utils/heatmapUtils";
 
 const estimateCaptureFps = (coords = []) => {
@@ -229,13 +230,15 @@ export const useHeatmapData = (experimentId) => {
         combinedCoords = combinedCoords.concat(sessionCoords);
 
         const sessionId = session.sessao_id || session.sessionId || session._id || session.id;
-        const participantName =
-          session.participante?.nome ||
-          session.participant?.nome ||
-          session.participant?.name ||
-          session.Nome ||
-          session.nome ||
-          "Anônimo";
+        const originalIndex = sessions.findIndex(
+          (s) =>
+            String(s.sessao_id || s.sessionId || s._id || s.id) ===
+            String(sessionId),
+        );
+        const participantName = formatSessionParticipantLabel(
+          session,
+          originalIndex >= 0 ? originalIndex : undefined,
+        );
         const color = SESSION_COLORS[sessionColorIndex % SESSION_COLORS.length];
         sessionColorIndex++;
 
@@ -259,11 +262,15 @@ export const useHeatmapData = (experimentId) => {
       sessionsToUse.forEach((session) => {
         let timelineOffset = 0;
         const sessionId = session.sessao_id || session.sessionId || session._id || session.id;
-        const participantName =
-          session.participante?.nome ||
-          session.participant?.nome ||
-          session.participant?.name ||
-          "Anônimo";
+        const originalIndex = sessions.findIndex(
+          (s) =>
+            String(s.sessao_id || s.sessionId || s._id || s.id) ===
+            String(sessionId),
+        );
+        const participantName = formatSessionParticipantLabel(
+          session,
+          originalIndex >= 0 ? originalIndex : undefined,
+        );
         const color = SESSION_COLORS[sessionColorIndex % SESSION_COLORS.length];
         sessionColorIndex++;
 
