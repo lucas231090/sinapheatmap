@@ -3,25 +3,38 @@ const http = require("http");
 const app = require("./app");
 const mongoose = require("mongoose");
 
-const MESSAGE_SERVER = "API ON-LINE EM: ";
-const PORT = 3333;
-const HOST = `http://localhost:${PORT}`;
+const MESSAGE_SERVER = "API ON-LINE NA PORTA: ";
+
+if (!process.env.PORT) {
+  console.error("ERRO: PORT não está definida!");
+  process.exit(1);
+}
+const PORT = process.env.PORT;
+
+// Verificar se as variáveis de ambiente estão carregadas
+if (!process.env.MONGO_URL) {
+  console.error("ERRO: MONGO_URL não está definida!");
+  process.exit(1);
+}
+
+if (!process.env.JWT_SECRET) {
+  console.error("ERRO: JWT_SECRET não está definida!");
+  process.exit(1);
+}
 
 mongoose.connect(process.env.MONGO_URL);
-//mongoose.connect('mongodb://localhost:27017/sinapsense');
+
+const seedAdmin = require("../seedAdmin");
 
 mongoose.connection
   .on("error", console.error.bind(console, "Erro na conexão com o MongoDB:"))
-  .once("open", function () {
+  .once("open", async function () {
     console.log("Conexão MongoDB estabelecida com sucesso!");
+    await seedAdmin();
   });
 
 const server = http.createServer(app);
-app.get("/server", (request, response) => {
-  const sv = server;
-  response.send(sv);
-});
 
 server.listen(PORT, () => {
-  console.log(MESSAGE_SERVER + HOST);
+  console.log(MESSAGE_SERVER + PORT);
 });

@@ -4,8 +4,20 @@ const path = require("path");
 const csv = require("csv-parser");
 const FileRepository = require("../../repositories/FileRepository");
 const logger = require("../../configs/logger");
+const { uploadsJsonDir } = require("../../configs/uploadsPaths");
 
+/**
+ * UseCase for uploading and processing a basic CSV file, mapping specific keys to x, y, and value coordinates.
+ */
 class UploadCsvUseCase {
+  /**
+   * Executes the CSV processing and saves the JSON representation.
+   * @param {Object} file - The file object from multer containing `path` and `filename`.
+   * @param {string} filename - The desired name for the file.
+   * @param {string} description - A description for the file.
+   * @returns {Promise<Object>} A promise resolving to the created file record in the repository.
+   * @throws {Error} If filename is missing or an error occurs during parsing/saving.
+   */
   async execute(file, filename, description) {
     if (!filename) {
       if (file) {
@@ -15,9 +27,13 @@ class UploadCsvUseCase {
     }
 
     const results = [];
-    const uploadDir = path.join(__dirname, "../../uploads");
+    const uploadDir = uploadsJsonDir;
     const jsonFilename = `${file.filename}.json`;
     const relativeJsonPath = path.join(uploadDir, jsonFilename);
+
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
 
     const fileData = await new Promise((resolve, reject) => {
       fs.createReadStream(file.path)
@@ -32,7 +48,7 @@ class UploadCsvUseCase {
 
             fs.writeFileSync(
               relativeJsonPath,
-              JSON.stringify(mappedResults, null, 2)
+              JSON.stringify(mappedResults, null, 2),
             );
 
             const fileData = {
@@ -49,7 +65,7 @@ class UploadCsvUseCase {
           } catch (error) {
             logger.error(
               "Erro ao processar o arquivo CSV ou salvar no MongoDB: %s",
-              error.message
+              error.message,
             );
             fs.unlinkSync(file.path);
             reject(new Error("Erro ao processar o arquivo CSV"));

@@ -1,0 +1,21 @@
+FROM node:20-alpine
+
+# Instala Chromium e dependências necessárias para o Puppeteer / Remotion rodarem no Alpine Linux
+RUN apk add --no-cache \
+      chromium \
+      nss \
+      freetype \
+      harfbuzz \
+      ca-certificates \
+      ttf-freefont \
+      util-linux
+
+# Informa ao Puppeteer e Remotion para usarem o Chromium do sistema
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV REMOTION_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+WORKDIR /app
+
+# Mantendo o mesmo comando do docker-compose original
+CMD ["sh", "-c", "npm install && npm run dev"]

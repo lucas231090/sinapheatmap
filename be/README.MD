@@ -1,80 +1,165 @@
-# API do SINAPHEATMAP
+# ⚙️ Backend — API REST SINAPHEATMAP
 
-A **API REST do SINAPHEATMAP** fornece os recursos necessários para o gerenciamento de experimentos provenientes de sistemas de **eyetracking**. Além disso, inclui funcionalidades para cadastro e autenticação de usuários, garantindo um ambiente seguro e personalizado para cada pesquisador.
-
-Para acessar a documentação completa da API, consulte o **Swagger** disponível no endpoint: `/api-docs`.
+A **API REST do SINAPHEATMAP** fornece os serviços de autenticação, persistência de experimentos, gestão de sessões de rastreamento ocular (**eyetracking**), upload de mídias de alta resolução e compilação de vídeos com heatmaps sobrepostos usando **Remotion**.
 
 ---
 
-## Requisitos do Sistema
+## 📑 Sumário
 
-Antes de executar o projeto, verifique se os seguintes requisitos estão atendidos:
-
-- **Node.js** (obrigatório - versão 18 ou superior [recomendado])
-- **MongoDB** (obrigatório)
-- **Docker** (opcional, sugerido para inicializar os serviços rapidamente)
+- [Tecnologias](#-tecnologias)
+- [Executando com Docker (Recomendado)](#-executando-com-docker-recomendado)
+- [Executando Localmente (Sem Docker)](#-executando-localmente-sem-docker)
+- [Variáveis de Ambiente](#-variáveis-de-ambiente)
+- [Rotas da API](#-rotas-da-api)
+- [Renderização de Vídeo (Remotion & Chromium)](#-renderização-de-vídeo-remotion--chromium)
+- [Testes Automatizados](#-testes-automatizados)
 
 ---
 
-## Configuração e Execução
+## 🛠️ Tecnologias
 
-### 1. Dependências
+- **Node.js 20 LTS** & **Express**
+- **MongoDB 6** com modelagem via **Mongoose**
+- **JWT (JSON Web Tokens)** + **Bcrypt** para autenticação e RBAC (Pesquisador / Administrador)
+- **Zod** para validação estrita de esquemas e entradas
+- **Multer** configurado com limite de 50MB para upload de imagens e vídeos
+- **Remotion (@remotion/bundler, @remotion/renderer)** integrado com Chromium para exportação de vídeo MP4
+- **Swagger UI** (`/api-docs`) para documentação interativa
+- **Jest** + **Supertest** para testes de controladores e casos de uso
 
-Instale as dependências do projeto utilizando o **npm**:
+---
+
+## 🐳 Executando com Docker (Recomendado)
+
+Recomenda-se utilizar o `docker-compose.yml` da raiz do repositório:
 
 ```bash
+# Na raiz do projeto:
+docker compose up -d backend
+```
+
+Para subir em ambiente de desenvolvimento (com nodemon e volumes mapeados):
+```bash
+docker compose -f docker-compose.dev.yml up -d backend
+```
+
+---
+
+## 💻 Executando Localmente (Sem Docker)
+
+### 1. Instalar dependências
+```bash
+cd be
 npm install
 ```
 
-### 2. Configuração do Ambiente
+### 2. Configurar variáveis de ambiente
+Copie o arquivo de exemplo:
+```bash
+cp .env.example .env
+```
 
-Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis de ambiente:
-
-```makefile
+Conteúdo esperado:
+```env
 PORT=3333
 MONGO_URL=mongodb://localhost:27017/sinapheatmap
-JWT_SECRET=sua_chave_secreta_aqui
+JWT_SECRET=sua_chave_secreta_super_segura
+NODE_ENV=development
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
 ```
 
-Substitua `sua_chave_secreta_aqui` por uma chave segura para autenticação via JWT.
+> Caso precise de uma instância MongoDB rápida via Docker:
+> ```bash
+> docker run -d -p 27017:27017 --name sinapheatmap-mongo mongo:6
+> ```
 
-### 3. Iniciando o Projeto
-
-#### Pré-requisitos
-
-Considerando que o Docker já esteja instalado. Certifique-se de estar dentro da pasta do projeto.
-
-Caso não tenha a imagem do container de compilação, ou precise reconstruir a imagem do Docker execute o seguinte comando:
-
-```sh
-npm run build
-```
-
-Obs.: Só é necessário gerar a imagem uma vez.
-
-Para iniciar a aplicação, você tem duas opções:
-
-#### 3.1. Usando Docker
-
-Caso prefira utilizar o **Docker** para rodar os serviços, execute o seguinte comando para iniciar a aplicação e o banco de dados MongoDB:
-
+### 3. Iniciar o servidor
 ```bash
-npm run start
-```
-
-Este comando vai subir tanto o MongoDB quanto a API em containers Docker.
-
-##### Portas Expostas
-
-- **API**: `localhost:3333`
-- **MongoDB**: `localhost:27017`
-
-#### 3.2. Sem Docker
-
-Caso prefira rodar sem o Docker, você pode iniciar o servidor diretamente com:
-
-```bash
+# Modo desenvolvimento (com nodemon):
 npm run dev
+
+# Modo produção:
+npm start
 ```
 
-Esse comando irá iniciar a API no modo de desenvolvimento e ficará monitorando as mudanças no código.
+---
+
+## 🔑 Variáveis de Ambiente
+
+| Variável | Obrigatória | Padrão | Descrição |
+| :--- | :---: | :--- | :--- |
+| `PORT` | Não | `3333` | Porta HTTP da API. |
+| `MONGO_URL` | **Sim** | — | URI de conexão com o banco MongoDB. |
+| `JWT_SECRET` | **Sim** | — | Chave criptográfica para assinatura dos tokens JWT. |
+| `NODE_ENV` | Não | `development` | Ambiente de execução (`development` ou `production`). |
+| `ALLOWED_ORIGINS` | Não | `http://localhost:3000` | Origens CORS permitidas (separadas por vírgula). |
+
+---
+
+## 🛣️ Rotas da API
+
+Consulte a documentação completa no Swagger em: `http://localhost:3333/api-docs`
+
+### Autenticação & Perfil
+| Método | Rota | Autenticado | Descrição |
+| :--- | :--- | :---: | :--- |
+| `POST` | `/sign-in` | Não | Autenticação com e-mail e senha. |
+| `POST` | `/sign-up` | Não | Cadastro de novo pesquisador. |
+| `GET` | `/me` | **Sim** | Retorna o perfil do usuário logado. |
+
+### Experimentos de Eyetracking
+| Método | Rota | Autenticado | Descrição |
+| :--- | :--- | :---: | :--- |
+| `GET` | `/eyetracking` | **Sim** | Lista todos os experimentos. |
+| `POST` | `/eyetracking` | **Sim** | Criação de novo experimento (com opções de gênero/idade). |
+| `GET` | `/eyetracking/:id` | **Sim** | Detalhes completos do experimento. |
+| `PUT` | `/eyetracking/:id` | **Sim** | Atualização de experimento. |
+| `DELETE` | `/eyetracking/:id` | **Sim** | Exclusão de experimento. |
+| `PATCH` | `/eyetracking/:id/status` | **Sim** | Ativação ou desativação de experimento. |
+| `GET` | `/eyetracking/public/:_id` | Não | Consulta pública de experimento para realização do teste. |
+
+### Sessões & Coleta de Dados
+| Método | Rota | Autenticado | Descrição |
+| :--- | :--- | :---: | :--- |
+| `POST` | `/eyetracking/sessions` | Não | Gravação de dados de rastreamento ocular e dados demográficos (`idade`, `genero`). |
+| `GET` | `/eyetracking/sessions/:id` | **Sim** | Consulta de sessões registradas de um experimento. |
+
+### Uploads & Exportação
+| Método | Rota | Autenticado | Descrição |
+| :--- | :--- | :---: | :--- |
+| `POST` | `/eyetracking/upload` | **Sim** | Upload de mídias de teste (imagens/vídeos até 50MB). |
+| `GET` | `/uploads/media/:filename` | Não | Servir arquivo de mídia armazenado. |
+| `POST` | `/video/export` | **Sim** | Dispara renderização assíncrona de vídeo com heatmap via Remotion. |
+
+### Sistema & Administração
+| Método | Rota | Autenticado | Descrição |
+| :--- | :--- | :---: | :--- |
+| `GET` | `/health` | Não | Health check de disponibilidade e banco de dados. |
+| `GET` | `/admin/users` | **Admin** | Listagem de usuários do sistema. |
+| `PUT` | `/admin/users/:id/role` | **Admin** | Alteração de permissão/cargo de usuário. |
+
+---
+
+## 🎬 Renderização de Vídeo (Remotion & Chromium)
+
+O backend utiliza o Remotion para renderizar vídeos com heatmaps sobrepostos quadro a quadro:
+- No Docker de produção (`be/Dockerfile`), pacotes do Chromium (`chromium`, `nss`, `freetype`, `harfbuzz`, `ttf-freefont`) são instalados na imagem Alpine.
+- As variáveis de ambiente `PUPPETEER_EXECUTABLE_PATH` e `REMOTION_CHROMIUM_EXECUTABLE_PATH` apontam para `/usr/bin/chromium-browser`.
+- Em ambiente de desenvolvimento local, o Remotion utilizará o Chromium instalado pelo Puppeteer ou o navegador do sistema operacional.
+
+---
+
+## 🧪 Testes Automatizados
+
+O backend conta com testes automatizados utilizando Jest e Supertest.
+
+```bash
+# Executa todos os testes:
+npm test
+
+# Executa em modo watch:
+npm run test:watch
+
+# Gera relatório de cobertura:
+npm run test:coverage
+```

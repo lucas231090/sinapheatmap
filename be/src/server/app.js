@@ -8,14 +8,24 @@ const swaggerDocs = require("../swagger.json");
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+// Configura CORS: defina ALLOWED_ORIGINS no .env para restringir origens em produção
+// Exemplo: ALLOWED_ORIGINS=https://seuapp.com,https://www.seuapp.com
+// Em desenvolvimento, aceita qualquer origem local automaticamente
+app.use(
+  cors({
+    origin: process.env.ALLOWED_ORIGINS
+      ? process.env.ALLOWED_ORIGINS.split(",")
+      : ["http://localhost:3000", "http://localhost:5173"],
+  }),
+);
+
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-app.use(
-  "/uploads/media",
-  express.static(path.join(__dirname, "uploads", "media"))
-);
+app.get("/health", (request, response) => {
+  response.status(200).json({ status: "ok" });
+});
 
 app.get("/", (request, response) => {
   response

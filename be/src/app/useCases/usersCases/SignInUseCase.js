@@ -4,7 +4,18 @@ const UsersRepository = require("../../repositories/UserRepository");
 const env = require("../../configs/env");
 const InvalidCredentials = require("../../errors/InvalidCredentials");
 
+/**
+ * UseCase for user authentication (Sign In).
+ */
 class SignInUseCase {
+  /**
+   * Executes the sign-in logic.
+   * @param {Object} credentials - The user's credentials.
+   * @param {string} credentials.email - The user's email address.
+   * @param {string} credentials.password - The user's plaintext password.
+   * @returns {Promise<Object>} A promise resolving to an object containing the JWT access token and user information.
+   * @throws {InvalidCredentials} If the email is not found or the password does not match.
+   */
   async execute({ email, password }) {
     const user = await UsersRepository.findByEmail(email);
 
@@ -18,12 +29,21 @@ class SignInUseCase {
       throw new InvalidCredentials();
     }
 
-    const accessToken = sign({ sub: user._id }, env.jwtSecret, {
-      expiresIn: "90d",
+    const accessToken = sign({ role: user.role }, env.jwtSecret, {
+      subject: String(user._id),
+      // 7 dias é um bom balanço entre segurança e usabilidade
+      // Para sessões mais longas, considere implementar refresh token
+      expiresIn: "7d",
     });
 
     return {
       accessToken,
+      user: {
+        id: String(user._id),
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     };
   }
 }

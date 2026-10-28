@@ -1,0 +1,98 @@
+import NPageHeader from "@/components/general/NPageHeader";
+import Card from "@/components/general/Card";
+import NCreateWizardStepper from "@/pages/researcher/NCreatePage/components/NCreateWizardStepper";
+import NCreateStepBasic from "@/pages/researcher/NCreatePage/components/NCreateStepBasic";
+import NCreateStepAssets from "@/pages/researcher/NCreatePage/components/NCreateStepAssets";
+import NCreateStepOrganization from "@/pages/researcher/NCreatePage/components/NCreateStepOrganization";
+import { useCreateExperimentWizard } from "@/hooks/useCreateExperimentWizard";
+
+const stepLabels = [
+  "Dados básicos",
+  "Amostras e peças",
+  "Organização final",
+];
+
+function NCreatePage() {
+  const wizard = useCreateExperimentWizard();
+
+  return (
+    <div>
+      <div className="mx-auto flex w-full flex-col gap-10">
+        <NPageHeader
+          title="CRIAR EXPERIMENTO"
+          description="Fluxo em 3 etapas para configurar o experimento de eyetracking com dados, amostras, peças e organização final."
+        />
+
+        <NCreateWizardStepper
+          activeStep={wizard.activeStep}
+          labels={stepLabels}
+        />
+
+        {wizard.submissionError ? (
+          <div className="rounded-[1.5rem] border border-red-200 bg-white dark:bg-slate-800 px-4 py-3 text-sm font-medium text-red-700 shadow-sm">
+            {wizard.submissionError}
+          </div>
+        ) : null}
+
+        <Card as="main">
+          {wizard.activeStep === 1 ? (
+            <NCreateStepBasic
+              basic={wizard.experiment.basic}
+              onFieldChange={wizard.updateBasicField}
+              onReset={wizard.resetWizard}
+              onNext={wizard.goToNextStep}
+            />
+          ) : null}
+
+          {wizard.activeStep === 2 ? (
+            <NCreateStepAssets
+              samples={wizard.experiment.samples}
+              pieces={wizard.experiment.pieces}
+              sampleDraft={wizard.sampleDraft}
+              pieceDraft={wizard.pieceDraft}
+              selectedSampleId={wizard.selectedSampleId}
+              selectedPieceId={wizard.selectedPieceId}
+              fileInputRef={wizard.fileInputRef}
+              onSampleDraftChange={wizard.updateSampleDraft}
+              onPieceDraftChange={wizard.updatePieceDraft}
+              onSampleSelect={wizard.selectSampleForEdit}
+              onPieceSelect={wizard.selectPieceForEdit}
+              onSampleSave={() => wizard.saveSampleDraft(false)}
+              onSampleCreateNew={() => wizard.saveSampleDraft(true)}
+              onPieceSave={() => wizard.savePieceDraft(false)}
+              onPieceCreateNew={() => wizard.savePieceDraft(true)}
+              onSampleDelete={wizard.deleteSample}
+              onPieceDelete={wizard.deletePiece}
+              onSampleMove={wizard.moveSample}
+              onPieceMove={wizard.movePiece}
+              onFileUploadClick={() => wizard.fileInputRef.current?.click()}
+              onFileSelected={wizard.handlePieceFileSelected}
+              onPrevious={wizard.goToPreviousStep}
+              onNext={wizard.goToNextStep}
+              onReset={wizard.resetWizard}
+              canAdvance={wizard.canContinueToOrganization}
+            />
+          ) : null}
+
+          {wizard.activeStep === 3 ? (
+            <NCreateStepOrganization
+              samples={wizard.experiment.samples}
+              pieces={wizard.experiment.pieces}
+              organization={wizard.experiment.organization}
+              selectedOrganizationSampleId={wizard.organizationSampleId}
+              onOrganizationFieldChange={wizard.updateOrganizationField}
+              onSelectOrganizationSample={wizard.setOrganizationSampleId}
+              onSampleMove={wizard.moveSample}
+              onPieceMove={wizard.movePiece}
+              onPrevious={wizard.goToPreviousStep}
+              onNext={wizard.createExperimentRequest}
+              onReset={wizard.resetWizard}
+            />
+          ) : null}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+export default NCreatePage;
