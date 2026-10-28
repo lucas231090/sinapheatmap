@@ -25,6 +25,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:-sinapheatmap/.env.example}
       NODE_ENV: development
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-admin@admin.com}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-admin123}
     volumes:
       - ./be:/app
       - ./fe:/fe

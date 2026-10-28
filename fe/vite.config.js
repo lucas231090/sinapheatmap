@@ -45,6 +45,7 @@ export default defineConfig({
         target: apiTarget,
         changeOrigin: true,
         secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ""),
       },
       "/uploads": {
         target: apiTarget,

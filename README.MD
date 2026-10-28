@@ -11,6 +11,7 @@ O **SINAPHEATMAP** é uma plataforma completa e integrada voltada a pesquisadore
 - [Executando Rapidamente com Docker](#-executando-rapidamente-com-docker)
 - [Ambiente de Desenvolvimento Local](#-ambiente-de-desenvolvimento-local)
 - [🚀 Checklist para Colocar em Produção](#-checklist-para-colocar-em-produção)
+- [🚢 Guia Detalhado de Deploy e Decisões de Arquitetura (DEPLOY_GUIDE.md)](DEPLOY_GUIDE.md)
 - [Variáveis de Ambiente](#-variáveis-de-ambiente)
 - [Documentação da API (Swagger)](#-documentação-da-api-swagger)
 - [Testes Automatizados](#-testes-automatizados)
@@ -51,15 +52,16 @@ A aplicação é dividida em dois componentes principais orquestrados por contê
 - **Importação de Experimentos Legados**: Compatibilidade com uploads de arquivos CSV históricos.
 
 ### 2. Execução de Testes Guiada (`/test/:id`)
-- **Acesso Público com Validação Prévia**: Caso o experimento exija idade e/ou gênero, o participante preenche os dados demográficos antes de iniciar.
+- **Acesso Público com Validação Prévia**: Caso o experimento exija idade e/ou gênero, o participante responde às perguntas humanizadas (*"Qual é sua idade?"* e *"Qual gênero você se identifica?"*), contando com campo de texto para especificar o gênero caso selecione *"Outro"*, e sem opção de omissão.
 - **Tutorial Interativo**: Instruções claras de posicionamento e postura para o participante.
 - **Alinhamento e Calibração Facial**: Detecção facial via MediaPipe e calibração de 9 pontos em tela cheia.
 - **Gravação em Tempo Real**: Captura das coordenadas da pupila mapeadas à tela durante a exibição dos estímulos.
+- **Envio Resiliente de Dados**: Ciclo de salvamento protegido contra desmontagens/StrictMode com reenvio automático e botão de tentativa manual em caso de falha de rede.
 
 ### 3. Visualização e Análise de Heatmaps
 - **Heatmaps Estáticos e Dinâmicos**: Renderização por densidade de fixação, com opção de alternar rastro contínuo ou agrupamento em pontos.
 - **Bubble Canvas (Bolhas de Fixação)**: Exibição ordenada e numerada das fixações por participante com identificação de tempo acumulado e timestamp exato.
-- **Gaze Plot (Caminho Sacádico)**: Traçado de vetores sacádicos direcionais com setas por participante e cálculo de tempo total acumulado quando o olhar retorna a uma mesma região.
+- **Gaze Plot (Caminho Sacádico)**: Traçado de vetores sacádicos direcionais com setas por participante, bolhas numeradas com a **ordem cronológica da fixação** (`1, 2, 3...`) e cálculo de tempo total acumulado quando o olhar retorna a uma mesma região.
 - **Identificação Rica de Sessões**: Em vez de rótulos genéricos ("Anônimo"), cada participante é identificado pelo número da sessão e seus dados demográficos (ex: `Sessão 1 (25 anos, Feminino)`).
 - **Sistema de Hover e Tooltip Preciso**:
   - Hit-testing geométrico centralizado sensível a zoom e pan.
@@ -220,7 +222,9 @@ O `docker-compose.yml` utiliza 3 volumes nativos do Docker com garantia de sobre
 | `MONGO_INITDB_ROOT_USERNAME` | Sim | `root` | Nome do usuário administrador do MongoDB. |
 | `MONGO_INITDB_ROOT_PASSWORD` | Sim | — | Senha do usuário administrador do MongoDB. |
 | `MONGO_INITDB_DATABASE` | Sim | `sinapheatmap` | Nome da base de dados principal. |
-| `VITE_API_BASE_URL` | Sim | `http://localhost:3333` | URL pública da API consumida pelo frontend no navegador. |
+| `VITE_API_BASE_URL` | Sim | `http://localhost:3333` | URL pública da API consumida pelo frontend no navegador (ou `/api` para domínio unificado). |
+| `INITIAL_ADMIN_EMAIL` | Não | `admin@admin.com` | E-mail do usuário administrador provisionado na primeira inicialização. |
+| `INITIAL_ADMIN_PASSWORD` | Não | `admin123` | Senha inicial do administrador provisionado na primeira inicialização. |
 
 ---
 

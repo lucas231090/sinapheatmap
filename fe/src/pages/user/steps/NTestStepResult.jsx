@@ -1,67 +1,100 @@
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { createEyeTrackingSession } from "@/services/eyetrackingService";
 
 // Global cache to prevent identical sessions from being submitted multiple times
 // within the same browser session (e.g. from StrictMode or accidental remounts).
 const submittedSessionsCache = new WeakSet();
 
+const generateSessionId = () => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+};
+
 export default function NTestStepResult({
   experimentId,
   sessionData,
   participantData,
 }) {
-  const [status, setStatus] = useReducer((state, action) => action, "saving"); // saving | success | error
+  const [status, setStatus] = useState(() => {
+    if (
+      sessionData &&
+      typeof sessionData === "object" &&
+      submittedSessionsCache.has(sessionData)
+    ) {
+      return "success";
+    }
+    return "saving";
+  }); // saving | success | error
 
-  const [sessionId] = useState(() => crypto.randomUUID());
+  const [errorMessage, setErrorMessage] = useState("");
+  const [sessionId] = useState(generateSessionId);
 
-  // Flag de idempotência: impede submit duplicado em StrictMode
-  const hasSubmittedRef = useRef(false);
+  // Armazena a Promise da requisição em andamento para não duplicar chamadas
+  // e permitir que re-renderizações/remounts recuperem o resultado
+  const inFlightPromiseRef = useRef(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    let ignore = false;
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
-    // Evita o reenvio se o array 'sessionData' já tiver sido salvo antes com sucesso
-    if (sessionData && submittedSessionsCache.has(sessionData)) {
+  const handleSave = useCallback(() => {
+    if (
+      sessionData &&
+      typeof sessionData === "object" &&
+      submittedSessionsCache.has(sessionData)
+    ) {
       setStatus("success");
       return;
     }
 
-    // Proteção contra chamadas duplas no Strict Mode ou remounts rápidos
-    if (hasSubmittedRef.current) return;
+    setStatus("saving");
+    setErrorMessage("");
 
-    async function submit() {
-      try {
-        hasSubmittedRef.current = true;
+    if (!inFlightPromiseRef.current) {
+      const payload = {
+        sessao_id: sessionId,
+        experimento_id: experimentId,
+        amostras: sessionData,
+        idade: participantData?.idade ?? null,
+        genero: participantData?.genero ?? null,
+      };
 
-        const payload = {
-          sessao_id: sessionId,
-          experimento_id: experimentId,
-          amostras: sessionData,
-          idade: participantData?.idade ?? null,
-          genero: participantData?.genero ?? null,
-        };
+      inFlightPromiseRef.current = createEyeTrackingSession(payload);
+    }
 
-        await createEyeTrackingSession(payload);
-
-        if (!ignore) {
-          // Somente adiciona ao cache se tiver sucesso
-          if (sessionData) {
-            submittedSessionsCache.add(sessionData);
-          }
+    inFlightPromiseRef.current
+      .then(() => {
+        if (sessionData && typeof sessionData === "object") {
+          submittedSessionsCache.add(sessionData);
+        }
+        if (isMountedRef.current) {
           setStatus("success");
         }
-      } catch (err) {
-        if (!ignore) {
-          console.error("Erro ao salvar:", err);
-          // Permite tentar novamente em caso de erro
-          hasSubmittedRef.current = false;
+      })
+      .catch((err) => {
+        console.error("Erro ao salvar sessão:", err);
+        // Permite nova tentativa limpando a promessa que falhou
+        inFlightPromiseRef.current = null;
+        if (isMountedRef.current) {
+          const message =
+            err?.response?.data?.error ||
+            err?.message ||
+            "Não foi possível enviar os dados da sua sessão. Comunique o pesquisador.";
+          setErrorMessage(message);
           setStatus("error");
         }
-      }
-    }
-    submit();
-    return () => { ignore = true; };
-  }, [experimentId, sessionData, sessionId]);
+      });
+  }, [sessionId, experimentId, sessionData, participantData]);
+
+  useEffect(() => {
+    handleSave();
+  }, [handleSave]);
 
   return (
     <div className="flex h-screen w-full items-center justify-center p-8 text-center text-white">
@@ -74,12 +107,24 @@ export default function NTestStepResult({
       )}
 
       {status === "error" && (
-        <div className="rounded-[2rem] border border-red-300/20 bg-red-950/30 px-8 py-6 text-red-200 shadow-2xl backdrop-blur-md">
+        <div className="max-w-lg rounded-[2rem] border border-red-300/20 bg-red-950/30 px-8 py-6 text-red-200 shadow-2xl backdrop-blur-md">
           <h2 className="text-2xl font-bold mb-2">Ops, tivemos um problema!</h2>
-          <p>
+          <p className="mb-2">
             Não foi possível enviar os dados da sua sessão. Comunique o
             pesquisador.
           </p>
+          {errorMessage && (
+            <p className="mb-4 text-xs text-red-300/80 font-mono">
+              Detalhes: {errorMessage}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={handleSave}
+            className="rounded-full bg-red-500 hover:bg-red-400 px-6 py-2.5 font-bold text-white transition shadow-lg cursor-pointer"
+          >
+            Tentar novamente
+          </button>
         </div>
       )}
 
@@ -110,4 +155,3 @@ export default function NTestStepResult({
     </div>
   );
 }
-

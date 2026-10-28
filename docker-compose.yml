@@ -29,6 +29,8 @@ services:
       NODE_ENV: ${NODE_ENV}
       # Origens permitidas para CORS (separe por vírgula para múltiplas)
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-admin@admin.com}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-admin123}
     volumes:
       # Volume para persistir uploads de forma nativa no Docker
       - backend_uploads:/app/uploads

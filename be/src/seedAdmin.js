@@ -5,7 +5,8 @@ const User = require("./app/models/User");
 async function seedAdmin() {
   try {
     
-    const adminEmail = "admin@admin.com";
+    const adminEmail = process.env.INITIAL_ADMIN_EMAIL || "admin@admin.com";
+    const adminPassword = process.env.INITIAL_ADMIN_PASSWORD || "admin123";
     
     const existingAdmin = await User.findOne({ email: adminEmail });
     if (existingAdmin) {
@@ -13,7 +14,7 @@ async function seedAdmin() {
       return;
     }
 
-    const hashedPassword = await bcrypt.hash("admin123", 10);
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
     await User.create({
       name: "Administrador",
@@ -23,8 +24,8 @@ async function seedAdmin() {
     });
 
     console.log("✅ Usuário admin criado com sucesso!");
-    console.log("Email: admin@admin.com");
-    console.log("Senha: admin123");
+    console.log(`Email: ${adminEmail}`);
+    console.log("Senha configurada.");
   } catch (error) {
     console.error("Erro ao criar admin:", error);
   }

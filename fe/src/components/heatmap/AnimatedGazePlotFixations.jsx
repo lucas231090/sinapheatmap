@@ -46,7 +46,7 @@ const AnimatedGazePlotFixations = ({
                 fontWeight="700"
                 style={{ pointerEvents: "none" }}
               >
-                {fix.pointCount}
+                {(fix.localIndex ?? fix.globalIndex ?? 0) + 1}
               </text>
             )}
           </g>

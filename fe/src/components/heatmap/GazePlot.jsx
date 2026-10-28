@@ -192,7 +192,7 @@ const FixationCircle = ({ fix, r, strokeWidth, fontSize, highlighted }) => (
         userSelect: "none",
       }}
     >
-      {fix.pointCount}
+      {(fix.localIndex ?? fix.globalIndex ?? 0) + 1}
     </text>
   </>
 );

@@ -51,9 +51,14 @@ describe("NTestStepWelcome", () => {
     expect(screen.getByText(/informe uma idade v.lida/i)).toBeInTheDocument();
 
     // Fill age
-    fireEvent.change(screen.getByLabelText(/idade \*/i), {
+    fireEvent.change(screen.getByLabelText(/qual . sua idade/i), {
       target: { value: "28" },
     });
+
+    // Check that 'Prefiro não informar' option was removed
+    expect(
+      screen.queryByRole("option", { name: /prefiro n.o informar/i }),
+    ).not.toBeInTheDocument();
 
     // Attempt start without gender
     fireEvent.click(
@@ -62,15 +67,61 @@ describe("NTestStepWelcome", () => {
     expect(onNext).not.toHaveBeenCalled();
     expect(screen.getByText(/selecione seu g.nero/i)).toBeInTheDocument();
 
-    // Select gender
-    fireEvent.change(screen.getByLabelText(/g.nero \*/i), {
+    // Select standard gender
+    fireEvent.change(screen.getByLabelText(/qual g.nero voc. se identifica/i), {
       target: { value: "Feminino" },
+    });
+
+    // Start successfully with standard gender
+    fireEvent.click(
+      screen.getByRole("button", { name: /iniciar experimento/i }),
+    );
+    expect(onNext).toHaveBeenCalledWith({ idade: 28, genero: "Feminino" });
+  });
+
+  it("handles 'Outro' gender with custom text input", () => {
+    const onNext = vi.fn();
+    const experiment = {
+      basic: {
+        name: "Teste Custom Genero",
+        requireAge: true,
+        requireGender: true,
+      },
+    };
+
+    render(<NTestStepWelcome experiment={experiment} onNext={onNext} />);
+
+    // Fill age
+    fireEvent.change(screen.getByLabelText(/qual . sua idade/i), {
+      target: { value: "32" },
+    });
+
+    // Select 'Outro'
+    fireEvent.change(screen.getByLabelText(/qual g.nero voc. se identifica/i), {
+      target: { value: "Outro" },
+    });
+
+    // Attempt to start without filling custom input
+    fireEvent.click(
+      screen.getByRole("button", { name: /iniciar experimento/i }),
+    );
+    expect(onNext).not.toHaveBeenCalled();
+    expect(
+      screen.getByText(/informe com qual g.nero voc. se identifica/i),
+    ).toBeInTheDocument();
+
+    // Fill custom gender
+    const customInput = screen.getByPlaceholderText(
+      /escreva qual g.nero voc. se identifica/i,
+    );
+    fireEvent.change(customInput, {
+      target: { value: "Agênero" },
     });
 
     // Start successfully
     fireEvent.click(
       screen.getByRole("button", { name: /iniciar experimento/i }),
     );
-    expect(onNext).toHaveBeenCalledWith({ idade: 28, genero: "Feminino" });
+    expect(onNext).toHaveBeenCalledWith({ idade: 32, genero: "Agênero" });
   });
 });

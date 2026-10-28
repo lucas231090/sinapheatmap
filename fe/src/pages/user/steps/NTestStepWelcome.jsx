@@ -10,6 +10,7 @@ export default function NTestStepWelcome({ experiment, onNext }) {
 
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
+  const [customGender, setCustomGender] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleStart = () => {
@@ -28,11 +29,21 @@ export default function NTestStepWelcome({ experiment, onNext }) {
         setErrorMsg("Por favor, selecione seu gênero.");
         return;
       }
+      if (gender === "Outro" && !customGender.trim()) {
+        setErrorMsg("Por favor, informe com qual gênero você se identifica.");
+        return;
+      }
     }
+
+    const resolvedGender = requireGender
+      ? gender === "Outro"
+        ? customGender.trim()
+        : gender.trim()
+      : null;
 
     onNext({
       idade: requireAge ? Number(age) : null,
-      genero: requireGender ? gender.trim() : null,
+      genero: resolvedGender,
     });
   };
 
@@ -64,7 +75,7 @@ export default function NTestStepWelcome({ experiment, onNext }) {
                     htmlFor="participant-age"
                     className="text-xs font-bold uppercase tracking-wider text-slate-300"
                   >
-                    Idade *
+                    Qual é sua idade? *
                   </label>
                   <input
                     id="participant-age"
@@ -88,13 +99,16 @@ export default function NTestStepWelcome({ experiment, onNext }) {
                     htmlFor="participant-gender"
                     className="text-xs font-bold uppercase tracking-wider text-slate-300"
                   >
-                    Gênero *
+                    Qual gênero você se identifica? *
                   </label>
                   <select
                     id="participant-gender"
                     value={gender}
                     onChange={(e) => {
                       setGender(e.target.value);
+                      if (e.target.value !== "Outro") {
+                        setCustomGender("");
+                      }
                       setErrorMsg("");
                     }}
                     className="w-full rounded-xl border border-white/20 bg-slate-900/80 px-4 py-2.5 text-white outline-none transition focus:border-sinapgreen-500 focus:ring-1 focus:ring-sinapgreen-500"
@@ -114,10 +128,29 @@ export default function NTestStepWelcome({ experiment, onNext }) {
                     <option value="Outro" className="bg-slate-900 text-white">
                       Outro
                     </option>
-                    <option value="Prefiro não informar" className="bg-slate-900 text-white">
-                      Prefiro não informar
-                    </option>
                   </select>
+
+                  {gender === "Outro" && (
+                    <div className="flex flex-col gap-1.5 pt-2">
+                      <label
+                        htmlFor="participant-custom-gender"
+                        className="text-xs font-bold uppercase tracking-wider text-slate-300"
+                      >
+                        Qual gênero você se identifica? *
+                      </label>
+                      <input
+                        id="participant-custom-gender"
+                        type="text"
+                        value={customGender}
+                        onChange={(e) => {
+                          setCustomGender(e.target.value);
+                          setErrorMsg("");
+                        }}
+                        placeholder="Escreva qual gênero você se identifica"
+                        className="w-full rounded-xl border border-white/20 bg-slate-900/80 px-4 py-2.5 text-white placeholder-slate-500 outline-none transition focus:border-sinapgreen-500 focus:ring-1 focus:ring-sinapgreen-500"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
